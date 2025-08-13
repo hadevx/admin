@@ -12,7 +12,7 @@ import React from "react";
 
 function Settings() {
   const [updateStoreStatus, { isLoading: loadingUpdateStatus }] = useUpdateStoreStatusMutation();
-  const { data: storeStatus, refetch, isLoading } = useGetStoreStatusQuery();
+  const { data: storeStatus, refetch, isLoading } = useGetStoreStatusQuery(undefined);
 
   const [status, setStatus] = useState("");
   const [banner, setBanner] = useState("");
@@ -24,7 +24,7 @@ function Settings() {
     refetch();
   };
 
-  const formatDate = (isoString) => {
+  const formatDate = (isoString: any) => {
     if (!isoString) return "N/A";
     const date = new Date(isoString);
     return date.toLocaleString(undefined, {

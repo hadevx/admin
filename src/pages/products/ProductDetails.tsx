@@ -1,6 +1,6 @@
 import React from "react";
 import { useEffect, useState } from "react";
-import { useParams, Link, useNavigate } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import Layout from "../../Layout";
 import { toast } from "react-toastify";
 import Loader from "../../components/Loader";
@@ -20,21 +20,20 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Loader2Icon } from "lucide-react";
 
 function ProductDetails() {
   const [newName, setNewName] = useState("");
-  const [newPrice, setNewPrice] = useState();
+  const [newPrice, setNewPrice] = useState<number>();
   const [newImage, setNewImage] = useState("");
   const [newBrand, setNewBrand] = useState("");
   const [newCategory, setNewCategory] = useState("");
-  const [newCountInStock, setNewCountInStock] = useState();
+  const [newCountInStock, setNewCountInStock] = useState<number>();
   const [newDescription, setNewDescription] = useState("");
 
-  const { data: categoryTree } = useGetCategoriesTreeQuery();
+  const { data: categoryTree } = useGetCategoriesTreeQuery(undefined);
 
   const { id: productId } = useParams();
   const navigate = useNavigate();
@@ -42,8 +41,8 @@ function ProductDetails() {
   const { data: product, refetch, isLoading: loadingProduct } = useGetProductByIdQuery(productId);
   const [deleteProduct, { isLoading: loadingDeleteProduct }] = useDeleteProductMutation();
   const [updateProduct, { isLoading: loadingUpdateProduct }] = useUpdateProductMutation();
-  const { data: products, isLoading, error, refetch: refetchProducts } = useGetProductsQuery();
-  const [uploadProductImage, { isLoading: loadingUpload }] = useUploadProductImageMutation();
+  const { refetch: refetchProducts } = useGetProductsQuery(undefined);
+  const [uploadProductImage] = useUploadProductImageMutation();
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   useEffect(() => {
@@ -71,7 +70,7 @@ function ProductDetails() {
   console.log(categoryName);
 
   const handleUpdateProduct = async () => {
-    if (newPrice <= 0) {
+    if (newPrice && newPrice <= 0) {
       toast.error("Price must be a positive number");
       return;
     }
@@ -100,7 +99,7 @@ function ProductDetails() {
     }
   };
 
-  const uploadFileHandler = async (e) => {
+  const uploadFileHandler = async (e: any) => {
     const formData = new FormData();
     formData.append("image", e.target.files[0]);
 
@@ -108,7 +107,7 @@ function ProductDetails() {
       const res = await uploadProductImage(formData).unwrap();
       toast.success(res.message);
       setNewImage(res.image);
-    } catch (error) {
+    } catch (error: any) {
       toast.error(error?.data?.message || error?.error);
     }
   };
@@ -232,7 +231,7 @@ function ProductDetails() {
                   ) : (
                     <input
                       value={newPrice}
-                      onChange={(e) => setNewPrice(e.target.value)}
+                      onChange={(e) => setNewPrice(Number(e.target.value))}
                       className="w-full p-2 bg-gray-50 border rounded-lg shadow"
                     />
                   )}
@@ -256,7 +255,7 @@ function ProductDetails() {
                   ) : (
                     <input
                       value={newCountInStock}
-                      onChange={(e) => setNewCountInStock(e.target.value)}
+                      onChange={(e) => setNewCountInStock(Number(e.target.value))}
                       className="w-full p-2 bg-gray-50 border rounded-lg shadow"
                     />
                   )}
@@ -323,13 +322,13 @@ function ProductDetails() {
     </Layout>
   );
 }
-const findCategoryNameById = (id, nodes) => {
+const findCategoryNameById = (id: any, nodes: any) => {
   if (!id || !Array.isArray(nodes)) return null; // Return null if no id or nodes
 
   for (const node of nodes) {
     if (String(node._id) === String(id)) return node.name; // Coerce IDs to string for safety
     if (node.children) {
-      const result = findCategoryNameById(id, node.children);
+      const result: any = findCategoryNameById(id, node.children);
       if (result) return result;
     }
   }
@@ -338,8 +337,8 @@ const findCategoryNameById = (id, nodes) => {
   return null; // return null if not found
 };
 
-const renderCategoryOptions = (nodes, level = 0) =>
-  nodes.map((node) => (
+const renderCategoryOptions = (nodes: any, level = 0) =>
+  nodes.map((node: any) => (
     <React.Fragment key={node._id}>
       <option value={node._id}>
         {"⤷ ".repeat(level)} {node.name}

@@ -1,9 +1,15 @@
 import { TriangleAlert, ShieldCheck, CircleAlert, X, Lightbulb } from "lucide-react";
 import { motion } from "framer-motion";
-import { useState } from "react";
+import React, { useState } from "react";
 import clsx from "clsx";
 
-function Message({ dismiss = true, variant = "primary", children }) {
+type MyMessage = {
+  dismiss?: boolean;
+  variant?: string;
+  children: React.ReactNode;
+};
+
+function Message({ dismiss = true, variant = "primary", children }: MyMessage) {
   const [close, setClose] = useState(false);
   const handleClose = () => {
     setClose(true);

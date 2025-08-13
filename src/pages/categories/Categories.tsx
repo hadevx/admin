@@ -32,23 +32,19 @@ function Categories() {
   const [searchTerm, setSearchTerm] = useState("");
   const [categoryError, setCategoryError] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const {
-    data: products,
-    refetch: refetchProducts,
-    isLoading: loadingProducts,
-  } = useGetProductsQuery();
+  const { refetch: refetchProducts } = useGetProductsQuery(undefined);
   const [createCategory, { isLoading: isCreating }] = useCreateCategoryMutation();
   const [deleteCategory, { isLoading: isDeleting }] = useDeleteCategoryMutation();
   const {
     data: categories = [],
     refetch,
     isLoading: isLoadingCategories,
-  } = useGetCategoriesQuery();
+  } = useGetCategoriesQuery(undefined);
 
-  const { data: tree, refetch: refetchTree } = useGetCategoriesTreeQuery();
+  const { data: tree, refetch: refetchTree } = useGetCategoriesTreeQuery(undefined);
 
   console.log(tree);
-  const filteredCategories = categories.filter((cat) =>
+  const filteredCategories = categories.filter((cat: any) =>
     cat.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
@@ -59,7 +55,7 @@ function Categories() {
     }
 
     const isDuplicate = categories.some(
-      (c) => c.name.toLowerCase() === category.trim().toLowerCase()
+      (c: any) => c.name.toLowerCase() === category.trim().toLowerCase()
     );
 
     if (isDuplicate) {
@@ -84,7 +80,7 @@ function Categories() {
     }
   };
 
-  const handleDeleteCategory = async (id, name) => {
+  const handleDeleteCategory = async (id: any, name: any) => {
     setDeletingCategoryId(id);
     try {
       await deleteCategory({ name }).unwrap();
@@ -116,7 +112,7 @@ function Categories() {
           <div className="flex justify-between items-center">
             <h1 className="text-sm lg:text-2xl font-black flex gap-2 lg:gap-5 items-center">
               Categories:
-              <Badge icon={false}>
+              <Badge icon={"false"}>
                 <Boxes strokeWidth={1} />
                 {categories.length || 0} categories
               </Badge>
@@ -154,7 +150,7 @@ function Categories() {
                 </thead>
                 <tbody className="divide-y divide-gray-200 bg-white">
                   {filteredCategories.length > 0 ? (
-                    filteredCategories.map((cat) => (
+                    filteredCategories.map((cat: any) => (
                       <tr key={cat._id} className="font-bold transition-all duration-300">
                         <td className="px-4 py-5">{cat?.name}</td>
                         <td className="px-4 py-5">
@@ -218,7 +214,7 @@ function Categories() {
             value={parent}
             onChange={(e) => setParent(e.target.value)}>
             <option value="">No Parent (Main Category)</option>
-            {categories.map((cat) => (
+            {categories.map((cat: any) => (
               <option key={cat._id} value={cat._id}>
                 {cat.name}
               </option>
@@ -238,8 +234,13 @@ function Categories() {
     </Layout>
   );
 }
-const renderTreeRows = (nodes, level = 0) => {
-  return nodes.map((node) => (
+const renderTreeRows = (
+  nodes: any,
+  level = 0,
+  isDeleting: boolean,
+  handleDeleteCategory: (name: any) => void
+) => {
+  return nodes.map((node: any) => (
     <React.Fragment key={node._id}>
       <tr className="font-bold transition-all duration-300">
         <td className="px-4 py-5">
@@ -264,7 +265,7 @@ const renderTreeRows = (nodes, level = 0) => {
           </button>
         </td>
       </tr>
-      {node.children && renderTreeRows(node.children, level + 1)}
+      {node.children && renderTreeRows(node.children, level + 1, isDeleting, handleDeleteCategory)}
     </React.Fragment>
   ));
 };

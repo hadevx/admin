@@ -4,11 +4,13 @@ import App from "./App.jsx";
 import "./index.css";
 import { BrowserRouter } from "react-router-dom";
 import { Provider } from "react-redux";
-import store from "./redux/store.js";
+import store from "./redux/store.ts";
 import ToastWrapper from "./ToastWrapper";
-import ProvideProvider from "./ProvideProvider.js";
+// import ProvideProvider from "./ProvideProvider.js";
 
-createRoot(document.getElementById("root")).render(
+const rootElement = document.getElementById("root")!;
+
+createRoot(rootElement).render(
   <StrictMode>
     <Provider store={store}>
       <BrowserRouter>

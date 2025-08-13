@@ -1,9 +1,9 @@
-import { api } from "./api.js";
+import { api } from "./api.ts";
 
 const userApi = api.injectEndpoints({
-  endpoints: (builder) => ({
+  endpoints: (builder: any) => ({
     loginUser: builder.mutation({
-      query: (data) => ({
+      query: (data: any) => ({
         url: "/api/users/admin",
         method: "POST",
         body: data,
@@ -15,12 +15,12 @@ const userApi = api.injectEndpoints({
       }),
     }),
     getAddress: builder.query({
-      query: (userId) => ({
+      query: (userId: any) => ({
         url: `/api/users/address/${userId}`,
       }),
     }),
     getUserDetails: builder.query({
-      query: (userId) => ({
+      query: (userId: any) => ({
         url: `/api/users/${userId}`,
       }),
     }),
@@ -31,13 +31,13 @@ const userApi = api.injectEndpoints({
       }),
     }),
     deleteUser: builder.mutation({
-      query: (userId) => ({
+      query: (userId: any) => ({
         url: `/api/users/${userId}`,
         method: "DELETE",
       }),
     }),
     updateUser: builder.mutation({
-      query: (data) => ({
+      query: (data: any) => ({
         url: `/api/users/${data.userId}`,
         method: "PUT",
         body: data,

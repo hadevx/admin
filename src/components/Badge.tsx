@@ -1,6 +1,14 @@
-import { CircleCheck, TriangleAlert, Hourglass, Lightbulb, Crown, Clock } from "lucide-react";
+import { CircleCheck, TriangleAlert, Lightbulb, Crown, Clock } from "lucide-react";
 
-function Badge({ variant = "primary", children, icon = "true" }) {
+function Badge({
+  variant = "primary",
+  children,
+  icon = "true",
+}: {
+  variant?: string;
+  children: React.ReactNode;
+  icon?: string;
+}) {
   if (variant === "success") {
     return (
       <div className=" text-teal-600 text-xs   lg:text-sm shadow relative items-center  bg-teal-100/50   flex  px-2 py-1 rounded-lg    gap-1 font-semibold ">

@@ -5,14 +5,14 @@ import { toast } from "react-toastify";
 import { useGetDeliveryStatusQuery } from "../../redux/queries/productApi";
 import Spinner from "../../components/Spinner";
 import { Separator } from "../../components/ui/separator";
-import { Loader2Icon, TruckIcon, PackageIcon } from "lucide-react";
+import { Loader2Icon } from "lucide-react";
 
 function Delivery() {
   const [timeToDeliver, setTimeToDeliver] = useState("");
   const [shippingFee, setShippingFee] = useState("");
   const [minDeliveryCost, setMinDeliveryCost] = useState("");
 
-  const { data: deliveryStatus, refetch, isLoading } = useGetDeliveryStatusQuery();
+  const { data: deliveryStatus, refetch, isLoading } = useGetDeliveryStatusQuery(undefined);
   const [updateDelivery, { isLoading: loadingUpdateDelivery }] = useUpdateDeliverMutation();
 
   const handleUpdateDelivery = async () => {

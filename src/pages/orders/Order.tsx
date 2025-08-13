@@ -1,21 +1,43 @@
 import Layout from "../../Layout";
-import { Link, useNavigate } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { useState } from "react";
+import type { ChangeEvent } from "react";
 import Badge from "../../components/Badge";
 import { useGetOrdersQuery } from "../../redux/queries/orderApi";
 import { Layers, Search } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import Loader from "../../components/Loader";
-import { Loader2Icon } from "lucide-react";
+
+interface User {
+  _id: string;
+  name: string;
+}
+
+interface OrderItem {
+  productId: string;
+  quantity: number;
+}
+
+interface Order {
+  _id: string;
+  user: User;
+  orderItems: OrderItem[];
+  paymentMethod: string;
+  totalPrice: number;
+  shippingPrice: number;
+  createdAt: string;
+  isDelivered: boolean;
+  isCanceled: boolean;
+}
 
 function Order() {
   const navigate = useNavigate();
-  const { data: orders, isLoading } = useGetOrdersQuery();
+  const { data: orders, isLoading } = useGetOrdersQuery(undefined);
 
-  const [searchQuery, setSearchQuery] = useState("");
+  const [searchQuery, setSearchQuery] = useState<string>("");
 
   // Filtered orders based on the search query
-  const filteredOrders = orders?.filter((order) => {
+  const filteredOrders = orders?.filter((order: any) => {
     const query = searchQuery.toLowerCase();
     return (
       order._id.toLowerCase().includes(query) ||
@@ -23,8 +45,19 @@ function Order() {
       order.paymentMethod?.toLowerCase().includes(query)
     );
   });
-  const totalRevenue = filteredOrders?.reduce((acc, order) => acc + order.totalPrice, 0).toFixed(3);
-  const totalItems = filteredOrders?.reduce((acc, order) => acc + order.orderItems.length, 0);
+
+  const totalRevenue = filteredOrders
+    ?.reduce((acc: any, order: any) => acc + order.totalPrice, 0)
+    .toFixed(3);
+
+  const totalItems = filteredOrders?.reduce(
+    (acc: any, order: any) => acc + order.orderItems.length,
+    0
+  );
+
+  const handleSearchChange = (e: ChangeEvent<HTMLInputElement>) => {
+    setSearchQuery(e.target.value);
+  };
 
   return (
     <Layout>
@@ -37,7 +70,7 @@ function Order() {
             <div className="flex justify-between items-center flex-wrap gap-3">
               <h1 className="text-base lg:text-2xl font-black flex gap-2 lg:gap-5 items-center flex-wrap">
                 Orders:
-                <Badge icon={false}>
+                <Badge icon={"false"}>
                   <Layers />
                   {orders?.length > 0 ? orders.length : "0"} orders
                 </Badge>
@@ -57,7 +90,7 @@ function Order() {
                     type="text"
                     placeholder="Search by ID, Name, or Payment"
                     value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
+                    onChange={handleSearchChange}
                     className="w-full border bg-white border-gray-300 rounded-lg py-3 pl-10 pr-4 text-sm focus:outline-none focus:border-blue-500 focus:border-2"
                   />
                 </div>
@@ -74,7 +107,6 @@ function Order() {
                   </div>
                 </div>
               </div>
-              {/* ----- */}
 
               {/* Table wrapper with horizontal scroll on small screens */}
               <div className="rounded-lg border lg:p-10 bg-white overflow-x-auto">
@@ -91,8 +123,8 @@ function Order() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-200 bg-white">
-                    {filteredOrders?.length > 0 ? (
-                      filteredOrders.map((order) => (
+                    {filteredOrders?.length ? (
+                      filteredOrders.map((order: Order) => (
                         <tr
                           key={order._id}
                           className="cursor-pointer hover:bg-gray-100 transition-all duration-300 font-bold"
@@ -107,7 +139,7 @@ function Order() {
                             {order.createdAt.substring(0, 10)}
                           </td>
                           <td className="px-4 py-5 whitespace-nowrap">
-                            {order?.isDelivered ? (
+                            {order.isDelivered ? (
                               <p className="bg-teal-50 py-1 rounded-xl text-teal-600 text-center border-teal-100 border">
                                 Delivered
                               </p>
@@ -122,7 +154,7 @@ function Order() {
                             )}
                           </td>
                           <td className="px-4 py-5 whitespace-nowrap">
-                            {(Number(order?.totalPrice) + Number(order.shippingPrice)).toFixed(3)}
+                            {(Number(order.totalPrice) + Number(order.shippingPrice)).toFixed(3)}
                           </td>
                         </tr>
                       ))

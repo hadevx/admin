@@ -11,22 +11,24 @@ import Layout from "../../Layout";
 function ProductCreate() {
   const navigate = useNavigate();
   const [name, setName] = useState("");
-  const [price, setPrice] = useState();
+  const [price, setPrice] = useState<number>(0);
   const [image, setImage] = useState("");
   const [brand, setBrand] = useState("");
   const [category, setCategory] = useState("");
-  const [countInStock, setCountInStock] = useState();
+  const [countInStock, setCountInStock] = useState<number | string>();
   const [description, setDescription] = useState("");
 
-  const [uploadProductImage, { isLoading: loadingUpload }] = useUploadProductImageMutation();
+  const [uploadProductImage] = useUploadProductImageMutation();
   const [createProduct] = useCreateProductMutation();
-  const { data: categories, refetch } = useGetCategoriesQuery();
+  const { data: categories } = useGetCategoriesQuery(undefined);
 
-  const hnadleCreateProduct = async (e) => {
+  const hnadleCreateProduct = async (e: any) => {
     e.preventDefault();
-    if (price <= 0) {
-      toast.error("Price must be a positive number");
-      return;
+    if (price) {
+      if (price <= 0) {
+        toast.error("Price must be a positive number");
+        return;
+      }
     }
     if (!name || !price || !image || !category || !countInStock || !description) {
       toast.error("All fields are required");
@@ -46,13 +48,13 @@ function ProductCreate() {
     const result = await createProduct(newProduct);
 
     if (result.error) {
-      toast.error(result.error);
+      toast.error("Error");
     } else {
       toast.success("Product created");
       navigate("/admin/productlist");
     }
   };
-  const uploadFileHandler = async (e) => {
+  const uploadFileHandler = async (e: any) => {
     const formData = new FormData();
     formData.append("image", e.target.files[0]);
 
@@ -61,7 +63,7 @@ function ProductCreate() {
       toast.success(res.message);
       setImage(res.image);
       console.log(res);
-    } catch (error) {
+    } catch (error: any) {
       toast.error(error?.data.message || error?.error);
     }
   };
@@ -106,7 +108,7 @@ function ProductCreate() {
                   <input
                     type="number"
                     value={price}
-                    onChange={(e) => setPrice(e.target.value)}
+                    onChange={(e) => setPrice(Number(e.target.value) || 0)}
                     className="p-2 w-full shadow border rounded-md h-full bg-gray-100 bg-opacity-50 py-3 px-4  outline-0 focus:shadow-[0_0_0_4px_rgba(74,157,236,0.2)] focus:border-[#4A9DEC] focus:border"
                     placeholder="Product Price"
                   />
@@ -125,13 +127,13 @@ function ProductCreate() {
               <div>
                 <select
                   value={category}
-                  placeholder="Product Category"
+                  // placeholder="Product Category"
                   onChange={(e) => setCategory(e.target.value)}
                   className="p-2 w-full shadow border rounded-md h-full bg-gray-100 bg-opacity-50 py-3 px-4  outline-0 focus:shadow-[0_0_0_4px_rgba(74,157,236,0.2)] focus:border-[#4A9DEC] focus:border">
                   <option value="" disabled>
                     Select a category
                   </option>
-                  {categories?.map((category) => (
+                  {categories?.map((category: any) => (
                     <option value={category?.name}>{category?.name}</option>
                   ))}
                 </select>

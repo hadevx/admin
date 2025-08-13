@@ -148,7 +148,7 @@ const styles = StyleSheet.create({
   },
 });
 
-const Invoise = ({ order }) => {
+const Invoise = ({ order }: { order: any }) => {
   const storeName = useContext(StoreContext);
 
   if (!order) {
@@ -162,7 +162,7 @@ const Invoise = ({ order }) => {
   }
 
   const calculateSubtotal = () =>
-    order.orderItems.reduce((total, item) => total + item.qty * item.price, 0).toFixed(3);
+    order.orderItems.reduce((total: any, item: any) => total + item.qty * item.price, 0).toFixed(3);
 
   return (
     <Document>
@@ -225,7 +225,7 @@ const Invoise = ({ order }) => {
         </View>
 
         {/* Table Rows */}
-        {order.orderItems.map((item) => (
+        {order.orderItems.map((item: any) => (
           <View key={item._id} style={styles.tableRow}>
             <Text style={styles.colItem}>{item.name}</Text>
             <Text style={styles.colQty}>{item.qty}</Text>

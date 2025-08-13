@@ -1,6 +1,6 @@
 import clsx from "clsx";
 
-function Spinner({ className }) {
+function Spinner({ className }: { className: string }) {
   return (
     <div
       className={clsx(

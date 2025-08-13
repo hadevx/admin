@@ -21,20 +21,20 @@ function Login() {
   const [password, setPassword] = useState("");
 
   const navigate = useNavigate();
-  const [loginUser, { isLoading, error }] = useLoginUserMutation();
+  const [loginUser, { isLoading }] = useLoginUserMutation();
 
-  const handleLogin = async (e) => {
+  const handleLogin = async (e: any) => {
     e.preventDefault();
     try {
       if (!email || !password) {
         return toast.error("All fields are required");
       }
 
-      const res = await loginUser({ email, password }).unwrap();
+      const res: any = await loginUser({ email, password }).unwrap();
 
       dispatch(setUserInfo({ ...res }));
       navigate("/admin");
-    } catch (error) {
+    } catch (error: any) {
       if (error?.status === "FETCH_ERROR") {
         toast.error("Server is down. Please try again later.");
       } else {

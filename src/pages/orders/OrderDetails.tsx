@@ -1,4 +1,4 @@
-import { useRef } from "react";
+// import { useRef } from "react";
 import Layout from "../../Layout";
 import {
   useGetOrderQuery,
@@ -6,7 +6,7 @@ import {
   useUpdateOrderToCanceledMutation,
 } from "../../redux/queries/orderApi";
 import { useParams } from "react-router-dom";
-import { useGetDeliveryStatusQuery } from "../../redux/queries/productApi";
+// import { useGetDeliveryStatusQuery } from "../../redux/queries/productApi";
 import { toast } from "react-toastify";
 import Badge from "../../components/Badge";
 import clsx from "clsx";
@@ -18,8 +18,8 @@ import { Loader2Icon } from "lucide-react";
 
 function OrderDetails() {
   const { orderId } = useParams();
-  const { data: order, isLoading, error, refetch } = useGetOrderQuery(orderId);
-  const { data: deliveryStatus } = useGetDeliveryStatusQuery();
+  const { data: order, isLoading, refetch } = useGetOrderQuery(orderId);
+  // const { data: deliveryStatus } = useGetDeliveryStatusQuery(undefined);
   const [updateOrderToDeliverd] = useUpdateOrderToDeliverdMutation();
   const [updateOrderToCanceled, { isLoading: isCanceled }] = useUpdateOrderToCanceledMutation();
 
@@ -123,7 +123,7 @@ function OrderDetails() {
                         </tr>
                       </thead>
                       <tbody>
-                        {order?.orderItems.map((item) => (
+                        {order?.orderItems.map((item: any) => (
                           <tr key={item._id} className="border-b ">
                             <td className="py-2 px-2 lg:px-4">{item.name}</td>
                             <td className="py-2 px-2 lg:px-4">{item.qty}</td>

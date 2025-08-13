@@ -1,9 +1,8 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import Layout from "../../Layout";
 import clsx from "clsx";
 import { toast } from "react-toastify";
-import Spinner from "../../components/Spinner";
 import Loader from "../../components/Loader";
 import { Loader2Icon } from "lucide-react";
 import {
@@ -20,7 +19,6 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -32,16 +30,16 @@ function UserDetails() {
   const navigate = useNavigate();
 
   const { data: userOrders } = useGetUserOrdersQuery(userID);
-  const { data: user, isLoading: loadingUser, error } = useGetUserDetailsQuery(userID);
+  const { data: user, isLoading: loadingUser } = useGetUserDetailsQuery<any>(userID);
   const [updateUser] = useUpdateUserMutation();
   const [deleteUser, { isLoading: loadingDeleteUser }] = useDeleteUserMutation();
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const { data: userAddress, isLoading: loadingAddress } = useGetAddressQuery(userID);
-  const { refetch } = useGetUsersQuery();
+  const { data: userAddress, isLoading: loadingAddress } = useGetAddressQuery<any>(userID);
+  const { refetch } = useGetUsersQuery(undefined);
 
   const handleDeleteUser = async () => {
     try {
-      if (user?.isAdmin) {
+      if (user && (user as any)?.isAdmin) {
         toast.error("Cannot delete an admin user.");
         return;
       }
@@ -51,7 +49,7 @@ function UserDetails() {
 
       refetch();
       navigate("/admin/userlist");
-    } catch (error) {
+    } catch (error: any) {
       const errorMsg =
         error?.data?.message || error?.message || "An error occurred while deleting the user.";
       toast.error(errorMsg);
@@ -172,7 +170,7 @@ function UserDetails() {
             </div>
 
             <div className="flex flex-col gap-5">
-              {userOrders?.map((order) => (
+              {userOrders?.map((order: any) => (
                 <div
                   key={order._id}
                   className="flex w-[300px] lg:w-4xl  flex-col hover:bg-gray-100 transition-all duration-300 gap-5 border bg-white p-4  shadow-md rounded-lg">

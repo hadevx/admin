@@ -1,43 +1,33 @@
 import Layout from "../../Layout";
-import { Link, useParams, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
-import { addDays, format } from "date-fns";
 import { useGetUsersQuery } from "../../redux/queries/userApi";
-import { Check, X, Plus, Search, Crown } from "lucide-react";
-import Paginate from "../../components/Paginate";
+import { Search, Crown } from "lucide-react";
 import { Users } from "lucide-react";
 import Badge from "../../components/Badge";
 import { Separator } from "../../components/ui/separator";
 import Loader from "../../components/Loader";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
-} from "@/components/ui/dialog";
 
 function Customers() {
   const [searchQuery, setSearchQuery] = useState("");
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const { data, isLoading, error, refetch } = useGetUsersQuery();
-  console.log(data);
+  // const [isModalOpen, setIsModalOpen] = useState(false);
+  const { data, isLoading } = useGetUsersQuery<any>(undefined);
+
   const navigate = useNavigate();
   const [filteredUsers, setFilteredUsers] = useState([]);
 
   useEffect(() => {
     if (data) {
-      const filtered = data.filter((user) =>
+      const filtered = data.filter((user: any) =>
         user.email.toLowerCase().includes(searchQuery.toLowerCase())
       );
       setFilteredUsers(filtered);
     }
   }, [data, searchQuery]);
 
-  const handleAdd = () => {
+  /*   const handleAdd = () => {
     setIsModalOpen(true);
-  };
+  }; */
   return (
     <Layout>
       {isLoading ? (
@@ -48,7 +38,7 @@ function Customers() {
             <div className="flex justify-between items-center ">
               <h1 className=" text-sm lg:text-2xl font-black flex gap-2 lg:gap-5 items-center">
                 Users:{" "}
-                <Badge icon={false}>
+                <Badge icon={"false"}>
                   <Users strokeWidth={1} />
                   {data?.length > 0 ? data?.length : "0"} users
                 </Badge>
@@ -83,7 +73,7 @@ function Customers() {
                   </thead>
                   <tbody className="divide-y divide-gray-200 bg-white">
                     {filteredUsers.length > 0 ? (
-                      filteredUsers.map((user) => (
+                      filteredUsers.map((user: any) => (
                         <tr
                           className="cursor-pointer hover:bg-gray-100 transition-all duration-300 font-bold"
                           onClick={() => navigate(`/admin/userlist/${user._id}`)}>
