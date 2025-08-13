@@ -162,7 +162,7 @@ function SideMenu() {
       </button>
 
       {/* Desktop sidebar (unchanged) */}
-      <div className="hidden lg:flex">{menuContent}</div>
+      <div className="hidden lg:flex z-50">{menuContent}</div>
 
       {/* Mobile menu drawer */}
       {isMenuOpen && (

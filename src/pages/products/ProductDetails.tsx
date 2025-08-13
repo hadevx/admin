@@ -133,7 +133,7 @@ function ProductDetails() {
             </button>
           </div>
           <Separator className="my-4 bg-black/20" />
-          <div className="bg-white w-4xl border rounded-xl p-6 space-y-6">
+          <div className="bg-white lg:w-4xl border rounded-xl p-6 space-y-6">
             <div className="flex justify-between items-center">
               <h2 className="text-xl font-semibold">{product?.name}</h2>
               <div className="flex items-center gap-3">
@@ -157,13 +157,13 @@ function ProductDetails() {
 
             <Separator />
 
-            <div className="flex flex-col lg:flex-row gap-8">
-              <div className="flex-shrink-0">
+            <div className="flex  flex-col lg:flex-row gap-8">
+              <div className="flex-shrink-0 h-72 lg:h-auto ">
                 {!clickEditProduct ? (
                   <img
                     src={product?.image}
                     alt="Product"
-                    className="w-64 h-64 object-cover rounded-lg"
+                    className="w-full h-full lg:w-64 lg:h-64 object-cover rounded-lg"
                   />
                 ) : (
                   <div className="space-y-2">
@@ -177,7 +177,7 @@ function ProductDetails() {
                 )}
               </div>
 
-              <div className="flex-1 grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <div className="flex-1 grid grid-cols-3 lg:grid-cols-2 gap-6">
                 {/* Name */}
                 <div>
                   <label className="text-gray-600">Name:</label>
@@ -274,7 +274,7 @@ function ProductDetails() {
                 </div>
 
                 {/* Description */}
-                <div className="lg:col-span-2">
+                <div className="col-span-3 lg:col-span-2">
                   <label className="text-gray-600">Description:</label>
                   {!clickEditProduct ? (
                     <p className="font-bold">{product?.description}</p>

@@ -12,7 +12,6 @@ import Categories from "./pages/categories/Categories";
 import "react-toastify/dist/ReactToastify.css";
 import Settings from "./pages/settings/Settings";
 import ProductDetails from "./pages/products/ProductDetails";
-import ProductCreate from "./pages/products/ProductCreate";
 
 function App() {
   return (
@@ -33,10 +32,7 @@ function App() {
           path="/admin/productlist/:id"
           element={<AdminRoute element={<ProductDetails />} />}
         />
-        <Route
-          path="/admin/productlist/product-create"
-          element={<AdminRoute element={<ProductCreate />} />}
-        />
+
         <Route path="/admin/discounts" element={<AdminRoute element={<Discounts />} />} />
         <Route path="/admin/settings" element={<AdminRoute element={<Settings />} />} />
         <Route path="/admin/categories" element={<AdminRoute element={<Categories />} />} />

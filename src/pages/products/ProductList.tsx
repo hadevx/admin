@@ -24,28 +24,6 @@ import {
 import { Button } from "@/components/ui/button";
 import { toast } from "react-toastify";
 
-interface Product {
-  _id: string;
-  name: string;
-  price: number;
-  image: string;
-  brand?: string;
-  category: string;
-  countInStock: number;
-  description: string;
-}
-
-interface CategoryNode {
-  _id: string;
-  name: string;
-  children?: CategoryNode[];
-}
-
-interface Discount {
-  category: string[];
-  discountBy: number;
-}
-
 function ProductList() {
   const [selectedCategory, setSelectedCategory] = useState<string>("");
   const [minPrice, setMinPrice] = useState<string>("");
@@ -53,7 +31,7 @@ function ProductList() {
   const [stockStatus, setStockStatus] = useState<string>("");
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
-  const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
+  const [filteredProducts, setFilteredProducts] = useState<any>([]);
 
   const navigate = useNavigate();
 
@@ -64,37 +42,37 @@ function ProductList() {
 
   useEffect(() => {
     if (products) {
-      let filtered: Product[] = [...products];
+      let filtered: any = [...products];
 
       // Search
       if (searchQuery) {
-        filtered = filtered.filter((product) =>
+        filtered = filtered.filter((product: any) =>
           product.name.toLowerCase().includes(searchQuery.toLowerCase())
         );
       }
 
       // Category
       if (selectedCategory) {
-        filtered = filtered.filter((product) => product.category === selectedCategory);
+        filtered = filtered.filter((product: any) => product.category === selectedCategory);
       }
 
       // Price Range
       if (minPrice !== "") {
-        filtered = filtered.filter((product) => product.price >= parseFloat(minPrice));
+        filtered = filtered.filter((product: any) => product.price >= parseFloat(minPrice));
       }
       if (maxPrice !== "") {
-        filtered = filtered.filter((product) => product.price <= parseFloat(maxPrice));
+        filtered = filtered.filter((product: any) => product.price <= parseFloat(maxPrice));
       }
 
       // Stock
       if (stockStatus === "in-stock") {
-        filtered = filtered.filter((product) => product.countInStock >= 5);
+        filtered = filtered.filter((product: any) => product.countInStock >= 5);
       } else if (stockStatus === "low-stock") {
         filtered = filtered.filter(
-          (product) => product.countInStock > 0 && product.countInStock < 5
+          (product: any) => product.countInStock > 0 && product.countInStock < 5
         );
       } else if (stockStatus === "out-of-stock") {
-        filtered = filtered.filter((product) => product.countInStock === 0);
+        filtered = filtered.filter((product: any) => product.countInStock === 0);
       }
 
       setFilteredProducts(filtered);
@@ -174,12 +152,12 @@ function ProductList() {
       {loadingProducts ? (
         <Loader />
       ) : (
-        <div className="lg:px-4 flex w-full lg:w-4xl min-h-screen lg:min-h-auto justify-between py-3 mt-[50px] px-2 lg:ml-[50px]">
+        <div className=" flex w-full lg:w-4xl min-h-screen lg:min-h-auto justify-between py-3 mt-[50px] px-4 lg:ml-[50px]">
           <div className="w-full">
             <div className="flex justify-between items-center">
-              <h1 className="text-sm lg:text-2xl font-black flex gap-2 lg:gap-5 items-center">
+              <h1 className="text-lg lg:text-2xl font-black flex gap-2 lg:gap-5 items-center">
                 Products:
-                <Badge icon={"false"}>
+                <Badge icon={false}>
                   <Box />
                   {products?.length ?? 0} products
                 </Badge>
@@ -217,7 +195,7 @@ function ProductList() {
                     onChange={(e) => setSelectedCategory(e.target.value)}
                     className="border bg-white border-gray-300 rounded-lg p-2 text-sm">
                     <option value="">All Categories</option>
-                    {categories?.map((cat: CategoryNode) => (
+                    {categories?.map((cat: any) => (
                       <option key={cat._id} value={cat._id}>
                         {cat.name}
                       </option>
@@ -254,7 +232,7 @@ function ProductList() {
               </div>
 
               {/* Table */}
-              <div className="rounded-lg border lg:p-10 bg-white overflow-x-auto">
+              <div className="rounded-lg mb-10 border lg:p-10 bg-white overflow-x-auto">
                 <table className="w-full min-w-[700px] border-gray-200 text-sm text-left text-gray-700">
                   <thead className="bg-white text-gray-900/50 font-semibold">
                     <tr>
@@ -267,7 +245,7 @@ function ProductList() {
                   </thead>
                   <tbody className="divide-y divide-gray-200 bg-white">
                     {filteredProducts.length > 0 ? (
-                      filteredProducts.map((product) => (
+                      filteredProducts.map((product: any) => (
                         <tr
                           key={product._id}
                           className="hover:bg-gray-100 cursor-pointer transition-all duration-300 font-bold"
@@ -341,7 +319,7 @@ function ProductList() {
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Add Category</DialogTitle>
+            <DialogTitle>Add Product</DialogTitle>
           </DialogHeader>
           <input
             type="file"
@@ -406,8 +384,8 @@ function ProductList() {
   );
 }
 
-const renderCategoryOptions = (nodes: CategoryNode[], level = 0): JSX.Element[] => {
-  return nodes.flatMap((node) => [
+const renderCategoryOptions = (nodes: any, level = 0): JSX.Element[] => {
+  return nodes.flatMap((node: any) => [
     <option key={node._id} value={node._id}>
       {"‣ ".repeat(level)}
       {node.name}
@@ -416,7 +394,7 @@ const renderCategoryOptions = (nodes: CategoryNode[], level = 0): JSX.Element[] 
   ]);
 };
 
-const findCategoryNameById = (id: string, nodes?: CategoryNode[]): string => {
+const findCategoryNameById = (id: string, nodes?: any): string => {
   if (!nodes || !id) return "---";
   for (const node of nodes) {
     if (node._id === id) return node.name;
@@ -428,7 +406,7 @@ const findCategoryNameById = (id: string, nodes?: CategoryNode[]): string => {
   return "---";
 };
 
-const getDiscountForCategory = (categoryName: string, discounts?: Discount[]): number => {
+const getDiscountForCategory = (categoryName: string, discounts?: any): number => {
   if (!discounts || !Array.isArray(discounts)) return 0;
   const discountEntry = discounts.find((d) => d.category.includes(categoryName));
   return discountEntry ? discountEntry.discountBy : 0;

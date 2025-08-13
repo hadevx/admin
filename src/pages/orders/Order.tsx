@@ -8,71 +8,63 @@ import { Layers, Search } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import Loader from "../../components/Loader";
 
-interface User {
-  _id: string;
-  name: string;
-}
-
-interface OrderItem {
-  productId: string;
-  quantity: number;
-}
-
-interface Order {
-  _id: string;
-  user: User;
-  orderItems: OrderItem[];
-  paymentMethod: string;
-  totalPrice: number;
-  shippingPrice: number;
-  createdAt: string;
-  isDelivered: boolean;
-  isCanceled: boolean;
-}
-
 function Order() {
   const navigate = useNavigate();
-  const { data: orders, isLoading } = useGetOrdersQuery(undefined);
+  const { data: orders, isLoading, isError } = useGetOrdersQuery<any>(undefined);
 
   const [searchQuery, setSearchQuery] = useState<string>("");
 
   // Filtered orders based on the search query
-  const filteredOrders = orders?.filter((order: any) => {
-    const query = searchQuery.toLowerCase();
-    return (
-      order._id.toLowerCase().includes(query) ||
-      order.user?.name?.toLowerCase().includes(query) ||
-      order.paymentMethod?.toLowerCase().includes(query)
-    );
-  });
+  const filteredOrders = orders
+    ? orders.filter((order: any) => {
+        const query = searchQuery.toLowerCase();
+        return (
+          order._id.toLowerCase().includes(query) ||
+          order.user?.name?.toLowerCase().includes(query) ||
+          order.paymentMethod?.toLowerCase().includes(query)
+        );
+      })
+    : [];
 
-  const totalRevenue = filteredOrders
+  /* const totalRevenue = filteredOrders
     ?.reduce((acc: any, order: any) => acc + order.totalPrice, 0)
     .toFixed(3);
 
   const totalItems = filteredOrders?.reduce(
     (acc: any, order: any) => acc + order.orderItems.length,
     0
-  );
+  ); */
+  const totalRevenue = filteredOrders.length
+    ? filteredOrders.reduce((acc: any, order: any) => acc + order.totalPrice, 0).toFixed(3)
+    : "0.000";
+
+  const totalItems = filteredOrders.length
+    ? filteredOrders.reduce((acc: any, order: any) => acc + order.orderItems.length, 0)
+    : 0;
 
   const handleSearchChange = (e: ChangeEvent<HTMLInputElement>) => {
     setSearchQuery(e.target.value);
   };
+
+  if (isError) {
+    return <p className="text-red-500">Something went wrong while fetching orders.</p>;
+  }
+  console.log({ orders, filteredOrders, isLoading, isError });
 
   return (
     <Layout>
       {isLoading ? (
         <Loader />
       ) : (
-        <div className="lg:px-4 flex flex-col w-full min-h-screen lg:min-h-auto py-3 mt-[50px] px-2 lg:ml-[50px]">
+        <div className="px-4 flex flex-col w-full min-h-screen lg:min-h-auto py-3 mt-[50px]  lg:ml-[50px]">
           {/* Header */}
           <div className="w-full">
             <div className="flex justify-between items-center flex-wrap gap-3">
               <h1 className="text-base lg:text-2xl font-black flex gap-2 lg:gap-5 items-center flex-wrap">
                 Orders:
-                <Badge icon={"false"}>
+                <Badge icon={false}>
                   <Layers />
-                  {orders?.length > 0 ? orders.length : "0"} orders
+                  {orders?.length > 0 ? orders?.length : "0"} orders
                 </Badge>
               </h1>
             </div>
@@ -124,26 +116,28 @@ function Order() {
                   </thead>
                   <tbody className="divide-y divide-gray-200 bg-white">
                     {filteredOrders?.length ? (
-                      filteredOrders.map((order: Order) => (
+                      filteredOrders?.map((order: any) => (
                         <tr
-                          key={order._id}
+                          key={order?._id}
                           className="cursor-pointer hover:bg-gray-100 transition-all duration-300 font-bold"
-                          onClick={() => navigate(`/admin/orders/${order._id}`)}>
+                          onClick={() => navigate(`/admin/orders/${order?._id}`)}>
                           <td className="px-4 py-5 max-w-20 truncate whitespace-nowrap">
                             #{order._id}
                           </td>
-                          <td className="px-4 py-5 whitespace-nowrap">{order.user.name}</td>
-                          <td className="px-4 py-5 whitespace-nowrap">{order.paymentMethod}</td>
-                          <td className="px-4 py-5 whitespace-nowrap">{order.orderItems.length}</td>
+                          <td className="px-4 py-5 whitespace-nowrap">{order?.user?.name}</td>
+                          <td className="px-4 py-5 whitespace-nowrap">{order?.paymentMethod}</td>
                           <td className="px-4 py-5 whitespace-nowrap">
-                            {order.createdAt.substring(0, 10)}
+                            {order?.orderItems?.length}
                           </td>
                           <td className="px-4 py-5 whitespace-nowrap">
-                            {order.isDelivered ? (
+                            {order?.createdAt.substring(0, 10)}
+                          </td>
+                          <td className="px-4 py-5 whitespace-nowrap">
+                            {order?.isDelivered ? (
                               <p className="bg-teal-50 py-1 rounded-xl text-teal-600 text-center border-teal-100 border">
                                 Delivered
                               </p>
-                            ) : order.isCanceled ? (
+                            ) : order?.isCanceled ? (
                               <p className="bg-rose-50 py-1 rounded-xl text-rose-600 text-center border-orange-100 border">
                                 Canceled
                               </p>
@@ -154,7 +148,7 @@ function Order() {
                             )}
                           </td>
                           <td className="px-4 py-5 whitespace-nowrap">
-                            {(Number(order.totalPrice) + Number(order.shippingPrice)).toFixed(3)}
+                            {(Number(order?.totalPrice) + Number(order?.shippingPrice)).toFixed(3)}
                           </td>
                         </tr>
                       ))

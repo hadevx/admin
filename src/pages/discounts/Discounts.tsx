@@ -92,7 +92,7 @@ function Discounts() {
       {loadingCategories ? (
         <Loader />
       ) : (
-        <div className="px-2 w-full lg:w-4xl min-h-screen lg:min-h-auto lg:px-4 lg:py-6 mt-[50px] lg:ml-[50px] space-y-8">
+        <div className="px-4 w-full lg:w-4xl min-h-screen lg:min-h-auto lg:px-4 lg:py-6 mt-[50px] lg:ml-[50px] space-y-8">
           {/* Discounts Section */}
           <section className="max-w-4xl mx-auto w-full">
             <div className="flex mt-5 lg:mt-0 justify-between items-center ">

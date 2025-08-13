@@ -3,11 +3,11 @@ import { CircleCheck, TriangleAlert, Lightbulb, Crown, Clock } from "lucide-reac
 function Badge({
   variant = "primary",
   children,
-  icon = "true",
+  icon = true,
 }: {
   variant?: string;
   children: React.ReactNode;
-  icon?: string;
+  icon?: boolean;
 }) {
   if (variant === "success") {
     return (
