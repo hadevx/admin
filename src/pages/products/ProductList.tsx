@@ -1,5 +1,5 @@
-import React, { useEffect, useState, type ChangeEvent, type JSX } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useEffect, useState, type ChangeEvent, type JSX } from "react";
+import { useNavigate } from "react-router-dom";
 import Layout from "../../Layout";
 import {
   useGetProductsQuery,
