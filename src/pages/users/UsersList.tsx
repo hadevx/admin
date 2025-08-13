@@ -38,7 +38,7 @@ function Customers() {
             <div className="flex justify-between items-center ">
               <h1 className=" text-sm lg:text-2xl font-black flex gap-2 lg:gap-5 items-center">
                 Users:{" "}
-                <Badge icon={"false"}>
+                <Badge icon={false}>
                   <Users strokeWidth={1} />
                   {data?.length > 0 ? data?.length : "0"} users
                 </Badge>
