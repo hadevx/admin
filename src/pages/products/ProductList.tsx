@@ -159,7 +159,9 @@ function ProductList() {
                 Products:
                 <Badge icon={false}>
                   <Box />
-                  {products?.length ?? 0} products
+                  <p className="text-lg lg:text-sm">
+                    {products?.length ?? 0} <span className="hidden lg:inline">products</span>
+                  </p>
                 </Badge>
               </h1>
               <button

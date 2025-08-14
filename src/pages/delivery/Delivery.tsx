@@ -43,7 +43,7 @@ function Delivery() {
               <select
                 onChange={(e) => setTimeToDeliver(e.target.value)}
                 value={timeToDeliver}
-                className="cursor-pointer px-4 py-2 border rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 w-full">
+                className="cursor-pointer  px-4 py-2 border rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 w-full">
                 <option value="" disabled>
                   Choose time to deliver
                 </option>

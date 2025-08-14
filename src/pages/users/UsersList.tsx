@@ -33,14 +33,17 @@ function Customers() {
       {isLoading ? (
         <Loader />
       ) : (
-        <div className="lg:px-4 w-full min-h-screen lg:min-h-auto flex text-xs lg:text-lg  justify-between py-3 mt-[50px] px-2 lg:ml-[50px]  ">
+        <div className="lg:px-4  w-full min-h-screen lg:min-h-auto flex text-xs lg:text-lg  justify-between py-3 mt-[50px] px-4 lg:ml-[50px]  ">
           <div className="w-full">
             <div className="flex justify-between items-center ">
-              <h1 className=" text-sm lg:text-2xl font-black flex gap-2 lg:gap-5 items-center">
+              <h1 className=" text-lg lg:text-2xl font-black flex gap-2 lg:gap-5 items-center">
                 Users:{" "}
                 <Badge icon={false}>
                   <Users strokeWidth={1} />
-                  {data?.length > 0 ? data?.length : "0"} users
+                  <p className="text-lg lg:text-sm">
+                    {data?.length > 0 ? data?.length : "0"}{" "}
+                    <span className="hidden lg:inline">users</span>
+                  </p>
                 </Badge>
               </h1>
             </div>

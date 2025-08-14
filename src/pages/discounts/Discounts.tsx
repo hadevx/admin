@@ -12,6 +12,7 @@ import { Separator } from "../../components/ui/separator";
 import { Trash2, Plus } from "lucide-react";
 import { Link } from "react-router-dom";
 import Loader from "../../components/Loader";
+import Coupon from "../../components/Coupon";
 
 interface Category {
   _id: string;
@@ -92,7 +93,7 @@ function Discounts() {
       {loadingCategories ? (
         <Loader />
       ) : (
-        <div className="px-4 w-full lg:w-4xl min-h-screen lg:min-h-auto lg:px-4 lg:py-6 mt-[50px] lg:ml-[50px] space-y-8">
+        <div className="px-4 w-full lg:w-4xl min-h-screen lg:min-h-auto lg:px-4 lg:py-6 mt-[50px] lg:ml-[50px] space-y-5">
           {/* Discounts Section */}
           <section className="max-w-4xl mx-auto w-full">
             <div className="flex mt-5 lg:mt-0 justify-between items-center ">
@@ -191,51 +192,20 @@ function Discounts() {
             <h1 className="text-lg lg:text-lg font-bold mb-4">Current Discounts</h1>
             <Separator className="my-3 bg-black/20" />
             {discountStatus && discountStatus.length > 0 ? (
-              <div className="flex flex-wrap flex-col gap-6 w-full lg:w-4xl">
+              <div className="flex flex-wrap gap-6">
                 {discountStatus.map((d: Discount) => (
-                  <div
-                    key={d._id}
-                    className="relative lg:w-full bg-white rounded-xl shadow-lg border-2 border-dashed border-blue-500 p-6 flex flex-col gap-4">
-                    {/* Coupon Header */}
-                    <div className="flex items-center justify-between">
-                      <span className="text-2xl font-extrabold text-blue-600">
-                        {d.discountBy * 100}% OFF
-                      </span>
-                      <button
-                        onClick={() => handleDeleteDiscount(d._id)}
-                        disabled={loadingDelete}
-                        aria-label="Delete coupon"
-                        title="Delete coupon"
-                        className="text-red-600 hover:text-red-800 transition-colors">
-                        <Trash2 size={24} />
-                      </button>
-                    </div>
-
-                    {/* Categories */}
-                    <p className="text-gray-700 font-semibold">
-                      Categories:{" "}
-                      {d.category.length === 0 ? (
-                        <span className="italic text-gray-400">No categories</span>
-                      ) : (
-                        d.category.map((cat, i) => (
-                          <span key={cat}>
-                            {cat.charAt(0).toUpperCase() + cat.slice(1)}
-                            {i !== d.category.length - 1 ? ", " : ""}
-                          </span>
-                        ))
-                      )}
-                    </p>
-
-                    {/* Coupon cutout effect bottom */}
-                    <div
-                      aria-hidden="true"
-                      className="absolute bottom-0 left-0 right-0 h-6 bg-white border-t-2 border-white rounded-b-xl"
-                      style={{
-                        clipPath:
-                          "polygon(0 0, 10% 100%, 20% 0, 30% 100%, 40% 0, 50% 100%, 60% 0, 70% 100%, 80% 0, 90% 100%, 100% 0, 100% 100%, 0 100%)",
-                      }}
-                    />
-                  </div>
+                  <Coupon
+                    discountBy={d.discountBy}
+                    categories={d.category}
+                    validUntil="Dec, 2025"
+                    id={d._id}>
+                    <button
+                      onClick={() => handleDeleteDiscount(d._id)}
+                      disabled={loadingDelete}
+                      className="bg-gray-600 text-white  rounded-full p-2">
+                      <Trash2 size={18} />
+                    </button>
+                  </Coupon>
                 ))}
               </div>
             ) : (

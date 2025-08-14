@@ -110,11 +110,13 @@ function Categories() {
       ) : (
         <div className="px-4 py-3 mt-[50px] lg:ml-[50px] w-full lg:w-4xl min-h-screen lg:min-h-auto">
           <div className="flex justify-between items-center">
-            <h1 className="text-lg lg:text-2xl font-black flex gap-2 lg:gap-5 items-center">
+            <h1 className="text-lg  lg:text-2xl font-black flex gap-2 lg:gap-5 items-center">
               Categories:
               <Badge icon={false}>
                 <Boxes strokeWidth={1} />
-                {categories.length || 0} categories
+                <p className="text-lg lg:text-sm">
+                  {categories.length || 0} <span className="hidden lg:inline">categories</span>
+                </p>
               </Badge>
             </h1>
             <button

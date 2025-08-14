@@ -45,7 +45,7 @@ function Settings() {
 
   return (
     <Layout>
-      <div className="px-4 w-full min-h-screen lg:w-4xl lg:min-h-auto text-lg py-6 mt-[50px] lg:ml-[50px] space-y-10">
+      <div className="px-4 w-full min-h-screen lg:w-4xl lg:min-h-auto text-lg py-6 mt-[50px] lg:ml-[50px] space-y-5">
         {/* Update Section */}
         <section>
           <div className="flex items-center gap-2 mb-2">

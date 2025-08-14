@@ -45,7 +45,7 @@ function SideMenu() {
 
   // Your exact menu content JSX (same as desktop)
   const menuContent = (
-    <div className="flex flex-col h-full text-black px-2 lg:px-[2rem] py-[2rem]  border-r-[2px] w-64 lg:w-auto min-h-screen">
+    <div className="flex flex-col h-full text-black px-2 lg:px-[2rem] py-[2rem]  border-r-[2px] w-64 lg:w-auto min-h-screen ">
       <div className="mt-10  flex items-center gap-2  p-2">
         <div className="rounded-full   select-none border-2 border-gray-400 hover:border-gray-900 size-12  flex justify-center items-center transition">
           <div className="rounded-full hover:opacity-80  bg-gradient-to-r shadow-md from-zinc-600 to-zinc-800 text-white size-10  flex justify-center items-center font-semibold text-lg">
@@ -62,7 +62,7 @@ function SideMenu() {
 
       <Separator className="my-4 bg-black/20" />
 
-      <div className="flex flex-col justify-between h-full">
+      <div className="flex flex-col lg:justify-between h-full">
         <div className="flex flex-col gap-3 overflow-auto max-h-[calc(100vh-320px)]">
           <Link
             to="/admin"
@@ -140,7 +140,7 @@ function SideMenu() {
           <Separator className="my-4 bg-black/20" />
           <button
             onClick={handleLogout}
-            className="items-center cursor-pointer transition-all duration-100 w-full flex gap-3 bg-gradient-to-t hover:from-rose-500 hover:to-rose-400 hover:text-white text-black px-3 py-2 rounded-lg hover:shadow-md">
+            className="items-center hover:font-bold cursor-pointer transition-all duration-100 w-full flex gap-3 bg-gradient-to-t hover:from-rose-500 hover:to-rose-400 hover:text-white text-black px-3 py-2 rounded-lg hover:shadow-md">
             <LogOut strokeWidth={1} />
             <p className="">Logout</p>
           </button>

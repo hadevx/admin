@@ -60,11 +60,14 @@ function Order() {
           {/* Header */}
           <div className="w-full">
             <div className="flex justify-between items-center flex-wrap gap-3">
-              <h1 className="text-base lg:text-2xl font-black flex gap-2 lg:gap-5 items-center flex-wrap">
+              <h1 className="text-lg lg:text-2xl font-black flex gap-2 lg:gap-5 items-center flex-wrap">
                 Orders:
                 <Badge icon={false}>
                   <Layers />
-                  {orders?.length > 0 ? orders?.length : "0"} orders
+                  <p className="text-lg lg:text-sm">
+                    {orders?.length > 0 ? orders?.length : "0"}{" "}
+                    <span className="hidden lg:inline">orders</span>
+                  </p>
                 </Badge>
               </h1>
             </div>
