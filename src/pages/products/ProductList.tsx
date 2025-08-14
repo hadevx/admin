@@ -152,7 +152,7 @@ function ProductList() {
       {loadingProducts ? (
         <Loader />
       ) : (
-        <div className=" flex w-full lg:w-4xl min-h-screen lg:min-h-auto justify-between py-3 mt-[50px] px-4 lg:ml-[50px]">
+        <div className=" flex w-full mb-10 lg:w-4xl min-h-screen lg:min-h-auto justify-between py-3 mt-[50px] px-4 lg:ml-[50px]">
           <div className="w-full">
             <div className="flex justify-between items-center">
               <h1 className="text-lg lg:text-2xl font-black flex gap-2 lg:gap-5 items-center">
@@ -190,7 +190,7 @@ function ProductList() {
                   />
                 </div>
 
-                <div className="grid grid-cols-4 lg:grid-cols-4 gap-2 lg:gap-4">
+                <div className="grid  w-full grid-cols-4 gap-2 lg:gap-4">
                   {/* Category Filter */}
                   <select
                     value={selectedCategory}
@@ -252,7 +252,7 @@ function ProductList() {
                           key={product._id}
                           className="hover:bg-gray-100 cursor-pointer transition-all duration-300 font-bold"
                           onClick={() => navigate(`/admin/productlist/${product._id}`)}>
-                          <td className="px-4 py-3 flex items-center gap-4 max-w-64">
+                          <td className="px-4 py-3 flex items-center gap-2 max-w-64">
                             <img
                               className="w-16"
                               src={product.image}

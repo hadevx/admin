@@ -39,80 +39,90 @@ function OrderDetails() {
       refetch();
     }
   };
-  console.log(order);
-  console.log(Number(order?.totalPrice));
+
   return (
     <Layout>
       {isLoading ? (
         <Loader />
       ) : (
-        <div className="px-0 py-6   lg:w-[1000px] lg:py-3 lg:mt-[50px] ml-0 lg:ml-[50px] ">
+        <div className=" mb-10 mt-[50px] min-h-screen  w-full lg:w-4xl lg:py-3 lg:mt-[50px]  lg:ml-[50px] ">
           <div className="container mx-auto px-4 py-6">
-            <div className="">
-              <h1 className="text-sm lg:text-2xl font-bold">Order details:</h1>
-              <Separator className="my-4 bg-black/20" />
-            </div>
-            <div className="flex mb-2 lg:text-sm text-xs  gap-2 justify-start items-start lg:justify-end lg:items-center  ">
-              <button
-                disabled={order?.isDelivered}
-                onClick={handleUpdateOrderToDelivered}
-                className={clsx(
-                  "select-none mt-5 hover:opacity-70   transition-all duration-300  lg:float-right bg-gradient-to-t p-1   lg:px-3 lg:py-2 rounded-lg font-bold shadow",
-                  order?.isDelivered
-                    ? "from-gray-200 to-gray-200 text-gray-600"
-                    : "from-teal-500 to-teal-400 text-white"
-                )}>
-                Mark as delivered
-              </button>
-              {isCanceled ? (
-                <Loader2Icon className="animate-spin" />
-              ) : (
+            <div className="flex gap-2 flex-col lg:flex-row  justify-between lg:items-center">
+              <h1 className="text-lg  lg:text-2xl font-bold">Order details:</h1>
+              <div className="flex justify-between text-sm  lg:gap-2  lg:justify-end lg:items-center  ">
                 <button
-                  disabled={order?.isDelivered || order?.isCanceled} // disable if delivered or canceled
-                  onClick={handleUpdateOrderToCanceled}
+                  disabled={order?.isDelivered}
+                  onClick={handleUpdateOrderToDelivered}
                   className={clsx(
-                    "select-none mt-5 hover:opacity-70 transition-all duration-300 p-1   lg:px-3 lg:py-2 rounded-lg font-bold shadow lg:float-right bg-gradient-to-t",
-                    order?.isCanceled || order.isDelivered
+                    "select-none  hover:opacity-70   transition-all duration-300  lg:float-right bg-gradient-to-t    px-3 py-2 rounded-lg font-bold shadow",
+                    order?.isDelivered
                       ? "from-gray-200 to-gray-200 text-gray-600"
-                      : "from-red-500 to-red-400 text-white"
+                      : "from-teal-500 to-teal-400 text-white"
                   )}>
-                  Mark as canceled
+                  Mark as delivered
                 </button>
-              )}
-              {/* Invoise */}
-              <PDFDownloadLink
-                document={<Invoise order={order} />}
-                fileName={`invoice-${order?._id}-${order?.createdAt?.substring(0, 10)}.pdf`}>
-                <button className="select-none mt-5 hover:opacity-70  transition-all duration-300  float-right bg-gradient-to-t   from-rose-500 to-rose-400 text-white p-1   lg:px-3 lg:py-2 rounded-lg font-bold shadow">
-                  Download Invoice
-                </button>
-              </PDFDownloadLink>
+                {isCanceled ? (
+                  <Loader2Icon className="animate-spin" />
+                ) : (
+                  <button
+                    disabled={order?.isDelivered || order?.isCanceled} // disable if delivered or canceled
+                    onClick={handleUpdateOrderToCanceled}
+                    className={clsx(
+                      "select-none hover:opacity-70 transition-all duration-300    px-3 py-2 rounded-lg font-bold shadow lg:float-right bg-gradient-to-t",
+                      order?.isCanceled || order.isDelivered
+                        ? "from-gray-200 to-gray-200 text-gray-600"
+                        : "from-red-500 to-red-400 text-white"
+                    )}>
+                    Mark as canceled
+                  </button>
+                )}
+                {/* Invoise */}
+                <PDFDownloadLink
+                  document={<Invoise order={order} />}
+                  fileName={`invoice-${order?._id}-${order?.createdAt?.substring(0, 10)}.pdf`}>
+                  <button className="select-none   hover:opacity-70  transition-all duration-300  float-right bg-gradient-to-t  from-rose-500 to-rose-400 text-white    px-3 py-2 rounded-lg font-bold shadow">
+                    Download Invoice
+                  </button>
+                </PDFDownloadLink>
 
-              {/* -- */}
+                {/* -- */}
+              </div>
             </div>
+            <Separator className="my-4 bg-black/20" />
+
             {isLoading ? (
               <Loader />
             ) : (
               order && (
                 <>
-                  <div className="text-xs lg:text-sm   bg-white shadow rounded-lg p-6 ">
-                    <h2 className="text-xs lg:text-lg font-semibold mb-5">Order ID: {order._id}</h2>
+                  <div className="text-sm lg:text-sm   bg-white shadow rounded-lg p-6 ">
+                    <div className="grid  grid-cols-2 lg:grid-cols-4 gap-4 mb-7">
+                      <h2 className="text-lg font-semibold col-span-full mb-4">
+                        Order ID: {order._id}
+                      </h2>
 
-                    <p className="text-gray-700 mb-2 ">
-                      <strong>Created on:</strong> {order.createdAt.substring(0, 10)}
-                    </p>
+                      <div className="flex flex-col text-gray-700">
+                        <span className="font-semibold">Created on:</span>
+                        <span>{order.createdAt.substring(0, 10)}</span>
+                      </div>
 
-                    <p className="text-gray-700 mb-2">
-                      <strong>User name:</strong> {order.user.name}
-                    </p>
-                    <p className="text-gray-700 mb-2">
-                      <strong>User email:</strong> {order.user.email}
-                    </p>
-                    <p className="text-gray-700 mb-5">
-                      <strong>User phone:</strong> {order.user.phone}
-                    </p>
+                      <div className="flex flex-col text-gray-700">
+                        <span className="font-semibold">User name:</span>
+                        <span>{order.user.name}</span>
+                      </div>
 
-                    <h3 className="text-xs lg:text-xl font-semibold mb-2">Items:</h3>
+                      <div className="flex flex-col text-gray-700">
+                        <span className="font-semibold">User email:</span>
+                        <span>{order.user.email}</span>
+                      </div>
+
+                      <div className="flex flex-col text-gray-700">
+                        <span className="font-semibold">User phone:</span>
+                        <span>{order.user.phone}</span>
+                      </div>
+                    </div>
+
+                    {/* <h3 className="text-xs lg:text-xl font-semibold mb-2">Items:</h3> */}
                     <table className="w-full table-auto  border-collapse mb-5">
                       <thead>
                         <tr className="bg-gray-100  border-b">
@@ -178,17 +188,19 @@ function OrderDetails() {
                         </tr>
                       </tbody>
                     </table>
-                    <div className="flex items-center justify-around">
-                      <p className="text-gray-700 capitalize">
-                        <strong>Payment Method:</strong> {order?.paymentMethod}
+                    <div className="flex flex-col sm:flex-row sm:justify-between items-center gap-4 bg-gray-50 p-4 rounded-lg shadow-sm">
+                      <p className="text-gray-700 font-medium">
+                        <span className="font-semibold">Payment Method:</span>{" "}
+                        {order?.paymentMethod}
                       </p>
-                      <div className="text-md font-semibold items-center flex gap-5 ">
-                        Order status:{" "}
+
+                      <div className="flex items-center gap-3 text-gray-700 font-medium">
+                        <span className="font-semibold">Order status:</span>
                         {order?.isDelivered ? (
                           <Badge variant="success">
                             Delivered on {order?.deliveredAt?.substring(0, 10)}
                           </Badge>
-                        ) : order.isCanceled ? (
+                        ) : order?.isCanceled ? (
                           <Badge variant="danger">Canceled</Badge>
                         ) : (
                           <Badge variant="pending">Processing</Badge>

@@ -70,11 +70,11 @@ function UserDetails() {
     <Layout>
       <div
         className={clsx(
-          "px-4 py-3 flex gap-10 flex-col text-xs lg:text-lg lg:flex-col  mt-[50px] ml-0 lg:ml-[50px] "
+          "px-4 min-h-screen py-3 flex gap-10 flex-col  lg:text-lg lg:flex-col  mt-[50px]  lg:ml-[50px] "
         )}>
         <div className="">
           <div className="flex justify-between flex-col ">
-            <h1 className="text-xs lg:text-lg mb-3 font-bold">Customer's information:</h1>
+            <h1 className="text-lg mb-3 font-bold">Customer's information:</h1>
             <div className="flex gap-5">
               {!user?.isAdmin && (
                 <button
@@ -84,7 +84,7 @@ function UserDetails() {
                 </button>
               )}
 
-              {user?.isAdmin ? (
+              {/*  {user?.isAdmin ? (
                 <button
                   onClick={handleRemoveAdmin}
                   className=" select-none  text-xs lg:text-lg  transition-all duration-300   bg-gradient-to-t  from-teal-500 to-teal-400 text-white px-3 py-2 rounded-lg font-bold shadow-md">
@@ -96,29 +96,33 @@ function UserDetails() {
                   className=" select-none  text-xs lg:text-lg  transition-all duration-300   bg-gradient-to-t  from-teal-500 to-teal-400 text-white px-3 py-2 rounded-lg font-bold shadow-md">
                   Make admin
                 </button>
-              )}
+              )} */}
             </div>
           </div>
           <Separator className="my-4 bg-black/20" />
 
-          <div className="w-[300px] relative text-xlmin-h-[500px] p-7 lg:w-4xl   bg-white shadow-md rounded-md">
-            <h1 className="text-xs lg:text-lg font-bold">Personal information:</h1>
-            <div className="flex lg:gap-40 mt-10">
-              <div className="*:mb-5">
-                <p>Name:</p>
-                <p>Email:</p>
-                <p>Phone:</p>
-                <p>Admin:</p>
-              </div>
-              {loadingUser ? (
-                <Loader />
-              ) : (
-                <div className="*:mb-5 font-bold">
-                  <p>{user?.name}</p>
-                  <p className="text-blue-500 underline">
+          <div className=" relative mb-3 w-full p-7 lg:w-4xl   bg-white shadow-md rounded-md">
+            <section>
+              <h2 className="text-lg font-bold border-b border-b-gray-200  border-gray-700 pb-2 mb-5">
+                Personal Information
+              </h2>
+              <div className="grid grid-cols-2 gap-y-4 gap-x-10">
+                <div className="flex flex-col">
+                  <p className="text-gray-400">Name:</p>
+                  <p className="font-semibold">{user?.name}</p>
+                </div>
+                <div className="flex flex-col">
+                  <p className="text-gray-400">Email:</p>
+                  <p className="font-semibold text-blue-400 underline">
                     <Link to={`mailto:${user?.email}`}>{user?.email}</Link>
                   </p>
-                  <p>{user?.phone}</p>
+                </div>
+                <div>
+                  <p className="text-gray-400">Phone:</p>
+                  <p className="font-semibold">{user?.phone}</p>
+                </div>
+                <div>
+                  <p className="text-gray-400">Admin:</p>
                   <div>
                     {user?.isAdmin ? (
                       <Badge variant="admin">Admin</Badge>
@@ -127,45 +131,82 @@ function UserDetails() {
                     )}
                   </div>
                 </div>
-              )}
-            </div>
-          </div>
-          {userAddress ? (
-            <div className="w-[300px] mt-5 relative text-xlmin-h-[500px] p-7 lg:w-4xl  bg-white shadow-md rounded-md">
-              <h1 className="text-xs lg:text-lg font-bold">Address:</h1>
-              <div className="flex lg:gap-40 mt-10">
-                <div className="*:mb-5 ">
-                  <p>Province:</p>
-                  <p>City:</p>
-                  <p>Block:</p>
-                  <p>Street:</p>
-                  <p>House:</p>
-                </div>
-                {loadingAddress ? (
-                  <Loader />
-                ) : (
-                  <div className="*:mb-5 font-bold">
-                    <p>{userAddress?.governorate}</p>
-                    <p>{userAddress?.city}</p>
-                    <p>{userAddress?.block}</p>
-                    <p>{userAddress?.street}</p>
-                    <p>{userAddress?.house}</p>
-                  </div>
-                )}
               </div>
-            </div>
-          ) : (
-            <>
-              <Message dismiss={false}>User does not provide address yet</Message>
-            </>
-          )}
+            </section>
+
+            {/* Address */}
+            {/*  <section>
+              <h2 className="text-lg font-bold border-b border-b-gray-200  border-gray-700 pb-2 mb-5">
+                Address
+              </h2>
+              {userAddress ? (
+                <div className="grid grid-cols-2 gap-y-4 gap-x-10">
+                  <p className="text-gray-400">Province:</p>
+                  <p className="font-semibold">{userAddress?.governorate}</p>
+
+                  <p className="text-gray-400">City:</p>
+                  <p className="font-semibold">{userAddress?.city}</p>
+
+                  <p className="text-gray-400">Block:</p>
+                  <p className="font-semibold">{userAddress?.block}</p>
+
+                  <p className="text-gray-400">Street:</p>
+                  <p className="font-semibold">{userAddress?.street}</p>
+
+                  <p className="text-gray-400">House:</p>
+                  <p className="font-semibold">{userAddress?.house}</p>
+                </div>
+              ) : (
+                <Message dismiss={false}>User does not provide address yet</Message>
+              )}
+            </section> */}
+          </div>
+
+          <div className="bg-white rounded-md p-7 shadow-md">
+            {/* Address */}
+            <section>
+              <h2 className="text-lg font-bold border-b border-b-gray-200  border-gray-700 pb-2 mb-5">
+                Address
+              </h2>
+              {userAddress ? (
+                <div className="grid grid-cols-2 gap-y-4 gap-x-10">
+                  <div className="flex flex-col ">
+                    <p className="text-gray-400">Governorate:</p>
+                    <p className="font-semibold">{userAddress?.governorate}</p>
+                  </div>
+
+                  <div>
+                    <p className="text-gray-400">City:</p>
+                    <p className="font-semibold">{userAddress?.city}</p>
+                  </div>
+
+                  <div>
+                    <p className="text-gray-400">Block:</p>
+                    <p className="font-semibold">{userAddress?.block}</p>
+                  </div>
+
+                  <div>
+                    <p className="text-gray-400">Street:</p>
+                    <p className="font-semibold">{userAddress?.street}</p>
+                  </div>
+
+                  <div>
+                    <p className="text-gray-400">House:</p>
+                    <p className="font-semibold">{userAddress?.house}</p>
+                  </div>
+                </div>
+              ) : (
+                <Message dismiss={false}>User does not provide address yet</Message>
+              )}
+            </section>
+          </div>
           {userOrders?.length === 0 && <Message dismiss={false}>User does not have orders</Message>}
         </div>
 
         {userOrders?.length > 0 && (
-          <div className="text-xs lg:text-lg">
+          <div className="w-full mb-10">
             <div className="">
-              <h1 className="text-xs lg:text-lg font-bold">Customer's orders:</h1>
+              <h1 className="text-lg font-bold">Customer's orders:</h1>
               <Separator className="my-4 bg-black/20" />
             </div>
 
@@ -173,26 +214,32 @@ function UserDetails() {
               {userOrders?.map((order: any) => (
                 <div
                   key={order._id}
-                  className="flex w-[300px] lg:w-4xl  flex-col hover:bg-gray-100 transition-all duration-300 gap-5 border bg-white p-4  shadow-md rounded-lg">
+                  className="flex  lg:w-4xl  flex-col hover:bg-gray-100 transition-all duration-300 gap-5 border bg-white p-4  shadow-md rounded-lg">
                   <div className="flex flex-col gap-5 ">
-                    <Link to={`/admin/orders/${order._id}`} className="flex gap-5 flex-wrap">
-                      <h1 className="flex flex-col gap-2 items-center ">
-                        Placed in:{" "}
+                    <Link to={`/admin/orders/${order._id}`} className="grid grid-cols-2 gap-2">
+                      <h1 className="flex   gap-2 ">
+                        <span className="text-gray-700">Placed in:</span>
+
                         <span className="font-bold"> {order.createdAt.substring(0, 10)}</span>
                       </h1>
-                      <h1 className="flex flex-col gap-2 items-center ">
-                        Payment method: <span className="font-bold">{order.paymentMethod}</span>
+                      <h1 className="flex  gap-2">
+                        <span className="text-gray-700"> Payment method:</span>
+
+                        <span className="font-bold">{order.paymentMethod}</span>
                       </h1>
-                      <h1 className="flex flex-col gap-2 items-center">
-                        Total price:{" "}
+                      <h1 className="flex gap-2">
+                        <span className="text-gray-700"> Total price:</span>
+
                         <span className="font-bold">{order.totalPrice.toFixed(3)} KD</span>
                       </h1>
-                      <h1 className="flex flex-col gap-2 items-center">
-                        Products:
+                      <h1 className="flex   gap-2">
+                        <span className="text-gray-700"> Products:</span>
+
                         <span className="font-bold">{order?.orderItems.length}</span>
                       </h1>
-                      <h1 className="flex flex-col gap-2 items-center">
-                        Delivered:
+                      <h1 className="flex  gap-2 ">
+                        <span className="text-gray-700"> Delivered:</span>
+
                         <span className="font-bold text-sm">
                           {order?.isDelivered ? (
                             <Badge variant="success">Delivered</Badge>

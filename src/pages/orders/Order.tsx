@@ -7,6 +7,7 @@ import { useGetOrdersQuery } from "../../redux/queries/orderApi";
 import { Layers, Search } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import Loader from "../../components/Loader";
+import Error from "../../components/Error";
 
 function Order() {
   const navigate = useNavigate();
@@ -34,22 +35,24 @@ function Order() {
     (acc: any, order: any) => acc + order.orderItems.length,
     0
   ); */
-  const totalRevenue = filteredOrders.length
-    ? filteredOrders.reduce((acc: any, order: any) => acc + order.totalPrice, 0).toFixed(3)
+  // Only include non-canceled orders
+  const validOrders = filteredOrders.filter((order: any) => !order.isCanceled);
+
+  const totalRevenue = validOrders.length
+    ? validOrders.reduce((acc: any, order: any) => acc + order.totalPrice, 0).toFixed(3)
     : "0.000";
 
-  const totalItems = filteredOrders.length
-    ? filteredOrders.reduce((acc: any, order: any) => acc + order.orderItems.length, 0)
+  const totalItems = validOrders.length
+    ? validOrders.reduce((acc: any, order: any) => acc + order.orderItems.length, 0)
     : 0;
 
   const handleSearchChange = (e: ChangeEvent<HTMLInputElement>) => {
     setSearchQuery(e.target.value);
   };
 
-  if (isError) {
-    return <p className="text-red-500">Something went wrong while fetching orders.</p>;
-  }
-  console.log({ orders, filteredOrders, isLoading, isError });
+  if (isError) return <Error />;
+
+  console.log(orders);
 
   return (
     <Layout>
@@ -151,7 +154,7 @@ function Order() {
                             )}
                           </td>
                           <td className="px-4 py-5 whitespace-nowrap">
-                            {(Number(order?.totalPrice) + Number(order?.shippingPrice)).toFixed(3)}
+                            {order?.totalPrice.toFixed(3)}
                           </td>
                         </tr>
                       ))

@@ -109,21 +109,21 @@ function Discounts() {
             </div>
             <Separator className="my-4 bg-black/20" />
 
-            <div className="bg-white lg:mt-10 lg:w-4xl p-8 rounded-2xl border space-y-8">
+            <div className="bg-white lg:mt-10 lg:w-4xl p-8 rounded-2xl border space-y-5">
               {/* Controls */}
-              <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-8">
+              <div className="flex flex-col lg:flex-col lg:justify-start gap-5 lg:gap-8">
                 {/* Discount Selector */}
-                <div className="flex flex-col w-full lg:w-1/2">
+                <div className="flex flex-col w-full ">
                   <label
                     htmlFor="discount"
-                    className="mb-2 text-lg lg:text-sm font-semibold text-gray-700 tracking-wide">
+                    className="mb-2 text-base lg:text-sm font-semibold text-gray-700 tracking-wide">
                     Discount by:
                   </label>
                   <select
                     id="discount"
                     onChange={handleDiscountChange}
                     value={discount}
-                    className="w-full text-lg lg:text-lg cursor-pointer px-5 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition">
+                    className="w-full text-base lg:text-lg cursor-pointer px-5 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition">
                     {discountOptions.map((value) => (
                       <option key={value} value={value}>
                         {value === 0 ? "None" : `${value * 100}%`}
@@ -133,8 +133,8 @@ function Discounts() {
                 </div>
 
                 {/* Categories */}
-                <div className="flex flex-col w-full lg:w-2/3">
-                  <p className="mb-2 text-lg lg:text-sm font-semibold text-gray-700 tracking-wide">
+                <div className="flex flex-col w-full ">
+                  <p className="mb-2 text-base lg:text-sm font-semibold text-gray-700 tracking-wide">
                     Categories:
                   </p>
                   {categories?.length === 0 ? (
@@ -145,19 +145,27 @@ function Discounts() {
                       </Link>
                     </p>
                   ) : (
-                    <div className="flex flex-wrap gap-3 max-h-40 overflow-y-auto px-2 py-2 border border-gray-300 rounded-lg scrollbar-thin scrollbar-thumb-zinc-400 scrollbar-track-gray-100">
+                    <div className="flex flex-wrap gap-3  overflow-y-auto px-2 py-2 border border-gray-300 rounded-lg scrollbar-thin scrollbar-thumb-zinc-400 scrollbar-track-gray-100">
                       {categories?.map((cat: Category) => (
                         <label
-                          key={cat._id}
-                          className="flex text-lg lg:text-lg items-center gap-2 border border-gray-300 px-4 py-1 cursor-pointer hover:bg-zinc-50 transition select-none">
+                          className={`
+    flex items-center gap-2 px-4 py-2 rounded-lg cursor-pointer transition-all duration-300
+    border ${
+      selectedCategories.includes(cat.name)
+        ? "bg-zinc-900 text-white border-zinc-900"
+        : "bg-white text-gray-800 border-gray-300"
+    }
+    hover:bg-zinc-500 hover:text-white
+    select-none
+  `}>
                           <input
                             type="checkbox"
                             value={cat.name}
                             checked={selectedCategories.includes(cat.name)}
                             onChange={() => handleCategoryChange(cat.name)}
-                            className="cursor-pointer h-5 w-5 text-zinc-900 focus:ring-zinc-600 rounded"
+                            className="hidden"
                           />
-                          <span className="capitalize text-gray-800">{cat.name}</span>
+                          <span className="capitalize">{cat.name}</span>
                         </label>
                       ))}
                     </div>
@@ -176,11 +184,14 @@ function Discounts() {
                   placeholder="Enter original price"
                   value={originalPrice}
                   onChange={handleOriginalPriceChange}
+                  onKeyDown={(e) => {
+                    if (e.key === "-" || e.key === "+") e.preventDefault(); // prevent negative and exponential
+                  }}
                   className="w-full text-base px-4 py-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
                 />
                 {originalPrice && (
-                  <p className="mt-3 text-lg font-semibold text-green-700">
-                    New price: {calculateDiscountedPrice()} KD
+                  <p className="mt-3 text-lg font-semibold text-teal-500">
+                    {calculateDiscountedPrice()} KD
                   </p>
                 )}
               </div>
@@ -209,7 +220,7 @@ function Discounts() {
                 ))}
               </div>
             ) : (
-              <p className="text-gray-600 text-lg">No discounts available.</p>
+              <p className="text-gray-600 text-base lg:text-lg">No discounts available.</p>
             )}
           </section>
         </div>

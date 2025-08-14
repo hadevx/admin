@@ -20,6 +20,7 @@ import { Separator } from "./ui/separator";
 import { useState } from "react";
 /* import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Mail, User } from "lucide-react"; */
+import { motion, AnimatePresence } from "framer-motion";
 
 function SideMenu() {
   const [logoutApiCall] = useLogoutMutation();
@@ -165,16 +166,23 @@ function SideMenu() {
       <div className="hidden lg:flex z-50">{menuContent}</div>
 
       {/* Mobile menu drawer */}
+
       {isMenuOpen && (
         <div
-          className="fixed inset-0  backdrop-blur-md z-40"
+          className="fixed inset-0   backdrop-blur-md z-40"
           onClick={() => setIsMenuOpen(false)}
           aria-hidden="true">
-          <div
-            className="fixed left-0 top-0 h-full w-64 bg-zinc-100  shadow-lg z-50"
-            onClick={(e) => e.stopPropagation()}>
-            {menuContent}
-          </div>
+          <AnimatePresence>
+            <motion.div
+              initial={{ x: "-100%" }} // start fully off-screen to the left
+              animate={{ x: 0 }} // animate to visible
+              exit={{ x: "-100%" }} // slide back out when closing
+              transition={{ type: "spring", stiffness: 300, damping: 30 }}
+              className="fixed left-0 top-0 h-full w-64 bg-zinc-100  shadow-lg z-50"
+              onClick={(e) => e.stopPropagation()}>
+              {menuContent}
+            </motion.div>
+          </AnimatePresence>
         </div>
       )}
     </>
