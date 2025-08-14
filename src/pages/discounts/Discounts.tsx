@@ -164,7 +164,7 @@ function Discounts() {
         ? "bg-zinc-900 text-white border-zinc-900"
         : "bg-white text-gray-800 border-gray-300"
     }
-    hover:bg-zinc-500 hover:text-white
+   
     select-none
   `}>
                           <input
@@ -212,7 +212,7 @@ function Discounts() {
             <h1 className="text-lg lg:text-lg font-bold mb-4">Current Discounts</h1>
             <Separator className="my-3 bg-black/20" />
             {discountStatus && discountStatus.length > 0 ? (
-              <div className="flex flex-wrap gap-6">
+              <div className="grid md:grid-cols-2  gap-6">
                 {discountStatus.map((d: Discount) => (
                   <Coupon
                     discountBy={d.discountBy}

@@ -46,7 +46,7 @@ function OrderDetails() {
         <Loader />
       ) : (
         <div className=" mb-10 mt-[50px] min-h-screen  w-full lg:w-4xl lg:py-3 lg:mt-[50px]  lg:ml-[50px] ">
-          <div className="container mx-auto px-4 py-6">
+          <div className=" px-4 py-6">
             <div className="flex gap-2 flex-col lg:flex-row  justify-between lg:items-center">
               <h1 className="text-lg  lg:text-2xl font-bold">Order details:</h1>
               <div className="flex  text-xs items-center gap-3  lg:gap-2  lg:justify-end lg:items-center  ">
