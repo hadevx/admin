@@ -52,7 +52,7 @@ function Login() {
   }, []);
   return (
     <>
-      <div className=" flex flex-col items-center justify-center  bg-gradient-to-br from-blue-50 via-white to-blue-50  h-[600px]  lg:min-h-screen   text-black">
+      <div className=" flex flex-col items-center justify-center  bg-gradient-to-br from-blue-50 via-white to-blue-50  min-h-screen   text-black">
         <div>
           <h1 className="mb-5 text-2xl font-semibold">Login to {storeName}</h1>
         </div>
