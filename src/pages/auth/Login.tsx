@@ -1,4 +1,4 @@
-import { useState, useContext } from "react";
+import { useState, useContext, useEffect } from "react";
 import { EyeOff, Eye } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useLoginUserMutation } from "../../redux/queries/userApi";
@@ -43,9 +43,16 @@ function Login() {
       }
     }
   };
+
+  useEffect(() => {
+    document.body.style.overflow = "hidden"; // disable scroll
+    return () => {
+      document.body.style.overflow = "auto"; // enable scroll when component unmounts
+    };
+  }, []);
   return (
     <>
-      <div className=" flex flex-col items-center justify-center  bg-gradient-to-br from-blue-50 via-white to-blue-50  overflow-hidden min-h-screen   lg:min-h-screen   text-black">
+      <div className=" flex flex-col items-center justify-center  bg-gradient-to-br from-blue-50 via-white to-blue-50  min-h-screen   lg:min-h-screen   text-black">
         <div>
           <h1 className="mb-5 text-2xl font-semibold">Login to {storeName}</h1>
         </div>
