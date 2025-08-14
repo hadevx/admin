@@ -9,7 +9,7 @@ import {
 } from "../../redux/queries/productApi";
 import { toast } from "react-toastify";
 import { Separator } from "../../components/ui/separator";
-import { Trash2, Plus } from "lucide-react";
+import { Trash2, Plus, Loader2Icon } from "lucide-react";
 import { Link } from "react-router-dom";
 import Loader from "../../components/Loader";
 import Coupon from "../../components/Coupon";
@@ -31,6 +31,8 @@ function Discounts() {
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [discount, setDiscount] = useState<number>(0);
   const [originalPrice, setOriginalPrice] = useState<string>("");
+
+  const [deletingDiscountId, setDeletingDiscountId] = useState(null);
 
   const [createDiscount, { isLoading: loadingCreate }] = useCreateDiscountMutation();
   const [deleteDiscount, { isLoading: loadingDelete }] = useDeleteDiscountMutation();
@@ -59,10 +61,17 @@ function Discounts() {
     refetch();
   };
 
-  const handleDeleteDiscount = async (id: string) => {
-    await deleteDiscount(id);
-    toast.success("Discount deleted");
-    refetch();
+  const handleDeleteDiscount = async (id: any) => {
+    setDeletingDiscountId(id);
+    try {
+      await deleteDiscount(id);
+      toast.success("Discount deleted");
+      refetch();
+    } catch (error) {
+      toast.error("Error deleting discount.");
+    } finally {
+      setDeletingDiscountId(null);
+    }
   };
 
   const handleCategoryChange = (catName: string) => {
@@ -212,9 +221,13 @@ function Discounts() {
                     id={d._id}>
                     <button
                       onClick={() => handleDeleteDiscount(d._id)}
-                      disabled={loadingDelete}
+                      disabled={loadingDelete && deletingDiscountId === d._id}
                       className="bg-gray-600 text-white  rounded-full p-2">
-                      <Trash2 size={18} />
+                      {loadingDelete && deletingDiscountId === d._id ? (
+                        <Loader2Icon className="animate-spin" />
+                      ) : (
+                        <Trash2 />
+                      )}
                     </button>
                   </Coupon>
                 ))}

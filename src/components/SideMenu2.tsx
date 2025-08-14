@@ -11,6 +11,7 @@ import {
   Settings,
   Menu,
   X,
+  Loader2Icon,
 } from "lucide-react";
 import { useSelector, useDispatch } from "react-redux";
 import { logout } from "../redux/slices/authSlice";
@@ -20,10 +21,11 @@ import { Separator } from "./ui/separator";
 import { useState } from "react";
 /* import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Mail, User } from "lucide-react"; */
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
+import { useEffect } from "react";
 
 function SideMenu() {
-  const [logoutApiCall] = useLogoutMutation();
+  const [logoutApiCall, { isLoading: loadingLogout }] = useLogoutMutation();
   const location = useLocation();
   const navigate = useNavigate();
   const { pathname } = location;
@@ -43,7 +45,16 @@ function SideMenu() {
       toast.error(error?.data?.message || "Logout failed");
     }
   };
+  useEffect(() => {
+    if (isMenuOpen) {
+      document.body.classList.add("overflow-hidden");
+    } else {
+      document.body.classList.remove("overflow-hidden");
+    }
 
+    // Cleanup on unmount
+    return () => document.body.classList.remove("overflow-hidden");
+  }, [isMenuOpen]);
   // Your exact menu content JSX (same as desktop)
   const menuContent = (
     <div className="flex flex-col h-full text-black px-2 lg:px-[2rem] py-[2rem]  border-r-[2px] w-64 lg:w-auto min-h-screen ">
@@ -142,8 +153,17 @@ function SideMenu() {
           <button
             onClick={handleLogout}
             className="items-center hover:font-bold cursor-pointer transition-all duration-100 w-full flex gap-3 bg-gradient-to-t hover:from-rose-500 hover:to-rose-400 hover:text-white text-black px-3 py-2 rounded-lg hover:shadow-md">
-            <LogOut strokeWidth={1} />
-            <p className="">Logout</p>
+            {loadingLogout ? (
+              <>
+                <Loader2Icon className="animate-spin" />
+                <p>Logging out...</p>
+              </>
+            ) : (
+              <>
+                <LogOut strokeWidth={1} />
+                <p className="">Logout</p>
+              </>
+            )}
           </button>
         </div>
       </div>
@@ -169,20 +189,18 @@ function SideMenu() {
 
       {isMenuOpen && (
         <div
-          className="fixed inset-0  backdrop-blur-md z-40"
+          className={clsx("fixed inset-0  backdrop-blur-sm z-40")}
           onClick={() => setIsMenuOpen(false)}
           aria-hidden="true">
-          <AnimatePresence>
-            <motion.div
-              initial={{ x: "-100%" }} // start fully off-screen to the left
-              animate={{ x: 0 }} // animate to visible
-              exit={{ x: "-100%" }} // slide back out when closing
-              transition={{ type: "spring", stiffness: 300, damping: 30 }}
-              className="fixed left-0 top-0 h-full w-64 bg-zinc-100  shadow-lg z-50"
-              onClick={(e) => e.stopPropagation()}>
-              {menuContent}
-            </motion.div>
-          </AnimatePresence>
+          <motion.div
+            initial={{ x: "-100%" }} // start fully off-screen to the left
+            animate={{ x: 0 }} // animate to visible
+            exit={{ x: "-100%" }} // slide back out when closing
+            transition={{ type: "spring", stiffness: 300, damping: 30 }}
+            className="fixed left-0 top-0 h-full w-64 bg-zinc-100  shadow-lg z-50"
+            onClick={(e) => e.stopPropagation()}>
+            {menuContent}
+          </motion.div>
         </div>
       )}
     </>

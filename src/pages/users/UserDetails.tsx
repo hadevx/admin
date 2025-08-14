@@ -73,33 +73,19 @@ function UserDetails() {
       ) : (
         <div
           className={clsx(
-            "px-4 min-h-screen py-3 flex gap-10 flex-col  lg:text-lg lg:flex-col  mt-[50px]  lg:ml-[50px] "
+            "px-4 min-h-screen py-3 mb-10 flex gap-10 flex-col  lg:text-lg lg:flex-col  mt-[50px]  lg:ml-[50px] "
           )}>
           <div className="">
-            <div className="flex justify-between flex-col ">
-              <h1 className="text-lg mb-3 font-bold">Customer's information:</h1>
+            <div className="flex justify-between items-center  ">
+              <h1 className="text-lg  font-bold">Customer's information:</h1>
               <div className="flex gap-5">
                 {!user?.isAdmin && (
                   <button
                     onClick={() => setIsModalOpen(true)}
-                    className=" select-none text-xs lg:text-lg  bg-gradient-to-t  from-rose-500 to-rose-400 text-white px-3 py-2 rounded-lg font-bold shadow-md">
-                    Delete
+                    className=" select-none  lg:text-lg  bg-gradient-to-t  from-rose-500 to-rose-400 text-white px-3 py-2 rounded-lg font-bold shadow-md">
+                    Delete User
                   </button>
                 )}
-
-                {/*  {user?.isAdmin ? (
-                <button
-                  onClick={handleRemoveAdmin}
-                  className=" select-none  text-xs lg:text-lg  transition-all duration-300   bg-gradient-to-t  from-teal-500 to-teal-400 text-white px-3 py-2 rounded-lg font-bold shadow-md">
-                  Remove from admin
-                </button>
-              ) : (
-                <button
-                  onClick={handleMakeAdmin}
-                  className=" select-none  text-xs lg:text-lg  transition-all duration-300   bg-gradient-to-t  from-teal-500 to-teal-400 text-white px-3 py-2 rounded-lg font-bold shadow-md">
-                  Make admin
-                </button>
-              )} */}
               </div>
             </div>
             <Separator className="my-4 bg-black/20" />
@@ -116,7 +102,7 @@ function UserDetails() {
                   </div>
                   <div className="flex flex-col">
                     <p className="text-gray-400">Email:</p>
-                    <p className="font-semibold text-blue-400 underline">
+                    <p className="font-semibold text-blue-400 underline break-words whitespace-pre-line">
                       <Link to={`mailto:${user?.email}`}>{user?.email}</Link>
                     </p>
                   </div>
@@ -203,63 +189,61 @@ function UserDetails() {
                 )}
               </section>
             </div>
-            {userOrders?.length === 0 && (
-              <Message dismiss={false}>User does not have orders</Message>
-            )}
-          </div>
 
-          {userOrders?.length > 0 && (
-            <div className="w-full mb-10">
-              <div className="">
-                <h1 className="text-lg font-bold">Customer's orders:</h1>
-                <Separator className="my-4 bg-black/20" />
-              </div>
+            {/* Orders */}
+            <div className="bg-white mt-3 rounded-md p-7 shadow">
+              <section>
+                <h2 className="text-lg font-bold border-b border-gray-200 dark:border-gray-700 pb-2 mb-5">
+                  Orders
+                </h2>
 
-              <div className="flex flex-col gap-5">
-                {userOrders?.map((order: any) => (
-                  <div
-                    key={order._id}
-                    className="flex  lg:w-4xl  flex-col hover:bg-gray-100 transition-all duration-300 gap-5 border bg-white p-4  shadow-md rounded-lg">
-                    <div className="flex flex-col gap-5 ">
-                      <Link to={`/admin/orders/${order._id}`} className="grid grid-cols-2 gap-2">
-                        <h1 className="flex   gap-2 ">
+                {userOrders?.length > 0 ? (
+                  userOrders.map((order: any) => (
+                    <div
+                      key={order._id}
+                      className="flex mb-2 flex-col hover:bg-gray-100 transition-all duration-300 gap-4 border bg-zinc-50  p-4 shadow-md rounded-lg max-w-full">
+                      <Link
+                        to={`/admin/orders/${order._id}`}
+                        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
+                        <div className="flex gap-2 flex-wrap">
                           <span className="text-gray-700">Placed in:</span>
+                          <span className="font-bold">{order.createdAt.substring(0, 10)}</span>
+                        </div>
 
-                          <span className="font-bold"> {order.createdAt.substring(0, 10)}</span>
-                        </h1>
-                        <h1 className="flex  gap-2">
-                          <span className="text-gray-700"> Payment method:</span>
+                        <div className="flex gap-2 flex-wrap">
+                          <span className="text-gray-700">Payment method:</span>
+                          <span className="font-bold break-words">{order.paymentMethod}</span>
+                        </div>
 
-                          <span className="font-bold">{order.paymentMethod}</span>
-                        </h1>
-                        <h1 className="flex gap-2">
-                          <span className="text-gray-700"> Total price:</span>
-
+                        <div className="flex gap-2 flex-wrap">
+                          <span className="text-gray-700">Total price:</span>
                           <span className="font-bold">{order.totalPrice.toFixed(3)} KD</span>
-                        </h1>
-                        <h1 className="flex   gap-2">
-                          <span className="text-gray-700"> Products:</span>
+                        </div>
 
+                        <div className="flex gap-2 flex-wrap">
+                          <span className="text-gray-700">Products:</span>
                           <span className="font-bold">{order?.orderItems.length}</span>
-                        </h1>
-                        <h1 className="flex  gap-2 ">
-                          <span className="text-gray-700"> Delivered:</span>
+                        </div>
 
-                          <span className="font-bold text-sm">
+                        <div className="flex gap-2 flex-wrap">
+                          <span className="text-gray-700">Order status:</span>
+                          <span className="font-bold ">
                             {order?.isDelivered ? (
                               <Badge variant="success">Delivered</Badge>
                             ) : (
                               <Badge variant="pending">Processing</Badge>
                             )}
                           </span>
-                        </h1>
+                        </div>
                       </Link>
                     </div>
-                  </div>
-                ))}
-              </div>
+                  ))
+                ) : (
+                  <Message dismiss={false}>User does not have orders</Message>
+                )}
+              </section>
             </div>
-          )}
+          </div>
         </div>
       )}
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
@@ -275,17 +259,12 @@ function UserDetails() {
             <Button
               disabled={loadingDeleteUser}
               variant="destructive"
+              className="bg-gradient-to-t  from-rose-500 to-rose-400"
               onClick={() => {
                 // perform deletion logic here
                 handleDeleteUser();
               }}>
-              {loadingDeleteUser ? (
-                <p>
-                  <Loader2Icon className="animate-spin" />
-                </p>
-              ) : (
-                <p> Delete</p>
-              )}
+              {loadingDeleteUser ? <Loader2Icon className="animate-spin" /> : <p> Delete</p>}
             </Button>
           </DialogFooter>
         </DialogContent>

@@ -7,6 +7,7 @@ import { setUserInfo } from "../../redux/slices/authSlice";
 import { toast } from "react-toastify";
 import Spinner from "../../components/Spinner";
 import { StoreContext } from "../../StorenameContext";
+import { clsx } from "clsx";
 
 function Login() {
   const storeName = useContext(StoreContext);
@@ -44,9 +45,9 @@ function Login() {
   };
   return (
     <>
-      <div className=" flex flex-col items-center justify-center    overflow-y-hidden h-[600px]   lg:min-h-screen   text-black">
+      <div className=" flex flex-col items-center justify-center  bg-gradient-to-br from-blue-50 via-white to-blue-50  overflow-hidden min-h-screen   lg:min-h-screen   text-black">
         <div>
-          <h1 className="mb-5 text-[20px] font-semibold">Login to {storeName}</h1>
+          <h1 className="mb-5 text-2xl font-semibold">Login to {storeName}</h1>
         </div>
         <div className="">
           <form onSubmit={handleLogin}>
@@ -69,7 +70,7 @@ function Login() {
               />
               <button
                 type="button"
-                className="text-grey-40 absolute right-0 focus:text-violet-60 px-4 focus:outline-none"
+                className="text-gray-500 absolute right-0 focus:text-violet-60 px-4 focus:outline-none"
                 onClick={togglePasswordVisibility}>
                 {showPassword ? (
                   <Eye strokeWidth={1} />
@@ -84,8 +85,13 @@ function Login() {
               <button
                 disabled={isLoading}
                 type="submit"
-                className="w-full cursor-pointer mt-4 border rounded-lg font-semibold flex items-center justify-center  px-3 py-2  transition-all duration-300 bg-gradient-to-t from-slate-800 to-slate-600 shadow-md text-white hover:bg-gradient-to-t hover:from-slate-800 hover:to-slate-700/80">
-                {!isLoading ? "Log in" : <Spinner className="!border-t-slate-800" />}
+                className={clsx(
+                  "w-full cursor-pointer mt-4 border rounded-lg font-semibold flex items-center justify-center  px-3 py-2  transition-all duration-300  shadow-md text-white ",
+                  isLoading
+                    ? "bg-gray-200"
+                    : "bg-gradient-to-t from-slate-800 to-slate-600 hover:bg-gradient-to-t hover:from-slate-800 hover:to-slate-700/80"
+                )}>
+                {isLoading ? <Spinner className="!border-t-black" /> : "Log in"}
               </button>
             </div>
           </form>

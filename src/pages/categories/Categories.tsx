@@ -11,7 +11,7 @@ import { toast } from "react-toastify";
 import Badge from "../../components/Badge";
 import Loader from "../../components/Loader";
 import { Button } from "@/components/ui/button";
-import { Plus, Trash2, Boxes, Search } from "lucide-react";
+import { Plus, Trash2, Boxes, Search, Loader2Icon } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -43,7 +43,6 @@ function Categories() {
 
   const { data: tree, refetch: refetchTree } = useGetCategoriesTreeQuery(undefined);
 
-  console.log(tree);
   const filteredCategories = categories.filter((cat: any) =>
     cat.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
@@ -168,9 +167,9 @@ function Categories() {
                           <button
                             disabled={isDeleting && deletingCategoryId === cat._id}
                             onClick={() => handleDeleteCategory(cat._id, cat.name)}
-                            className="text-rose-500 hover:bg-red-100 bg-red-50 p-2 rounded-lg transition-all duration-300 flex items-center justify-center min-w-[32px] min-h-[32px]">
+                            className="text-black hover:bg-zinc-200 bg-zinc-100 p-2 rounded-lg transition-all duration-300 flex items-center justify-center min-w-[32px] min-h-[32px]">
                             {isDeleting && deletingCategoryId === cat._id ? (
-                              <span className="animate-spin rounded-full h-4 w-4 border-b-2 border-red-500"></span>
+                              <Loader2Icon className="animate-spin" />
                             ) : (
                               <Trash2 />
                             )}
