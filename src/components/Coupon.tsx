@@ -43,9 +43,8 @@ const color = getRandomColorFromPalette();
 export default function Coupon({
   discountBy,
   categories = [],
-  validUntil,
+
   children,
-  id,
 }: CouponProps) {
   return (
     <div className="relative text-white  w-[400px]  h-[200px] rounded-lg overflow-hidden shadow-[0_2px_rgba(0,0,0,0.1)] flex items-stretch">
