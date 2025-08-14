@@ -14,7 +14,7 @@ function Order() {
   const { data: orders, isLoading, isError } = useGetOrdersQuery<any>(undefined);
 
   const [searchQuery, setSearchQuery] = useState<string>("");
-
+  console.log(orders);
   // Filtered orders based on the search query
   const filteredOrders = orders
     ? orders.filter((order: any) => {

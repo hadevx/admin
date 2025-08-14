@@ -6,7 +6,7 @@ export const orderApi = api.injectEndpoints({
       query: () => ({
         url: "/api/orders",
       }),
-      keepUnusedDataFor: 5,
+      // keepUnusedDataFor: 5,
     }),
     getOrder: builder.query({
       query: (orderId) => ({

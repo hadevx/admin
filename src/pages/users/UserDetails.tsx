@@ -9,7 +9,7 @@ import {
   useGetAddressQuery,
   useDeleteUserMutation,
   useGetUserDetailsQuery,
-  useUpdateUserMutation,
+  // useUpdateUserMutation,
 } from "../../redux/queries/userApi";
 import Message from "../../components/Message";
 import Badge from "../../components/Badge";
@@ -31,7 +31,7 @@ function UserDetails() {
 
   const { data: userOrders } = useGetUserOrdersQuery(userID);
   const { data: user, isLoading: loadingUser } = useGetUserDetailsQuery<any>(userID);
-  const [updateUser] = useUpdateUserMutation();
+  // const [updateUser] = useUpdateUserMutation();
   const [deleteUser, { isLoading: loadingDeleteUser }] = useDeleteUserMutation();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const { data: userAddress, isLoading: loadingAddress } = useGetAddressQuery<any>(userID);
@@ -56,7 +56,7 @@ function UserDetails() {
     }
   };
 
-  const handleMakeAdmin = async () => {
+  /*   const handleMakeAdmin = async () => {
     await updateUser({ userId: userID, isAdmin: true }).unwrap();
     refetch();
     toast.success("User updated successfully");
@@ -65,26 +65,29 @@ function UserDetails() {
     await updateUser({ userId: userID, isAdmin: false }).unwrap();
     refetch();
     toast.success("User updated successfully");
-  };
+  }; */
   return (
     <Layout>
-      <div
-        className={clsx(
-          "px-4 min-h-screen py-3 flex gap-10 flex-col  lg:text-lg lg:flex-col  mt-[50px]  lg:ml-[50px] "
-        )}>
-        <div className="">
-          <div className="flex justify-between flex-col ">
-            <h1 className="text-lg mb-3 font-bold">Customer's information:</h1>
-            <div className="flex gap-5">
-              {!user?.isAdmin && (
-                <button
-                  onClick={() => setIsModalOpen(true)}
-                  className=" select-none text-xs lg:text-lg  bg-gradient-to-t  from-rose-500 to-rose-400 text-white px-3 py-2 rounded-lg font-bold shadow-md">
-                  Delete
-                </button>
-              )}
+      {loadingUser || loadingAddress ? (
+        <Loader />
+      ) : (
+        <div
+          className={clsx(
+            "px-4 min-h-screen py-3 flex gap-10 flex-col  lg:text-lg lg:flex-col  mt-[50px]  lg:ml-[50px] "
+          )}>
+          <div className="">
+            <div className="flex justify-between flex-col ">
+              <h1 className="text-lg mb-3 font-bold">Customer's information:</h1>
+              <div className="flex gap-5">
+                {!user?.isAdmin && (
+                  <button
+                    onClick={() => setIsModalOpen(true)}
+                    className=" select-none text-xs lg:text-lg  bg-gradient-to-t  from-rose-500 to-rose-400 text-white px-3 py-2 rounded-lg font-bold shadow-md">
+                    Delete
+                  </button>
+                )}
 
-              {/*  {user?.isAdmin ? (
+                {/*  {user?.isAdmin ? (
                 <button
                   onClick={handleRemoveAdmin}
                   className=" select-none  text-xs lg:text-lg  transition-all duration-300   bg-gradient-to-t  from-teal-500 to-teal-400 text-white px-3 py-2 rounded-lg font-bold shadow-md">
@@ -97,45 +100,45 @@ function UserDetails() {
                   Make admin
                 </button>
               )} */}
+              </div>
             </div>
-          </div>
-          <Separator className="my-4 bg-black/20" />
+            <Separator className="my-4 bg-black/20" />
 
-          <div className=" relative mb-3 w-full p-7 lg:w-4xl   bg-white shadow-md rounded-md">
-            <section>
-              <h2 className="text-lg font-bold border-b border-b-gray-200  border-gray-700 pb-2 mb-5">
-                Personal Information
-              </h2>
-              <div className="grid grid-cols-2 gap-y-4 gap-x-10">
-                <div className="flex flex-col">
-                  <p className="text-gray-400">Name:</p>
-                  <p className="font-semibold">{user?.name}</p>
-                </div>
-                <div className="flex flex-col">
-                  <p className="text-gray-400">Email:</p>
-                  <p className="font-semibold text-blue-400 underline">
-                    <Link to={`mailto:${user?.email}`}>{user?.email}</Link>
-                  </p>
-                </div>
-                <div>
-                  <p className="text-gray-400">Phone:</p>
-                  <p className="font-semibold">{user?.phone}</p>
-                </div>
-                <div>
-                  <p className="text-gray-400">Admin:</p>
+            <div className=" relative mb-3 w-full p-7 lg:w-4xl   bg-white shadow rounded-md">
+              <section>
+                <h2 className="text-lg font-bold border-b border-b-gray-200  border-gray-700 pb-2 mb-5">
+                  Personal Information
+                </h2>
+                <div className="grid grid-cols-2 gap-y-4 gap-x-10">
+                  <div className="flex flex-col">
+                    <p className="text-gray-400">Name:</p>
+                    <p className="font-semibold">{user?.name}</p>
+                  </div>
+                  <div className="flex flex-col">
+                    <p className="text-gray-400">Email:</p>
+                    <p className="font-semibold text-blue-400 underline">
+                      <Link to={`mailto:${user?.email}`}>{user?.email}</Link>
+                    </p>
+                  </div>
                   <div>
-                    {user?.isAdmin ? (
-                      <Badge variant="admin">Admin</Badge>
-                    ) : (
-                      <Badge>Not admin</Badge>
-                    )}
+                    <p className="text-gray-400">Phone:</p>
+                    <p className="font-semibold">{user?.phone}</p>
+                  </div>
+                  <div>
+                    <p className="text-gray-400">Admin:</p>
+                    <div>
+                      {user?.isAdmin ? (
+                        <Badge variant="admin">Admin</Badge>
+                      ) : (
+                        <Badge>Not admin</Badge>
+                      )}
+                    </div>
                   </div>
                 </div>
-              </div>
-            </section>
+              </section>
 
-            {/* Address */}
-            {/*  <section>
+              {/* Address */}
+              {/*  <section>
               <h2 className="text-lg font-bold border-b border-b-gray-200  border-gray-700 pb-2 mb-5">
                 Address
               </h2>
@@ -160,102 +163,105 @@ function UserDetails() {
                 <Message dismiss={false}>User does not provide address yet</Message>
               )}
             </section> */}
+            </div>
+
+            <div className="bg-white rounded-md p-7 shadow">
+              {/* Address */}
+              <section>
+                <h2 className="text-lg font-bold border-b border-b-gray-200  border-gray-700 pb-2 mb-5">
+                  Address
+                </h2>
+                {userAddress ? (
+                  <div className="grid grid-cols-2 gap-y-4 gap-x-10">
+                    <div className="flex flex-col ">
+                      <p className="text-gray-400">Governorate:</p>
+                      <p className="font-semibold">{userAddress?.governorate}</p>
+                    </div>
+
+                    <div>
+                      <p className="text-gray-400">City:</p>
+                      <p className="font-semibold">{userAddress?.city}</p>
+                    </div>
+
+                    <div>
+                      <p className="text-gray-400">Block:</p>
+                      <p className="font-semibold">{userAddress?.block}</p>
+                    </div>
+
+                    <div>
+                      <p className="text-gray-400">Street:</p>
+                      <p className="font-semibold">{userAddress?.street}</p>
+                    </div>
+
+                    <div>
+                      <p className="text-gray-400">House:</p>
+                      <p className="font-semibold">{userAddress?.house}</p>
+                    </div>
+                  </div>
+                ) : (
+                  <Message dismiss={false}>User does not provide address yet</Message>
+                )}
+              </section>
+            </div>
+            {userOrders?.length === 0 && (
+              <Message dismiss={false}>User does not have orders</Message>
+            )}
           </div>
 
-          <div className="bg-white rounded-md p-7 shadow-md">
-            {/* Address */}
-            <section>
-              <h2 className="text-lg font-bold border-b border-b-gray-200  border-gray-700 pb-2 mb-5">
-                Address
-              </h2>
-              {userAddress ? (
-                <div className="grid grid-cols-2 gap-y-4 gap-x-10">
-                  <div className="flex flex-col ">
-                    <p className="text-gray-400">Governorate:</p>
-                    <p className="font-semibold">{userAddress?.governorate}</p>
-                  </div>
+          {userOrders?.length > 0 && (
+            <div className="w-full mb-10">
+              <div className="">
+                <h1 className="text-lg font-bold">Customer's orders:</h1>
+                <Separator className="my-4 bg-black/20" />
+              </div>
 
-                  <div>
-                    <p className="text-gray-400">City:</p>
-                    <p className="font-semibold">{userAddress?.city}</p>
-                  </div>
+              <div className="flex flex-col gap-5">
+                {userOrders?.map((order: any) => (
+                  <div
+                    key={order._id}
+                    className="flex  lg:w-4xl  flex-col hover:bg-gray-100 transition-all duration-300 gap-5 border bg-white p-4  shadow-md rounded-lg">
+                    <div className="flex flex-col gap-5 ">
+                      <Link to={`/admin/orders/${order._id}`} className="grid grid-cols-2 gap-2">
+                        <h1 className="flex   gap-2 ">
+                          <span className="text-gray-700">Placed in:</span>
 
-                  <div>
-                    <p className="text-gray-400">Block:</p>
-                    <p className="font-semibold">{userAddress?.block}</p>
-                  </div>
+                          <span className="font-bold"> {order.createdAt.substring(0, 10)}</span>
+                        </h1>
+                        <h1 className="flex  gap-2">
+                          <span className="text-gray-700"> Payment method:</span>
 
-                  <div>
-                    <p className="text-gray-400">Street:</p>
-                    <p className="font-semibold">{userAddress?.street}</p>
-                  </div>
+                          <span className="font-bold">{order.paymentMethod}</span>
+                        </h1>
+                        <h1 className="flex gap-2">
+                          <span className="text-gray-700"> Total price:</span>
 
-                  <div>
-                    <p className="text-gray-400">House:</p>
-                    <p className="font-semibold">{userAddress?.house}</p>
+                          <span className="font-bold">{order.totalPrice.toFixed(3)} KD</span>
+                        </h1>
+                        <h1 className="flex   gap-2">
+                          <span className="text-gray-700"> Products:</span>
+
+                          <span className="font-bold">{order?.orderItems.length}</span>
+                        </h1>
+                        <h1 className="flex  gap-2 ">
+                          <span className="text-gray-700"> Delivered:</span>
+
+                          <span className="font-bold text-sm">
+                            {order?.isDelivered ? (
+                              <Badge variant="success">Delivered</Badge>
+                            ) : (
+                              <Badge variant="pending">Processing</Badge>
+                            )}
+                          </span>
+                        </h1>
+                      </Link>
+                    </div>
                   </div>
-                </div>
-              ) : (
-                <Message dismiss={false}>User does not provide address yet</Message>
-              )}
-            </section>
-          </div>
-          {userOrders?.length === 0 && <Message dismiss={false}>User does not have orders</Message>}
+                ))}
+              </div>
+            </div>
+          )}
         </div>
-
-        {userOrders?.length > 0 && (
-          <div className="w-full mb-10">
-            <div className="">
-              <h1 className="text-lg font-bold">Customer's orders:</h1>
-              <Separator className="my-4 bg-black/20" />
-            </div>
-
-            <div className="flex flex-col gap-5">
-              {userOrders?.map((order: any) => (
-                <div
-                  key={order._id}
-                  className="flex  lg:w-4xl  flex-col hover:bg-gray-100 transition-all duration-300 gap-5 border bg-white p-4  shadow-md rounded-lg">
-                  <div className="flex flex-col gap-5 ">
-                    <Link to={`/admin/orders/${order._id}`} className="grid grid-cols-2 gap-2">
-                      <h1 className="flex   gap-2 ">
-                        <span className="text-gray-700">Placed in:</span>
-
-                        <span className="font-bold"> {order.createdAt.substring(0, 10)}</span>
-                      </h1>
-                      <h1 className="flex  gap-2">
-                        <span className="text-gray-700"> Payment method:</span>
-
-                        <span className="font-bold">{order.paymentMethod}</span>
-                      </h1>
-                      <h1 className="flex gap-2">
-                        <span className="text-gray-700"> Total price:</span>
-
-                        <span className="font-bold">{order.totalPrice.toFixed(3)} KD</span>
-                      </h1>
-                      <h1 className="flex   gap-2">
-                        <span className="text-gray-700"> Products:</span>
-
-                        <span className="font-bold">{order?.orderItems.length}</span>
-                      </h1>
-                      <h1 className="flex  gap-2 ">
-                        <span className="text-gray-700"> Delivered:</span>
-
-                        <span className="font-bold text-sm">
-                          {order?.isDelivered ? (
-                            <Badge variant="success">Delivered</Badge>
-                          ) : (
-                            <Badge variant="pending">Processing</Badge>
-                          )}
-                        </span>
-                      </h1>
-                    </Link>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-      </div>
+      )}
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
         <DialogContent>
           <DialogHeader>

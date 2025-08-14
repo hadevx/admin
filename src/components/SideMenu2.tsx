@@ -169,7 +169,7 @@ function SideMenu() {
 
       {isMenuOpen && (
         <div
-          className="fixed inset-0   backdrop-blur-md z-40"
+          className="fixed inset-0  backdrop-blur-md z-40"
           onClick={() => setIsMenuOpen(false)}
           aria-hidden="true">
           <AnimatePresence>
