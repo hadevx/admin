@@ -28,7 +28,7 @@ export default function Coupon({ discountBy, categories = [], children }: Coupon
   const color = useMemo(() => colors[Math.floor(Math.random() * colors.length)], []);
 
   return (
-    <div className="relative text-white w-[400px] h-[200px] rounded-lg overflow-hidden shadow-[0_2px_rgba(0,0,0,0.1)] flex items-stretch">
+    <div className="relative text-white sm:w-[350px] md:w-[400px] h-[200px] rounded-lg overflow-hidden shadow-[0_2px_rgba(0,0,0,0.1)] flex items-stretch">
       <div
         className="w-full h-full flex items-stretch uppercase"
         style={{
