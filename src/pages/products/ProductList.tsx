@@ -22,8 +22,6 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { toast } from "react-toastify";
-import Lottie from "lottie-react";
-import thinking from "./thinking.json";
 
 function ProductList() {
   const [selectedCategory, setSelectedCategory] = useState<string>("");
