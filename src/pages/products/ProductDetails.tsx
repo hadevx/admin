@@ -82,12 +82,12 @@ function ProductDetails() {
       image: newImage || product.image,
       brand: newBrand || product.brand,
       category: newCategory || product.category,
-      countInStock: newCountInStock || product.countInStock,
+      countInStock: newCountInStock ?? product.countInStock, // 0 will work now
       description: newDescription || product.description,
     };
 
     const result = await updateProduct(updatedProduct).unwrap();
-    console.log(result);
+
     setClickEditProduct(!clickEditProduct);
     refetch();
     refetchProducts();
@@ -123,7 +123,7 @@ function ProductDetails() {
       {loadingProduct ? (
         <Loader />
       ) : (
-        <div className="px-4 w-full py-6 mb-10 lg:px-16 mt-10 min-h-screen">
+        <div className="px-4 w-full lg:w-4xl py-6 mb-10 lg:px-16 mt-10 min-h-screen">
           <div className="flex justify-between items-center mb-6">
             <h1 className="text-2xl font-bold">Product Details</h1>
             <button
@@ -133,7 +133,7 @@ function ProductDetails() {
             </button>
           </div>
           <Separator className="my-4 bg-black/20" />
-          <div className="bg-white lg:w-4xl border rounded-xl p-6 space-y-6">
+          <div className="bg-white  border rounded-xl p-6 space-y-6">
             <div className="flex justify-between items-center">
               <h2 className="text-xl font-semibold">{product?.name}</h2>
               <div className="flex items-center gap-3">
@@ -244,9 +244,9 @@ function ProductDetails() {
                     <p className="font-bold">
                       {product?.countInStock > 0 ? (
                         product.countInStock < 5 ? (
-                          <span className="text-orange-500">{product.countInStock} left</span>
+                          <span className="text-orange-500">{product?.countInStock} left</span>
                         ) : (
-                          product.countInStock
+                          product?.countInStock
                         )
                       ) : (
                         <span className="text-rose-600">Out of stock</span>
@@ -306,6 +306,7 @@ function ProductDetails() {
             <Button
               disabled={loadingDeleteProduct}
               variant="destructive"
+              className=" bg-gradient-to-t  from-rose-500 hover:opacity-90 to-rose-400"
               onClick={() => {
                 // perform deletion logic here
                 handleDeleteProduct();
