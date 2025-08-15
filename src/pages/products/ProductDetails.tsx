@@ -4,7 +4,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import Layout from "../../Layout";
 import { toast } from "react-toastify";
 import Loader from "../../components/Loader";
-import { PencilLine, UploadCloud } from "lucide-react";
+import { PencilLine } from "lucide-react";
 import {
   useGetProductByIdQuery,
   useDeleteProductMutation,
@@ -23,6 +23,9 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Loader2Icon } from "lucide-react";
+
+import Lottie from "lottie-react";
+import upload from "./uploading.json";
 
 function ProductDetails() {
   const [newName, setNewName] = useState("");
@@ -171,18 +174,20 @@ function ProductDetails() {
                     {/* <label className="block text-gray-600 font-medium">Upload new image:</label> */}
 
                     <label className="cursor-pointer h-full flex flex-col items-center justify-center w-full p-4 bg-gray-50 border-2 border-dashed border-gray-300 rounded-lg shadow hover:bg-gray-100 hover:border-gray-400 transition">
-                      <UploadCloud className="w-8 h-8 text-gray-400 mb-2" />
+                      {/* <UploadCloud className="w-8 h-8 text-gray-400 mb-2" /> */}
+                      <div className="w-44 h-44">
+                        <Lottie animationData={upload} loop={true} />
+                      </div>
                       <span className="text-gray-700 font-medium">Upload new image</span>
+                      {selectedFile && (
+                        <p className="text-sm text-gray-600 mt-1">Selected: {selectedFile.name}</p>
+                      )}
                       <input
                         type="file"
                         onChange={(e) => setSelectedFile(e.target.files ? e.target.files[0] : null)}
                         className="hidden"
                       />
                     </label>
-
-                    {selectedFile && (
-                      <p className="text-sm text-gray-600 mt-1">Selected: {selectedFile.name}</p>
-                    )}
                   </div>
                 )}
               </div>
