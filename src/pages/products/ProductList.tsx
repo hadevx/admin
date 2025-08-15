@@ -13,7 +13,6 @@ import Badge from "../../components/Badge";
 import { Box, Plus, Search } from "lucide-react";
 import Loader from "../../components/Loader";
 import { Separator } from "@/components/ui/separator";
-import { Loader2Icon } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -33,7 +32,7 @@ function ProductList() {
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [filteredProducts, setFilteredProducts] = useState<any>([]);
   const [imageFile, setImageFile] = useState<File | null>(null);
-
+  const [isCancelled, setIsCancelled] = useState(false);
   const navigate = useNavigate();
 
   const { data: products, refetch, isLoading: loadingProducts } = useGetProductsQuery(undefined);
@@ -49,7 +48,7 @@ function ProductList() {
   const [countInStock, setCountInStock] = useState<number | undefined>(undefined);
   const [description, setDescription] = useState<string>("");
 
-  const [uploadProductImage] = useUploadProductImageMutation();
+  const [uploadProductImage, { isLoading: loadingUploadImage }] = useUploadProductImageMutation();
   const [createProduct, { isLoading: loadingCreateOrder }] = useCreateProductMutation();
 
   useEffect(() => {
@@ -103,6 +102,7 @@ function ProductList() {
 
       try {
         const res = await uploadProductImage(formData).unwrap();
+        if (isCancelled) return; // ignore result if cancelled
         uploadedImage = res.image;
         uploadedPublicId = res.publicId;
       } catch (error: any) {
@@ -252,7 +252,7 @@ function ProductList() {
                           onClick={() => navigate(`/admin/productlist/${product._id}`)}>
                           <td className="px-4 py-3 flex items-center gap-2 max-w-64">
                             <img
-                              className="w-16"
+                              className="w-16 h-16 object-cover shadow-md"
                               src={product.image}
                               alt="thumbnail"
                               loading="lazy"
@@ -371,11 +371,20 @@ function ProductList() {
             className="p-2 w-full border rounded-md"
           />
           <DialogFooter className="mt-4 flex justify-end gap-2">
-            <Button variant="outline" onClick={() => setIsModalOpen(false)}>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setIsModalOpen(false);
+                setIsCancelled(true); // cancel the creation handling
+                window.location.reload(); // refresh the page
+              }}>
               Cancel
             </Button>
-            <Button variant="default" disabled={loadingCreateOrder} onClick={handleCreateProduct}>
-              {loadingCreateOrder ? <Loader2Icon className="animate-spin" /> : "Create"}
+            <Button
+              variant="default"
+              disabled={loadingCreateOrder || loadingUploadImage}
+              onClick={handleCreateProduct}>
+              {loadingUploadImage ? "Uploading..." : loadingCreateOrder ? "Creating..." : "Create"}
             </Button>
           </DialogFooter>
         </DialogContent>

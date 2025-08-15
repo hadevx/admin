@@ -123,7 +123,7 @@ function ProductDetails() {
       {loadingProduct ? (
         <Loader />
       ) : (
-        <div className="px-4 py-6 mb-10 lg:px-16 mt-10 min-h-screen">
+        <div className="px-4 w-full py-6 mb-10 lg:px-16 mt-10 min-h-screen">
           <div className="flex justify-between items-center mb-6">
             <h1 className="text-2xl font-bold">Product Details</h1>
             <button
@@ -158,12 +158,12 @@ function ProductDetails() {
             <Separator />
 
             <div className="flex  flex-col lg:flex-row gap-8">
-              <div className="flex-shrink-0 h-72 lg:h-auto ">
+              <div className="flex-shrink-0 h-auto lg:h-auto ">
                 {!clickEditProduct ? (
                   <img
                     src={product?.image}
                     alt="Product"
-                    className="w-full h-full lg:w-64 lg:h-64 object-cover rounded-lg"
+                    className="w-full h-full lg:w-64 lg:h-64 object-cover rounded-lg shadow-md"
                   />
                 ) : (
                   <div className="space-y-2">
