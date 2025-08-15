@@ -252,7 +252,7 @@ function ProductList() {
                           onClick={() => navigate(`/admin/productlist/${product._id}`)}>
                           <td className="px-4 py-3 flex items-center gap-2 max-w-64">
                             <img
-                              className="w-16 h-16 object-cover shadow-md"
+                              className="w-16 h-16 object-cover "
                               src={product.image}
                               alt="thumbnail"
                               loading="lazy"
