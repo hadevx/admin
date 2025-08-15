@@ -13,6 +13,8 @@ import Categories from "./pages/categories/Categories";
 import "react-toastify/dist/ReactToastify.css";
 import Settings from "./pages/settings/Settings";
 import ProductDetails from "./pages/products/ProductDetails";
+import ForgotPassword from "./pages/auth/ForgetPassword";
+import ResetPassword from "./pages/auth/ResetPassword";
 
 function App() {
   const { userInfo } = useSelector((state: any) => state.auth);
@@ -32,6 +34,9 @@ function App() {
         path="/admin/login"
         element={userInfo ? <Navigate to="/admin" replace /> : <Login />}
       />
+
+      <Route path="/admin/forget-password" element={<ForgotPassword />} />
+      <Route path="/reset-password/:token" element={<ResetPassword />} />
 
       {/* Admin routes */}
       <Route path="/admin" element={<PrivateRoute element={<Order />} />} />

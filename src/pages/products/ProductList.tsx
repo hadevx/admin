@@ -22,6 +22,8 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { toast } from "react-toastify";
+import Lottie from "lottie-react";
+import thinking from "./thinking.json";
 
 function ProductList() {
   const [selectedCategory, setSelectedCategory] = useState<string>("");
@@ -304,6 +306,11 @@ function ProductList() {
                       <tr>
                         <td colSpan={6} className="px-4 py-6 text-center text-gray-500">
                           No products found.
+                          {/*      <Lottie
+                            animationData={thinking}
+                            loop={false}
+                            style={{ width: "500px" }}
+                          /> */}
                         </td>
                       </tr>
                     )}

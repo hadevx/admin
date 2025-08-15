@@ -1,6 +1,6 @@
 import { useState, useContext, useEffect } from "react";
 import { EyeOff, Eye } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { useLoginUserMutation } from "../../redux/queries/userApi";
 import { useDispatch } from "react-redux";
 import { setUserInfo } from "../../redux/slices/authSlice";
@@ -14,9 +14,7 @@ function Login() {
   const storeName = useContext(StoreContext);
 
   const [showPassword, setShowPassword] = useState(false);
-  const togglePasswordVisibility = () => {
-    setShowPassword(!showPassword);
-  };
+  const togglePasswordVisibility = () => setShowPassword(!showPassword);
 
   const dispatch = useDispatch();
   const [email, setEmail] = useState("");
@@ -27,7 +25,6 @@ function Login() {
 
   const handleLogin = async (e: any) => {
     e.preventDefault();
-    // Example usage:
     const result = validateLogin({ email, password });
 
     if (!result.isValid) {
@@ -39,7 +36,6 @@ function Login() {
       }
 
       const res: any = await loginUser(result.data).unwrap();
-
       dispatch(setUserInfo({ ...res }));
       setPassword("");
       setEmail("");
@@ -54,66 +50,65 @@ function Login() {
   };
 
   useEffect(() => {
-    document.body.style.overflow = "hidden"; // disable scroll
+    document.body.style.overflow = "hidden";
     return () => {
-      document.body.style.overflow = "auto"; // enable scroll when component unmounts
+      document.body.style.overflow = "auto";
     };
   }, []);
+
   return (
-    <>
-      <div className=" flex flex-col items-center justify-center  bg-gradient-to-br from-blue-50 via-white to-blue-50  min-h-screen   text-black">
-        <div>
-          <h1 className="mb-5 text-2xl font-semibold">Login to {storeName}</h1>
+    <div className="flex flex-col items-center justify-center bg-gradient-to-br from-blue-50 via-white to-blue-50 min-h-screen text-black">
+      <h1 className="mb-5 text-2xl font-semibold">Login to {storeName}</h1>
+      <form onSubmit={handleLogin} className="w-[300px]">
+        {/* Email */}
+        <div className="h-[40px] bg-opacity-50 rounded-md bg-gray-100 flex items-center mb-4">
+          <input
+            type="email"
+            placeholder="Email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            className="w-full border rounded-md h-full bg-gray-100 py-3 px-4 outline-0 focus:border-blue-500 focus:border-2"
+          />
         </div>
-        <div className="">
-          <form onSubmit={handleLogin}>
-            <div className=" h-[40px] bg-opacity-50 w-[300px] rounded-md   bg-gray-100  placeholder:text-grey-40  flex items-center mb-4">
-              <input
-                type="email"
-                placeholder="Email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className=" w-full border rounded-md h-full bg-gray-100 bg-opacity-50 py-3 px-4  outline-0  focus:border-blue-500 focus:border-2 "
-              />
-            </div>
-            <div className="rounded-md border relative  h-[40px]  w-[300px]   bg-gray-100  placeholder:text-grey-40  flex items-center mb-2">
-              <input
-                type={showPassword ? "text" : "password"}
-                placeholder="Password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="w-full  rounded-md h-full bg-gray-100 bg-opacity-50 py-3 px-4 outline-none outline-0 focus:border-blue-500 focus:border-2"
-              />
-              <button
-                type="button"
-                className="text-gray-500 absolute right-0 focus:text-violet-60 px-4 focus:outline-none"
-                onClick={togglePasswordVisibility}>
-                {showPassword ? (
-                  <Eye strokeWidth={1} />
-                ) : (
-                  <span>
-                    <EyeOff strokeWidth={1} />
-                  </span>
-                )}
-              </button>
-            </div>
-            <div className="flex justify-center">
-              <button
-                disabled={isLoading}
-                type="submit"
-                className={clsx(
-                  "w-full cursor-pointer mt-4 border rounded-lg font-semibold flex items-center justify-center  px-3 py-2  transition-all duration-300  shadow-md text-white ",
-                  isLoading
-                    ? "bg-gray-200"
-                    : "bg-gradient-to-t from-slate-800 to-slate-600 hover:bg-gradient-to-t hover:from-slate-800 hover:to-slate-700/80"
-                )}>
-                {isLoading ? <Spinner className="!border-t-black" /> : "Log in"}
-              </button>
-            </div>
-          </form>
+
+        {/* Password */}
+        <div className="rounded-md border relative h-[40px] bg-gray-100 flex items-center mb-2">
+          <input
+            type={showPassword ? "text" : "password"}
+            placeholder="Password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            className="w-full rounded-md h-full bg-gray-100 py-3 px-4 outline-none focus:border-blue-500 focus:border-2"
+          />
+          <button
+            type="button"
+            className="text-gray-500 absolute right-0 px-4 focus:outline-none"
+            onClick={togglePasswordVisibility}>
+            {showPassword ? <Eye strokeWidth={1} /> : <EyeOff strokeWidth={1} />}
+          </button>
         </div>
-      </div>
-    </>
+
+        {/* Forgot Password Link */}
+        <div className="text-right mb-4">
+          <Link to="/admin/forget-password" className="text-sm text-blue-600 hover:underline">
+            Forgot password?
+          </Link>
+        </div>
+
+        {/* Submit Button */}
+        <button
+          disabled={isLoading}
+          type="submit"
+          className={clsx(
+            "w-full cursor-pointer mt-2 border rounded-lg font-semibold flex items-center justify-center px-3 py-2 shadow-md text-white transition-all duration-300",
+            isLoading
+              ? "bg-gray-200"
+              : "bg-gradient-to-t from-slate-800 to-slate-600 hover:from-slate-800 hover:to-slate-700/80"
+          )}>
+          {isLoading ? <Spinner className="!border-t-black" /> : "Log in"}
+        </button>
+      </form>
+    </div>
   );
 }
 

@@ -80,8 +80,8 @@ function Order() {
             {/* Container with responsive width */}
             <div className="mt-10 mb-2 overflow-hidden w-full max-w-full lg:w-4xl">
               {/* Search Box + Revenue stats */}
-              <div className="flex flex-col lg:flex-row items-center gap-4 mb-5">
-                <div className="relative w-full lg:w-64">
+              <div className="flex flex-col lg:flex-row  items-center gap-2 mb-5">
+                <div className="relative w-full lg:w-full ">
                   <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400 pointer-events-none">
                     <Search className="h-5 w-5" />
                   </span>
@@ -94,14 +94,14 @@ function Order() {
                   />
                 </div>
 
-                <div className="flex flex-wrap gap-2 lg:gap-4 items-center w-full justify-start">
+                <div className="flex  gap-2  items-center w-full ">
                   {/* Total Revenue Display */}
-                  <div className="bg-blue-50 border border-blue-200 text-blue-700 text-xs sm:text-sm font-semibold rounded-lg p-3 lg:px-4 lg:py-3 min-w-[140px] text-center">
+                  <div className="bg-blue-50 border flex-1 border-blue-200 text-blue-700 text-sm sm:text-sm font-semibold rounded-lg p-3 lg:px-4 lg:py-3  text-center">
                     Revenue: {totalRevenue} KD
                   </div>
 
                   {/* Total Items Display */}
-                  <div className="bg-blue-50 border border-blue-200 text-blue-700 text-xs sm:text-sm font-semibold rounded-lg p-3 lg:px-4 lg:py-3 min-w-[140px] text-center">
+                  <div className="bg-blue-50 border flex-1 border-blue-200 text-blue-700 text-sm sm:text-sm font-semibold rounded-lg p-3 lg:px-4 lg:py-3 text-center">
                     Items Sold: {totalItems} items
                   </div>
                 </div>
@@ -113,7 +113,7 @@ function Order() {
                   <thead className="bg-white text-gray-900/50 font-semibold">
                     <tr>
                       <th className="px-4 py-3 border-b whitespace-nowrap">Id</th>
-                      <th className="px-4 py-3 border-b whitespace-nowrap">Name</th>
+                      <th className="px-4 py-3 border-b whitespace-nowrap">Customer</th>
                       <th className="px-4 py-3 border-b whitespace-nowrap">Payment</th>
                       <th className="px-4 py-3 border-b whitespace-nowrap">Items</th>
                       <th className="px-4 py-3 border-b whitespace-nowrap">Created At</th>

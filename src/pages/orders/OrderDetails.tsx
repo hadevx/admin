@@ -20,10 +20,9 @@ function OrderDetails() {
   const { orderId } = useParams();
   const { data: order, isLoading, refetch } = useGetOrderQuery(orderId);
   // const { data: deliveryStatus } = useGetDeliveryStatusQuery(undefined);
-  const [updateOrderToDeliverd] = useUpdateOrderToDeliverdMutation();
+  const [updateOrderToDeliverd, { isLoading: loadingDelivered }] =
+    useUpdateOrderToDeliverdMutation();
   const [updateOrderToCanceled, { isLoading: isCanceled }] = useUpdateOrderToCanceledMutation();
-
-  console.log(order);
 
   const handleUpdateOrderToDelivered = async () => {
     if (order) {
@@ -49,38 +48,38 @@ function OrderDetails() {
           <div className=" px-4 py-6">
             <div className="flex gap-2 flex-col lg:flex-row  justify-between lg:items-center">
               <h1 className="text-lg  lg:text-2xl font-bold">Order details:</h1>
-              <div className="flex  text-xs items-center gap-3  lg:gap-2  lg:justify-end lg:items-center  ">
+              <div className="flex  text-xs items-center gap-3  lg:gap-2 sm:justify-end  lg:justify-end lg:items-center  ">
                 <button
-                  disabled={order?.isDelivered}
+                  disabled={order?.isDelivered || order?.isCanceled || loadingDelivered}
                   onClick={handleUpdateOrderToDelivered}
                   className={clsx(
-                    "select-none  hover:opacity-70   transition-all duration-300  lg:float-right bg-gradient-to-t    px-3 py-2 rounded-lg font-bold shadow",
-                    order?.isDelivered
+                    "select-none  hover:opacity-70 lg:text-sm   transition-all duration-300  lg:float-right bg-gradient-to-t    px-3 py-2 rounded-lg font-bold shadow",
+                    order?.isDelivered || order?.isCanceled
                       ? "from-gray-200 to-gray-200 text-gray-600"
                       : "from-teal-500 to-teal-400 text-white"
                   )}>
-                  Mark as delivered
+                  {loadingDelivered ? "Updating..." : "Mark as delivered"}
                 </button>
                 {isCanceled ? (
                   <Loader2Icon className="animate-spin" />
                 ) : (
                   <button
-                    disabled={order?.isDelivered || order?.isCanceled} // disable if delivered or canceled
+                    disabled={order?.isDelivered || order?.isCanceled || order?.isCanceled} // disable if delivered or canceled
                     onClick={handleUpdateOrderToCanceled}
                     className={clsx(
-                      "select-none hover:opacity-70 transition-all duration-300    px-3 py-2 rounded-lg font-bold shadow lg:float-right bg-gradient-to-t",
+                      "select-none hover:opacity-70 transition-all duration-300 lg:text-sm    px-3 py-2 rounded-lg font-bold shadow lg:float-right bg-gradient-to-t",
                       order?.isCanceled || order.isDelivered
                         ? "from-gray-200 to-gray-200 text-gray-600"
                         : "from-red-500 to-red-400 text-white"
                     )}>
-                    Mark as canceled
+                    {isCanceled ? "Updating..." : "Mark as canceled"}
                   </button>
                 )}
                 {/* Invoise */}
                 <PDFDownloadLink
                   document={<Invoise order={order} />}
                   fileName={`invoice-${order?._id}-${order?.createdAt?.substring(0, 10)}.pdf`}>
-                  <button className="select-none   hover:opacity-70  transition-all duration-300  float-right bg-gradient-to-t  from-rose-500 to-rose-400 text-white    px-3 py-2 rounded-lg font-bold shadow">
+                  <button className="select-none   hover:opacity-70 lg:text-sm   transition-all duration-300  float-right bg-gradient-to-t  from-rose-500 to-rose-400 text-white    px-3 py-2 rounded-lg font-bold shadow">
                     Download Invoice
                   </button>
                 </PDFDownloadLink>
@@ -146,12 +145,14 @@ function OrderDetails() {
                       </tbody>
                     </table>
 
-                    <h3 className=" font-semibold mb-2">
-                      Shipping Fees: {order?.shippingPrice.toFixed(3)} KD
-                    </h3>
-                    <h3 className=" font-semibold mb-5 ">
-                      Total Price: {order?.totalPrice.toFixed(3)} KD
-                    </h3>
+                    <div className="flex gap-5  mb-5">
+                      <p className="  ">
+                        Delivery: <strong>{order?.shippingPrice.toFixed(3)} KD</strong>
+                      </p>
+                      <p className="  ">
+                        Total Price: <strong>{order?.totalPrice.toFixed(3)} KD</strong>
+                      </p>
+                    </div>
                     <table className="w-full text-left border-collapse border border-gray-300 text-gray-700 mb-5">
                       <tbody>
                         <tr>
