@@ -91,6 +91,13 @@ export const productApi = api.injectEndpoints({
       }),
       // invalidatesTags: ["Products"],
     }),
+    deleteImage: builder.mutation({
+      query: (data) => ({
+        url: `/api/products/delete-image`,
+        method: "POST",
+        body: data,
+      }),
+    }),
     getLatestProducts: builder.query({
       query: () => ({
         url: "/api/products/latest",
@@ -142,4 +149,5 @@ export const {
   useGetCategoriesTreeQuery,
   useCreateDiscountMutation,
   useDeleteDiscountMutation,
+  useDeleteImageMutation,
 } = productApi;

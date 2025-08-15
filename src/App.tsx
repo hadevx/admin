@@ -5,7 +5,7 @@ import UsersList from "./pages/users/UsersList";
 import OrderDetails from "./pages/orders/OrderDetails";
 import UserDetails from "./pages/users/UserDetails";
 import Login from "./pages/auth/Login";
-import AdminRoute from "./components/AdminRoute";
+import PrivateRoute from "./components/PrivateRoute";
 import Delivery from "./pages/delivery/Delivery";
 import ProductList from "./pages/products/ProductList";
 import Discounts from "./pages/discounts/Discounts";
@@ -13,7 +13,6 @@ import Categories from "./pages/categories/Categories";
 import "react-toastify/dist/ReactToastify.css";
 import Settings from "./pages/settings/Settings";
 import ProductDetails from "./pages/products/ProductDetails";
-import PublicRoute from "./components/PublicRoutes";
 
 function App() {
   const { userInfo } = useSelector((state: any) => state.auth);
@@ -35,19 +34,19 @@ function App() {
       />
 
       {/* Admin routes */}
-      <Route path="/admin" element={<AdminRoute element={<Order />} />} />
-      <Route path="/admin/orders/:orderId" element={<AdminRoute element={<OrderDetails />} />} />
-      <Route path="/admin/userlist" element={<AdminRoute element={<UsersList />} />} />
-      <Route path="/admin/userlist/:userID" element={<AdminRoute element={<UserDetails />} />} />
-      <Route path="/admin/delivery" element={<AdminRoute element={<Delivery />} />} />
-      <Route path="/admin/productlist" element={<AdminRoute element={<ProductList />} />} />
+      <Route path="/admin" element={<PrivateRoute element={<Order />} />} />
+      <Route path="/admin/orders/:orderId" element={<PrivateRoute element={<OrderDetails />} />} />
+      <Route path="/admin/userlist" element={<PrivateRoute element={<UsersList />} />} />
+      <Route path="/admin/userlist/:userID" element={<PrivateRoute element={<UserDetails />} />} />
+      <Route path="/admin/delivery" element={<PrivateRoute element={<Delivery />} />} />
+      <Route path="/admin/productlist" element={<PrivateRoute element={<ProductList />} />} />
       <Route
         path="/admin/productlist/:id"
-        element={<AdminRoute element={<PublicRoute element={<ProductDetails />} />} />}
+        element={<PrivateRoute element={<ProductDetails />} />}
       />
-      <Route path="/admin/discounts" element={<AdminRoute element={<Discounts />} />} />
-      <Route path="/admin/settings" element={<AdminRoute element={<Settings />} />} />
-      <Route path="/admin/categories" element={<AdminRoute element={<Categories />} />} />
+      <Route path="/admin/discounts" element={<PrivateRoute element={<Discounts />} />} />
+      <Route path="/admin/settings" element={<PrivateRoute element={<Settings />} />} />
+      <Route path="/admin/categories" element={<PrivateRoute element={<Categories />} />} />
     </Routes>
   );
 }

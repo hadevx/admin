@@ -93,7 +93,7 @@ function ProductList() {
       return;
     }
 
-    // 1️⃣ Upload image first
+    //  Upload image first
     let uploadedImage = "";
     let uploadedPublicId = "";
     if (imageFile) {
@@ -111,14 +111,14 @@ function ProductList() {
       }
     }
 
-    // 2️⃣ Create product
+    // Create product
     const newProduct = {
       name,
       price,
       image: uploadedImage,
       imagePublicId: uploadedPublicId,
       brand,
-      category: category.charAt(0).toUpperCase() + category.slice(1),
+      category /* category.charAt(0).toUpperCase() + category.slice(1), */,
       countInStock,
       description,
     };
@@ -244,27 +244,27 @@ function ProductList() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-200 bg-white">
-                    {filteredProducts.length > 0 ? (
-                      filteredProducts.map((product: any) => (
+                    {filteredProducts?.length > 0 ? (
+                      filteredProducts?.map((product: any) => (
                         <tr
-                          key={product._id}
+                          key={product?._id}
                           className="hover:bg-gray-100 cursor-pointer transition-all duration-300 font-bold"
-                          onClick={() => navigate(`/admin/productlist/${product._id}`)}>
+                          onClick={() => navigate(`/admin/productlist/${product?._id}`)}>
                           <td className="px-4 py-3 flex items-center gap-2 max-w-64">
                             <img
                               className="w-16 h-16 object-cover "
-                              src={product.image}
+                              src={product?.image}
                               alt="thumbnail"
                               loading="lazy"
                             />
-                            <p className="truncate">{product.name}</p>
+                            <p className="truncate">{product?.name}</p>
                           </td>
                           <td className="px-4 py-3">
-                            {tree?.length ? findCategoryNameById(product.category, tree) : "---"}
+                            {tree?.length ? findCategoryNameById(product?.category, tree) : "---"}
                           </td>
-                          <td className="px-4 py-3">{product.countInStock}</td>
+                          <td className="px-4 py-3">{product?.countInStock}</td>
                           <td className="px-4 py-3">
-                            {product.countInStock === 0 ? (
+                            {product?.countInStock === 0 ? (
                               <p className="bg-red-50 rounded-xl py-1 text-red-600 text-center border-red-100 border">
                                 Out of stock
                               </p>
@@ -287,15 +287,15 @@ function ProductList() {
                                 return (
                                   <div>
                                     <span className="line-through text-zinc-500 mr-2">
-                                      {product.price.toFixed(3)} KD
+                                      {product?.price.toFixed(3)} KD
                                     </span>
                                     <span className="text-green-600 font-bold">
-                                      {discountedPrice.toFixed(3)} KD
+                                      {discountedPrice?.toFixed(3)} KD
                                     </span>
                                   </div>
                                 );
                               }
-                              return `${product.price.toFixed(3)} KD`;
+                              return `${product?.price.toFixed(3)} KD`;
                             })()}
                           </td>
                         </tr>

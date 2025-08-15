@@ -4,7 +4,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import Layout from "../../Layout";
 import { toast } from "react-toastify";
 import Loader from "../../components/Loader";
-import { PencilLine } from "lucide-react";
+import { PencilLine, UploadCloud } from "lucide-react";
 import {
   useGetProductByIdQuery,
   useDeleteProductMutation,
@@ -42,8 +42,9 @@ function ProductDetails() {
   const [deleteProduct, { isLoading: loadingDeleteProduct }] = useDeleteProductMutation();
   const [updateProduct, { isLoading: loadingUpdateProduct }] = useUpdateProductMutation();
   const { refetch: refetchProducts } = useGetProductsQuery(undefined);
-  const [uploadProductImage] = useUploadProductImageMutation();
+  const [uploadProductImage, { isLoading: loadingUploadImage }] = useUploadProductImageMutation();
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
   useEffect(() => {
     if (product) {
@@ -66,64 +67,59 @@ function ProductDetails() {
     }
   };
 
-  const categoryName = findCategoryNameById(newCategory, categoryTree) || newCategory;
-  console.log(categoryName);
-
   const handleUpdateProduct = async () => {
-    if (newPrice && newPrice <= 0) {
+    if (typeof newPrice === "number" && newPrice <= 0) {
       toast.error("Price must be a positive number");
       return;
     }
 
+    let imageUrl = newImage;
+    let newImagePublicId = product?.imagePublicId;
+
+    if (selectedFile) {
+      const formData = new FormData();
+      formData.append("image", selectedFile);
+
+      try {
+        const res = await uploadProductImage(formData).unwrap();
+        imageUrl = res.image;
+        newImagePublicId = res.publicId;
+      } catch (error: any) {
+        toast.error(error?.data?.message || error?.error || "Image upload failed");
+        return;
+      }
+    }
+
     const updatedProduct = {
       _id: productId,
-      name: newName || product.name,
-      price: newPrice || product.price,
-      image: newImage || product.image,
-      brand: newBrand || product.brand,
+      name: newName.trim() || product.name,
+      price: typeof newPrice === "number" ? newPrice : product.price,
+      image: imageUrl,
+      imagePublicId: newImagePublicId,
+      brand: newBrand.trim() || product.brand,
       category: newCategory || product.category,
-      countInStock: newCountInStock ?? product.countInStock, // 0 will work now
-      description: newDescription || product.description,
+      countInStock: typeof newCountInStock === "number" ? newCountInStock : product.countInStock,
+      description: newDescription.trim() || product.description,
     };
 
-    const result = await updateProduct(updatedProduct).unwrap();
-
-    setClickEditProduct(!clickEditProduct);
-    refetch();
-    refetchProducts();
-
-    if (result.error) {
-      toast.error(result.error);
-    } else {
-      toast.success("Product updated");
-    }
-  };
-
-  const uploadFileHandler = async (e: any) => {
-    const formData = new FormData();
-    formData.append("image", e.target.files[0]);
-
     try {
-      const res = await uploadProductImage(formData).unwrap();
-      toast.success(res.message);
-      setNewImage(res.image);
-    } catch (error: any) {
-      toast.error(error?.data?.message || error?.error);
+      await updateProduct(updatedProduct).unwrap();
+      toast.success("Product updated successfully");
+      setClickEditProduct(false);
+      refetch();
+      refetchProducts();
+      setSelectedFile(null);
+    } catch (err: any) {
+      toast.error(err?.data?.message || "Error updating product");
     }
   };
-  /*   useEffect(() => {
-    if (product?.category && !findCategoryNameById(product.category, categoryTree)) {
-      console.log("Refetching category tree...");
-      refetchCategories(); // make sure this function exists and works
-    }
-  }, [product, categoryTree]); */
 
   return (
     <Layout>
       {loadingProduct ? (
         <Loader />
       ) : (
-        <div className="px-4 w-full lg:w-4xl py-6 mb-10 lg:px-16 mt-10 min-h-screen">
+        <div className="px-4 w-full lg:w-5xl py-6 mb-10 lg:px-16 mt-10 min-h-screen">
           <div className="flex justify-between items-center mb-6">
             <h1 className="text-2xl font-bold">Product Details</h1>
             <button
@@ -137,16 +133,21 @@ function ProductDetails() {
             <div className="flex justify-between items-center">
               <h2 className="text-xl font-semibold">{product?.name}</h2>
               <div className="flex items-center gap-3">
-                {clickEditProduct &&
-                  (loadingUpdateProduct ? (
-                    <Loader2Icon className="animate-spin" />
-                  ) : (
-                    <button
-                      onClick={handleUpdateProduct}
-                      className="bg-zinc-900 px-4 py-2 rounded-lg text-white font-semibold shadow hover:opacity-90 transition">
-                      Update
-                    </button>
-                  ))}
+                {clickEditProduct && (
+                  <button
+                    onClick={handleUpdateProduct}
+                    disabled={loadingUploadImage || loadingUpdateProduct}
+                    className={`px-4 py-2 rounded-lg text-white font-semibold shadow transition
+    ${loadingUploadImage ? "bg-zinc-400 " : ""} 
+    ${loadingUpdateProduct ? "bg-zinc-400 " : ""} 
+    ${!loadingUploadImage && !loadingUpdateProduct ? "bg-black hover:opacity-90" : ""}`}>
+                    {loadingUploadImage
+                      ? "Uploading..."
+                      : loadingUpdateProduct
+                      ? "Updating..."
+                      : "Update"}
+                  </button>
+                )}
                 <button
                   onClick={() => setClickEditProduct(!clickEditProduct)}
                   className="bg-zinc-100 border px-4 py-2 rounded-lg text-black font-semibold shadow hover:opacity-70 transition flex items-center gap-2">
@@ -157,22 +158,31 @@ function ProductDetails() {
 
             <Separator />
 
-            <div className="flex  flex-col sm:flex-row lg:flex-row gap-8">
-              <div className="flex-shrink-0 h-70 sm:h-80 sm:w-80 lg:h-auto ">
+            <div className="flex  flex-col sm:flex-row lg:flex-row gap-5">
+              <div className="flex-shrink-0 h-70 sm:h-80 sm:w-80 lg:h-96 lg:w-96 ">
                 {!clickEditProduct ? (
                   <img
                     src={product?.image}
                     alt="Product"
-                    className="w-full h-full lg:w-64 lg:h-64 object-cover rounded-lg "
+                    className="w-full h-full  object-cover rounded-lg "
                   />
                 ) : (
-                  <div className="space-y-2">
-                    <label className="block text-gray-600 font-medium">Upload new image:</label>
-                    <input
-                      type="file"
-                      onChange={uploadFileHandler}
-                      className="w-full  p-2 bg-gray-50 border rounded-lg shadow"
-                    />
+                  <div className="space-y-2 h-full">
+                    {/* <label className="block text-gray-600 font-medium">Upload new image:</label> */}
+
+                    <label className="cursor-pointer h-full flex flex-col items-center justify-center w-full p-4 bg-gray-50 border-2 border-dashed border-gray-300 rounded-lg shadow hover:bg-gray-100 hover:border-gray-400 transition">
+                      <UploadCloud className="w-8 h-8 text-gray-400 mb-2" />
+                      <span className="text-gray-700 font-medium">Upload new image</span>
+                      <input
+                        type="file"
+                        onChange={(e) => setSelectedFile(e.target.files ? e.target.files[0] : null)}
+                        className="hidden"
+                      />
+                    </label>
+
+                    {selectedFile && (
+                      <p className="text-sm text-gray-600 mt-1">Selected: {selectedFile.name}</p>
+                    )}
                   </div>
                 )}
               </div>
