@@ -8,6 +8,7 @@ import { toast } from "react-toastify";
 import Spinner from "../../components/Spinner";
 import { StoreContext } from "../../StorenameContext";
 import { clsx } from "clsx";
+import { validateLogin } from "../../validation/userSchema";
 
 function Login() {
   const storeName = useContext(StoreContext);
@@ -26,14 +27,22 @@ function Login() {
 
   const handleLogin = async (e: any) => {
     e.preventDefault();
+    // Example usage:
+    const result = validateLogin({ email, password });
+
+    if (!result.isValid) {
+      return toast.error(Object.values(result.errors)[0]);
+    }
     try {
       if (!email || !password) {
         return toast.error("All fields are required");
       }
 
-      const res: any = await loginUser({ email, password }).unwrap();
+      const res: any = await loginUser(result.data).unwrap();
 
       dispatch(setUserInfo({ ...res }));
+      setPassword("");
+      setEmail("");
       navigate("/admin");
     } catch (error: any) {
       if (error?.status === "FETCH_ERROR") {
@@ -60,7 +69,7 @@ function Login() {
           <form onSubmit={handleLogin}>
             <div className=" h-[40px] bg-opacity-50 w-[300px] rounded-md   bg-gray-100  placeholder:text-grey-40  flex items-center mb-4">
               <input
-                type="text"
+                type="email"
                 placeholder="Email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}

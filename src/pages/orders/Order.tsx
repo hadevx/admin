@@ -38,6 +38,7 @@ function Order() {
   // Only include non-canceled orders
   const validOrders = filteredOrders.filter((order: any) => !order.isCanceled);
 
+  console.log(validOrders);
   const totalRevenue = validOrders.length
     ? validOrders.reduce((acc: any, order: any) => acc + order.totalPrice, 0).toFixed(3)
     : "0.000";

@@ -32,6 +32,7 @@ function ProductList() {
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [filteredProducts, setFilteredProducts] = useState<any>([]);
+  const [imageFile, setImageFile] = useState<File | null>(null);
 
   const navigate = useNavigate();
 
@@ -40,31 +41,35 @@ function ProductList() {
   const { data: discounts } = useGetDiscountStatusQuery(undefined);
   const { data: categories } = useGetCategoriesQuery(undefined);
 
+  /* Create product fields */
+  const [name, setName] = useState<string>("");
+  const [price, setPrice] = useState<number | undefined>(undefined);
+  const [brand, setBrand] = useState<string>("");
+  const [category, setCategory] = useState<string>("");
+  const [countInStock, setCountInStock] = useState<number | undefined>(undefined);
+  const [description, setDescription] = useState<string>("");
+
+  const [uploadProductImage] = useUploadProductImageMutation();
+  const [createProduct, { isLoading: loadingCreateOrder }] = useCreateProductMutation();
+
   useEffect(() => {
     if (products) {
       let filtered: any = [...products];
 
-      // Search
       if (searchQuery) {
         filtered = filtered.filter((product: any) =>
           product.name.toLowerCase().includes(searchQuery.toLowerCase())
         );
       }
-
-      // Category
       if (selectedCategory) {
         filtered = filtered.filter((product: any) => product.category === selectedCategory);
       }
-
-      // Price Range
       if (minPrice !== "") {
         filtered = filtered.filter((product: any) => product.price >= parseFloat(minPrice));
       }
       if (maxPrice !== "") {
         filtered = filtered.filter((product: any) => product.price <= parseFloat(maxPrice));
       }
-
-      // Stock
       if (stockStatus === "in-stock") {
         filtered = filtered.filter((product: any) => product.countInStock >= 5);
       } else if (stockStatus === "low-stock") {
@@ -79,68 +84,64 @@ function ProductList() {
     }
   }, [products, searchQuery, selectedCategory, minPrice, maxPrice, stockStatus]);
 
-  /* Create products */
-  const [name, setName] = useState<string>("");
-  const [price, setPrice] = useState<number | undefined>(undefined);
-  const [image, setImage] = useState<string>("");
-  const [brand, setBrand] = useState<string>("");
-  const [category, setCategory] = useState<string>("");
-  const [countInStock, setCountInStock] = useState<number | undefined>(undefined);
-  const [description, setDescription] = useState<string>("");
-
-  const [uploadProductImage] = useUploadProductImageMutation();
-  const [createProduct, { isLoading: loadingCreateOrder }] = useCreateProductMutation();
-
   const handleCreateProduct = async () => {
     if (price && price <= 0) {
       toast.error("Price must be a positive number");
       return;
     }
-    if (!name || !price || !image || !category || !countInStock || !description) {
+    if (!name || !price || !imageFile || !category || !countInStock || !description) {
       toast.error("All fields are required");
       return;
     }
 
+    // 1️⃣ Upload image first
+    let uploadedImage = "";
+    let uploadedPublicId = "";
+    if (imageFile) {
+      const formData = new FormData();
+      formData.append("image", imageFile);
+
+      try {
+        const res = await uploadProductImage(formData).unwrap();
+        uploadedImage = res.image;
+        uploadedPublicId = res.publicId;
+      } catch (error: any) {
+        toast.error(error?.data?.message || error?.error);
+        return; // stop creating product if image upload fails
+      }
+    }
+
+    // 2️⃣ Create product
     const newProduct = {
       name,
       price,
-      image,
+      image: uploadedImage,
+      imagePublicId: uploadedPublicId,
       brand,
       category: category.charAt(0).toUpperCase() + category.slice(1),
       countInStock,
       description,
     };
 
-    const result = await createProduct(newProduct);
-
-    if ("error" in result) {
-      toast.error("Error creating product");
-    } else {
-      toast.success("Product created");
-      refetch();
-      setIsModalOpen(false);
-      resetForm();
-    }
-  };
-
-  const uploadFileHandler = async (e: ChangeEvent<HTMLInputElement>) => {
-    if (!e.target.files?.length) return;
-    const formData = new FormData();
-    formData.append("image", e.target.files[0]);
-
     try {
-      const res = await uploadProductImage(formData).unwrap();
-      toast.success(res.message);
-      setImage(res.image);
-    } catch (error: any) {
-      toast.error(error?.data?.message || error?.error);
+      const result = await createProduct(newProduct);
+      if ("error" in result) {
+        toast.error("Error creating product");
+      } else {
+        toast.success("Product created");
+        refetch();
+        setIsModalOpen(false);
+        resetForm();
+      }
+    } catch (err) {
+      toast.error("Failed to create product");
     }
   };
 
   const resetForm = () => {
     setName("");
     setPrice(undefined);
-    setImage("");
+    setImageFile(null);
     setBrand("");
     setCategory("");
     setCountInStock(undefined);
@@ -152,7 +153,7 @@ function ProductList() {
       {loadingProducts ? (
         <Loader />
       ) : (
-        <div className=" flex w-full mb-10 lg:w-4xl min-h-screen lg:min-h-auto justify-between py-3 mt-[50px] px-4 lg:ml-[50px]">
+        <div className="flex w-full mb-10 lg:w-4xl min-h-screen lg:min-h-auto justify-between py-3 mt-[50px] px-4 lg:ml-[50px]">
           <div className="w-full">
             <div className="flex justify-between items-center">
               <h1 className="text-lg lg:text-2xl font-black flex gap-2 lg:gap-5 items-center">
@@ -173,10 +174,10 @@ function ProductList() {
             </div>
 
             <Separator className="my-4 bg-black/20" />
+
             {/* Filters */}
             <div className="mt-10 mb-2">
               <div className="flex flex-wrap items-center gap-4 mb-5">
-                {/* Search Input */}
                 <div className="relative w-full lg:w-64">
                   <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400">
                     <Search className="h-5 w-5" />
@@ -190,8 +191,7 @@ function ProductList() {
                   />
                 </div>
 
-                <div className="grid  w-full grid-cols-4 gap-2 lg:gap-4">
-                  {/* Category Filter */}
+                <div className="grid w-full grid-cols-4 gap-2 lg:gap-4">
                   <select
                     value={selectedCategory}
                     onChange={(e) => setSelectedCategory(e.target.value)}
@@ -204,7 +204,6 @@ function ProductList() {
                     ))}
                   </select>
 
-                  {/* Price Range Filter */}
                   <input
                     type="number"
                     placeholder="Min Price"
@@ -220,7 +219,6 @@ function ProductList() {
                     className="border bg-white border-gray-300 rounded-lg p-2 text-sm"
                   />
 
-                  {/* Stock Filter */}
                   <select
                     value={stockStatus}
                     onChange={(e) => setStockStatus(e.target.value)}
@@ -317,7 +315,7 @@ function ProductList() {
         </div>
       )}
 
-      {/* Create product */}
+      {/* Create product modal */}
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
         <DialogContent>
           <DialogHeader>
@@ -325,7 +323,7 @@ function ProductList() {
           </DialogHeader>
           <input
             type="file"
-            onChange={uploadFileHandler}
+            onChange={(e) => setImageFile(e.target.files?.[0] || null)}
             className="p-2 w-full border rounded-md"
           />
           <input
