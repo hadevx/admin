@@ -1,4 +1,4 @@
-import { useEffect, useState, type ChangeEvent, type JSX } from "react";
+import { useEffect, useState, type JSX } from "react";
 import { useNavigate } from "react-router-dom";
 import Layout from "../../Layout";
 import {
