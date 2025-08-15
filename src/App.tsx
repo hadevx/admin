@@ -36,7 +36,7 @@ function App() {
       />
 
       <Route path="/admin/forget-password" element={<ForgotPassword />} />
-      <Route path="/reset-password/:token" element={<ResetPassword />} />
+      <Route path="/admin/reset-password/:token" element={<ResetPassword />} />
 
       {/* Admin routes */}
       <Route path="/admin" element={<PrivateRoute element={<Order />} />} />
