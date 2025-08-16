@@ -243,7 +243,7 @@ const Invoise = ({ order }: { order: any }) => {
 
         {/* Footer */}
         <View style={styles.footer}>
-          <Text>Thank you for your business &hearts;</Text>
+          <Text>Thank you for your business</Text>
           <Text>{storeName}</Text>
         </View>
       </Page>
