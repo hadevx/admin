@@ -104,7 +104,7 @@ function Discounts() {
       ) : (
         <div className="px-4 w-full lg:w-4xl min-h-screen lg:min-h-auto lg:px-4 lg:py-6 mt-[50px] lg:ml-[50px] space-y-5">
           {/* Discounts Section */}
-          <section className="max-w-4xl mx-auto w-full">
+          <section className="lg:w-4xl mx-auto w-full">
             <div className="flex mt-5 lg:mt-0 justify-between items-center ">
               <h1 className="lg:text-2xl text-lg font-extrabold text-gray-900">Set Discounts</h1>
               <div className="flex ">
