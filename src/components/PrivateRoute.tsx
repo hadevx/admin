@@ -13,7 +13,7 @@ import { useSelector } from "react-redux";
  */
 function PrivateRoute({ element }: { element: React.ReactElement }) {
   // Get the authentication state from Redux
-  const { userInfo } = useSelector((state: any) => state.auth);
+  const { adminUserInfo } = useSelector((state: any) => state.auth);
 
   /**
    * Check:
@@ -23,7 +23,7 @@ function PrivateRoute({ element }: { element: React.ReactElement }) {
    * If both pass → allow access to the page.
    * Else → redirect to the admin login page.
    */
-  return userInfo && userInfo.isAdmin ? element : <Navigate to="/admin/login" replace />;
+  return adminUserInfo && adminUserInfo.isAdmin ? element : <Navigate to="/admin/login" replace />;
 }
 
 export default PrivateRoute;

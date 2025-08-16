@@ -17,7 +17,7 @@ import ForgotPassword from "./pages/auth/ForgetPassword";
 import ResetPassword from "./pages/auth/ResetPassword";
 
 function App() {
-  const { userInfo } = useSelector((state: any) => state.auth);
+  const { adminUserInfo } = useSelector((state: any) => state.auth);
 
   return (
     <Routes>
@@ -25,14 +25,14 @@ function App() {
       <Route
         path="/"
         element={
-          userInfo ? <Navigate to="/admin" replace /> : <Navigate to="/admin/login" replace />
+          adminUserInfo ? <Navigate to="/admin" replace /> : <Navigate to="/admin/login" replace />
         }
       />
 
       {/* Login page */}
       <Route
         path="/admin/login"
-        element={userInfo ? <Navigate to="/admin" replace /> : <Login />}
+        element={adminUserInfo ? <Navigate to="/admin" replace /> : <Login />}
       />
 
       <Route path="/admin/forget-password" element={<ForgotPassword />} />
