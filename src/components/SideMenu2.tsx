@@ -29,7 +29,9 @@ function SideMenu() {
   const location = useLocation();
   const navigate = useNavigate();
   const { pathname } = location;
-  const { userInfo } = useSelector((state: any) => state.auth);
+
+  const { adminUserInfo } = useSelector((state: any) => state.auth);
+
   const dispatch = useDispatch();
 
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -61,14 +63,14 @@ function SideMenu() {
       <div className="mt-10  flex items-center gap-2  p-2">
         <div className="rounded-full   select-none border-2 border-gray-400 hover:border-gray-900 size-12  flex justify-center items-center transition">
           <div className="rounded-full hover:opacity-80  bg-gradient-to-r shadow-md from-zinc-600 to-zinc-800 text-white size-10  flex justify-center items-center font-semibold text-lg">
-            {userInfo?.name.charAt(0).toUpperCase()}
-            {userInfo?.name.charAt(userInfo?.name.length - 1).toUpperCase()}
+            {adminUserInfo?.name.charAt(0).toUpperCase()}
+            {adminUserInfo?.name.charAt(adminUserInfo?.name.length - 1).toUpperCase()}
           </div>
         </div>
 
         <div className="">
-          <p className="  text-sm font-bold ">{userInfo?.name}</p>
-          <p className="text-sm text-gray-500 ">{userInfo?.email}</p>
+          <p className="  text-sm font-bold ">{adminUserInfo?.name}</p>
+          <p className="text-sm text-gray-500 ">{adminUserInfo?.email}</p>
         </div>
       </div>
 
