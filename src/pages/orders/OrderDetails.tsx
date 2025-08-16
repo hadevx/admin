@@ -50,7 +50,7 @@ function OrderDetails() {
       {isLoading ? (
         <Loader />
       ) : (
-        <div className=" mb-10 mt-[50px] min-h-screen  w-full lg:w-4xl lg:py-3 lg:mt-[50px]  lg:ml-[50px] ">
+        <div className=" mb-10 mt-[50px] min-h-screen  w-full lg:w-4xl lg:py-3 lg:mt-[50px] ">
           <div className=" px-4 py-6">
             <div className="flex gap-2 flex-col lg:flex-row  justify-between lg:items-center">
               <h1 className="text-lg  lg:text-2xl font-bold">Order details:</h1>
@@ -127,7 +127,6 @@ function OrderDetails() {
                       </div>
                     </div>
 
-                    {/* <h3 className="text-xs lg:text-xl font-semibold mb-2">Items:</h3> */}
                     <table className="w-full table-auto  border-collapse mb-5">
                       <thead>
                         <tr className="bg-gray-100  border-b">
@@ -195,7 +194,7 @@ function OrderDetails() {
                         </tr>
                       </tbody>
                     </table>
-                    <div className="flex flex-col sm:flex-row sm:justify-between items-center gap-4 bg-gray-50 p-4 rounded-lg shadow-sm">
+                    <div className="flex flex-col sm:flex-row sm:justify-between items-center gap-4  p-4 rounded-lg shadow-sm">
                       <p className="text-gray-700 font-medium">
                         <span className="font-semibold">Payment Method:</span>{" "}
                         {order?.paymentMethod}
@@ -215,44 +214,6 @@ function OrderDetails() {
                       </div>
                     </div>
                   </div>
-                  {/* <div className="flex text-xs lg:text-lg gap-2 justify-start items-start lg:justify-end lg:items-center  lg:gap-5">
-                    <button
-                      disabled={order?.isDelivered}
-                      onClick={handleUpdateOrderToDelivered}
-                      className={clsx(
-                        "select-none mt-5   transition-all duration-300  lg:float-right bg-gradient-to-t p-1   lg:px-3 lg:py-2 rounded-lg font-bold shadow-md",
-                        order?.isDelivered
-                          ? "from-gray-200 to-gray-200 text-gray-600"
-                          : "from-teal-500 to-teal-400 text-white"
-                      )}>
-                      Mark as delivered
-                    </button>
-                    {isCanceled ? (
-                      <Loader2Icon className="animate-spin" />
-                    ) : (
-                      <button
-                        disabled={order?.isDelivered || order?.isCanceled} // disable if delivered or canceled
-                        onClick={handleUpdateOrderToCanceled}
-                        className={clsx(
-                          "select-none mt-5 transition-all duration-300 p-1   lg:px-3 lg:py-2 rounded-lg font-bold shadow-md lg:float-right bg-gradient-to-t",
-                          order?.isCanceled || order.isDelivered
-                            ? "from-gray-200 to-gray-200 text-gray-600"
-                            : "from-red-500 to-red-400 text-white"
-                        )}>
-                        Mark as canceled
-                      </button>
-                    )}
-                   
-                    <PDFDownloadLink
-                      document={<Invoise order={order} />}
-                      fileName={`invoice-${order?._id}-${order?.createdAt?.substring(0, 10)}.pdf`}>
-                      <button className="select-none mt-5  transition-all duration-300  float-right bg-gradient-to-t   from-rose-500 to-rose-400 text-white p-1   lg:px-3 lg:py-2 rounded-lg font-bold shadow-md">
-                        Download Invoice
-                      </button>
-                    </PDFDownloadLink>
-
-                  
-                  </div> */}
                 </>
               )
             )}
