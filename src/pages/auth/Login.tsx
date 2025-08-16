@@ -89,7 +89,7 @@ function Login() {
         </div>
 
         {/* Forgot Password Link */}
-        <div className="text-right mb-4">
+        <div className="text-left mb-4">
           <Link to="/admin/forget-password" className="text-sm text-blue-600 hover:underline">
             Forgot password?
           </Link>
