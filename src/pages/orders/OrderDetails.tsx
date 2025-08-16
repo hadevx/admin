@@ -22,20 +22,26 @@ function OrderDetails() {
   // const { data: deliveryStatus } = useGetDeliveryStatusQuery(undefined);
   const [updateOrderToDeliverd, { isLoading: loadingDelivered }] =
     useUpdateOrderToDeliverdMutation();
+
   const [updateOrderToCanceled, { isLoading: isCanceled }] = useUpdateOrderToCanceledMutation();
 
   const handleUpdateOrderToDelivered = async () => {
-    if (order) {
-      await updateOrderToDeliverd(orderId);
+    try {
+      await updateOrderToDeliverd(orderId).unwrap(); // unwrap to catch errors
       toast.success("Order is updated to delivered");
       refetch();
+    } catch (error) {
+      toast.error("Failed to update order");
     }
   };
+
   const handleUpdateOrderToCanceled = async () => {
-    if (order) {
-      await updateOrderToCanceled(orderId);
+    try {
+      await updateOrderToCanceled(orderId).unwrap();
       toast.success("Order is canceled");
       refetch();
+    } catch (error) {
+      toast.error("Failed to cancel order");
     }
   };
 
@@ -68,7 +74,7 @@ function OrderDetails() {
                     onClick={handleUpdateOrderToCanceled}
                     className={clsx(
                       "select-none hover:opacity-70 transition-all duration-300 lg:text-sm    px-3 py-2 rounded-lg font-bold shadow lg:float-right bg-gradient-to-t",
-                      order?.isCanceled || order.isDelivered
+                      order?.isCanceled || order?.isDelivered
                         ? "from-gray-200 to-gray-200 text-gray-600"
                         : "from-red-500 to-red-400 text-white"
                     )}>
