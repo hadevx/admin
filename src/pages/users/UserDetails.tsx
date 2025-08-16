@@ -73,7 +73,7 @@ function UserDetails() {
       ) : (
         <div
           className={clsx(
-            "px-4 min-h-screen py-3 w-full mb-10 flex gap-10 flex-col  lg:text-lg lg:flex-col  mt-[50px]  lg:ml-[50px] "
+            "px-4 min-h-screen lg:w-4xl py-3 w-full mb-10 flex gap-10 flex-col  lg:text-lg lg:flex-col  mt-[50px]  lg:ml-[50px] "
           )}>
           <div className="">
             <div className="flex justify-between items-center  ">
