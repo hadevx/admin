@@ -209,7 +209,7 @@ function Discounts() {
 
           {/* Current Coupons Section */}
           <section className="mb-10 w-full">
-            <h1 className="text-lg lg:text-lg font-bold mb-4">Current Discounts</h1>
+            <h1 className="text-lg lg:text-lg font-bold mb-4 mt-4">Current Discounts</h1>
             <Separator className="my-3 bg-black/20" />
             {discountStatus && discountStatus.length > 0 ? (
               <div className="grid sm:grid-cols-2 md:grid-cols-2 gap-5">

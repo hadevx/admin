@@ -34,7 +34,7 @@ function Delivery() {
           </div>
           <Separator className="my-4 bg-black/10" />
 
-          <div className="bg-white shadow-md rounded-xl p-5  space-y-3 lg:space-y-0 lg:flex lg:items-end lg:justify-between gap-6">
+          <div className="bg-white border rounded-xl p-5  space-y-3 lg:space-y-0 lg:flex lg:items-end lg:justify-between gap-6">
             {/* Time to Deliver */}
             <div className="w-full lg:w-[200px]">
               <label className="block mb-1 text-sm font-medium text-zinc-700">
@@ -43,7 +43,7 @@ function Delivery() {
               <select
                 onChange={(e) => setTimeToDeliver(e.target.value)}
                 value={timeToDeliver}
-                className="cursor-pointer  px-4 py-2 border rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 w-full">
+                className="cursor-pointer text-base px-4 py-2 border rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 w-full">
                 <option value="" disabled>
                   Choose time to deliver
                 </option>
@@ -59,7 +59,7 @@ function Delivery() {
               <select
                 value={shippingFee}
                 onChange={(e) => setShippingFee(e.target.value)}
-                className="cursor-pointer px-4 py-2 border rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 w-full">
+                className="cursor-pointer text-base px-4 py-2 border rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 w-full">
                 <option value="" disabled>
                   Choose shipping fee
                 </option>
@@ -72,11 +72,11 @@ function Delivery() {
             </div>
             {/* Min delivery cost */}
             <div className="w-full lg:w-[200px]">
-              <p className="block mb-1 text-sm font-medium text-zinc-700">Min delivery cost</p>
+              <p className="block  mb-1 text-sm font-medium text-zinc-700">Min delivery cost</p>
               <select
                 value={minDeliveryCost}
                 onChange={(e) => setMinDeliveryCost(e.target.value)}
-                className="cursor-pointer px-4 py-2 border rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 w-full">
+                className="cursor-pointer px-4 text-base py-2 border rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 w-full">
                 <option value="" disabled>
                   Min delivery cost
                 </option>
@@ -107,7 +107,7 @@ function Delivery() {
           </div>
           <Separator className="my-4 bg-black/10" />
 
-          <div className="bg-white  shadow-md rounded-xl p-5  flex flex-col lg:flex-row lg:items-center lg:justify-start gap-3 lg:gap-10 font-semibold text-zinc-800">
+          <div className="bg-white  border rounded-xl p-5  flex flex-col lg:flex-row lg:items-center lg:justify-start gap-3 lg:gap-10 font-semibold text-zinc-800">
             <div>
               <span className="block text-xs text-zinc-500">Time to Deliver</span>
               {isLoading ? (

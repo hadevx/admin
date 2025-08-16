@@ -53,7 +53,7 @@ function Settings() {
           </div>
           <Separator className="my-4 bg-black/10" />
 
-          <div className="bg-white shadow-md rounded-xl p-5  space-y-4">
+          <div className="bg-white border rounded-xl p-5  space-y-4">
             {/* Row with select and button */}
             <div className="flex items-end gap-6">
               <div className="w-full lg:w-full">
@@ -103,7 +103,7 @@ function Settings() {
           </div>
           <Separator className="my-4 bg-black/10" />
 
-          <div className="bg-white shadow-md rounded-xl p-5  flex flex-col gap-4 lg:gap-6 font-semibold text-zinc-800">
+          <div className="bg-white border rounded-xl p-5  flex flex-col gap-4 lg:gap-6 font-semibold text-zinc-800">
             <div className="flex flex-col lg:flex-row lg:items-center lg:justify-start gap-4 lg:gap-10">
               <div>
                 <span className="block text-xs text-zinc-500">Condition</span>
