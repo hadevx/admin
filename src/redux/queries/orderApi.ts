@@ -10,7 +10,7 @@ export const orderApi = api.injectEndpoints({
     }),
     getOrder: builder.query({
       query: (orderId) => ({
-        url: `/api/orders/${orderId}`,
+        url: `/api/orders/admin/${orderId}`,
       }),
       keepUnusedDataFor: 5,
     }),

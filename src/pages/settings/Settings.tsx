@@ -131,7 +131,7 @@ function Settings() {
               {isLoading ? (
                 <Spinner className="border-t-black" />
               ) : (
-                <p className="whitespace-pre-wrap max-w-md">
+                <p className="whitespace-pre-wrap max-w-md break-words">
                   {storeStatus?.[0].banner?.trim() ? storeStatus[0].banner : "No banner"}
                 </p>
               )}
