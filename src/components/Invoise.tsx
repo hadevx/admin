@@ -238,9 +238,7 @@ const Invoise = ({ order }: { order: any }) => {
         <View style={styles.totalsSection}>
           <Text style={styles.subtotalText}>Subtotal: {calculateSubtotal()} KD</Text>
           <Text style={styles.subtotalText}>Delivery: {order.shippingPrice.toFixed(3)} KD</Text>
-          <Text style={styles.totalText}>
-            Total: {(Number(order.totalPrice) + Number(order.shippingPrice)).toFixed(3)} KD
-          </Text>
+          <Text style={styles.totalText}>Total: {order.totalPrice} KD</Text>
         </View>
 
         {/* Footer */}
