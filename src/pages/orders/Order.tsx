@@ -60,7 +60,7 @@ function Order() {
       {isLoading ? (
         <Loader />
       ) : (
-        <div className="px-4 flex flex-col w-full min-h-screen lg:min-h-auto py-3 mt-[50px]  lg:ml-[50px]">
+        <div className="px-4 flex flex-col w-full min-h-screen lg:min-h-auto py-3 mt-[50px]  ">
           {/* Header */}
           <div className="w-full">
             <div className="flex justify-between items-center flex-wrap gap-3">

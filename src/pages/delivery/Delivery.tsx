@@ -26,7 +26,7 @@ function Delivery() {
 
   return (
     <Layout>
-      <div className="px-4 w-full lg:w-4xl min-h-screen lg:min-h-auto lg:text-lg py-6 mt-[50px] lg:ml-[50px] space-y-5">
+      <div className="px-4 w-full lg:w-4xl min-h-screen lg:min-h-auto lg:text-lg py-6 mt-[50px]  space-y-5">
         {/* Update Section */}
         <section>
           <div className="flex items-center gap-2 mb-2">

@@ -102,9 +102,9 @@ function Discounts() {
       {loadingCategories ? (
         <Loader />
       ) : (
-        <div className="px-4 w-full lg:w-4xl min-h-screen lg:min-h-auto lg:px-4 lg:py-6 mt-[50px] lg:ml-[50px] space-y-5">
+        <div className="px-4 w-full   lg:w-4xl min-h-screen lg:min-h-auto lg:px-4 lg:py-6 mt-[50px]  ">
           {/* Discounts Section */}
-          <section className="lg:w-4xl mx-auto w-full">
+          <section className=" mx-auto w-full">
             <div className="flex mt-5 lg:mt-0 justify-between items-center ">
               <h1 className="lg:text-2xl text-lg font-extrabold text-gray-900">Set Discounts</h1>
               <div className="flex ">
@@ -118,7 +118,7 @@ function Discounts() {
             </div>
             <Separator className="my-4 bg-black/20" />
 
-            <div className="bg-white lg:mt-10 lg:w-4xl p-8 rounded-2xl border space-y-5">
+            <div className="bg-white lg:mt-10  p-8 rounded-2xl border space-y-5">
               {/* Controls */}
               <div className="flex flex-col lg:flex-col lg:justify-start gap-5 lg:gap-8">
                 {/* Discount Selector */}

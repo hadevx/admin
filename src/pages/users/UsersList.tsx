@@ -33,7 +33,7 @@ function Customers() {
       {isLoading ? (
         <Loader />
       ) : (
-        <div className="lg:px-4 mb-10  w-full min-h-screen lg:min-h-auto flex text-xs lg:text-lg  justify-between py-3 mt-[50px] px-4 lg:ml-[50px]  ">
+        <div className="lg:px-4 mb-10 lg:w-4xl  w-full min-h-screen lg:min-h-auto flex text-xs lg:text-lg  justify-between py-3 mt-[50px] px-4  ">
           <div className="w-full">
             <div className="flex justify-between items-center ">
               <h1 className=" text-lg lg:text-2xl font-black flex gap-2 lg:gap-5 items-center">
@@ -49,7 +49,7 @@ function Customers() {
             </div>
             <Separator className="my-4 bg-black/20" />
 
-            <div className=" mt-10  lg:w-4xl mb-2 overflow-hidden ">
+            <div className=" mt-10 mb-2 overflow-hidden ">
               <div className="relative w-full lg:w-64 mb-5">
                 <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400">
                   <Search className="h-5 w-5" />
@@ -63,7 +63,7 @@ function Customers() {
                 />
               </div>
 
-              <div className=" rounded-lg border lg:p-10 overflow-x-scroll bg-white">
+              <div className=" rounded-lg border lg:p-10 overflow-x-scrol md:overflow-auto  bg-white">
                 <table className="w-full rounded-lg text-xs lg:text-sm  border-gray-200  text-left text-gray-700 ">
                   <thead className="bg-white text-gray-900/50 font-semibold">
                     <tr>

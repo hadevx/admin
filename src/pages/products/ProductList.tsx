@@ -153,7 +153,7 @@ function ProductList() {
       {loadingProducts ? (
         <Loader />
       ) : (
-        <div className="flex w-full mb-10 lg:w-4xl min-h-screen lg:min-h-auto justify-between py-3 mt-[50px] px-4 lg:ml-[50px]">
+        <div className="flex w-full mb-10 lg:w-4xl min-h-screen lg:min-h-auto justify-between py-3 mt-[50px] px-4 ">
           <div className="w-full">
             <div className="flex justify-between items-center">
               <h1 className="text-lg lg:text-2xl font-black flex gap-2 lg:gap-5 items-center">

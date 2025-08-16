@@ -122,7 +122,7 @@ function ProductDetails() {
       {loadingProduct ? (
         <Loader />
       ) : (
-        <div className="px-4 w-full lg:w-5xl py-6 mb-10 lg:px-16 mt-10 min-h-screen">
+        <div className="px-4 w-full lg:w-4xl py-6 mb-10  mt-10 min-h-screen">
           <div className="flex justify-between items-center mb-6">
             <h1 className="text-2xl font-bold">Product Details</h1>
             <button
