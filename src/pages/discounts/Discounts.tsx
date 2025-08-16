@@ -183,7 +183,7 @@ function Discounts() {
               </div>
 
               {/* Calculate Discount Section */}
-              <div className="lg:mt-6 p-4 border rounded-lg bg-gray-50">
+              <div className="lg:mt-6 p-4 border rounded-lg bg-gray-50 w-full">
                 <p className="block mb-2 text-sm font-semibold text-gray-700">Calculate Discount</p>
                 <input
                   id="originalPrice"
