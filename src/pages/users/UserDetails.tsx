@@ -90,7 +90,7 @@ function UserDetails() {
             </div>
             <Separator className="my-4 bg-black/20" />
 
-            <div className=" relative mb-3 w-full p-7 lg:w-4xl   bg-white shadow rounded-md">
+            <div className=" relative mb-3 w-full p-7  bg-white shadow rounded-md">
               <section>
                 <h2 className="text-lg font-bold border-b border-b-gray-200  border-gray-700 pb-2 mb-5">
                   Personal Information
@@ -201,7 +201,7 @@ function UserDetails() {
                   userOrders.map((order: any) => (
                     <div
                       key={order._id}
-                      className="flex mb-2 flex-col hover:bg-gray-100 transition-all duration-300 gap-4 border bg-zinc-50  p-4 shadow-md rounded-lg max-w-full">
+                      className="flex mb-2 flex-col hover:bg-gray-100 transition-all duration-300 gap-4 border bg-zinc-50  p-4 shadow-md rounded-lg w-full">
                       <Link
                         to={`/admin/orders/${order._id}`}
                         className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
