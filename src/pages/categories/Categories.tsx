@@ -43,11 +43,8 @@ function Categories() {
   const { refetch: refetchProducts } = useGetProductsQuery(undefined);
   const [createCategory, { isLoading: isCreating }] = useCreateCategoryMutation();
   const [deleteCategory, { isLoading: isDeleting }] = useDeleteCategoryMutation();
-  /*   const {
-    data: categories = [],
-    refetch,
-    isLoading: isLoadingCategories,
-  } = useGetCategoriesQuery(undefined); */
+
+  const [filterType, setFilterType] = useState("all"); // new filter state
 
   const {
     data,
@@ -60,9 +57,17 @@ function Categories() {
 
   const { data: tree, refetch: refetchTree } = useGetCategoriesTreeQuery(undefined);
 
-  const filteredCategories = categories.filter((cat: any) =>
+  /*   const filteredCategories = categories.filter((cat: any) =>
     cat.name.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  ); */
+
+  const filteredCategories = categories
+    .filter((cat: any) => cat.name.toLowerCase().includes(searchTerm.toLowerCase()))
+    .filter((cat: any) => {
+      if (filterType === "main") return !cat.parent;
+      if (filterType === "sub") return !!cat.parent;
+      return true; // all
+    });
 
   const handleCreateCategory = async () => {
     if (!category.trim()) {
@@ -144,19 +149,31 @@ function Categories() {
           </div>
           <Separator className="my-4 bg-black/20" />
           <div className="  mt-10 mb-2 overflow-hidden">
-            <div className="relative w-full lg:w-64 mb-5">
-              <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400">
-                <Search className="h-5 w-5" />
-              </span>
-              <input
-                type="text"
-                placeholder="Search categories..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full border bg-white border-gray-300 rounded-lg py-3 pl-10 pr-4 text-sm focus:outline-none focus:border-blue-500 focus:border-2"
-              />
-            </div>
+            <div className="flex flex-col lg:flex-row items-start lg:items-center gap-3 mb-5">
+              {/* Search box */}
+              <div className="relative w-full lg:w-64">
+                <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400">
+                  <Search className="h-5 w-5" />
+                </span>
+                <input
+                  type="text"
+                  placeholder="Search categories..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="w-full border bg-white border-gray-300 rounded-lg py-3 pl-10 pr-4 text-sm focus:outline-none focus:border-blue-500 focus:border-2"
+                />
+              </div>
 
+              {/* Filter dropdown */}
+              <select
+                value={filterType}
+                onChange={(e) => setFilterType(e.target.value)}
+                className="border bg-white border-gray-300 rounded-lg py-3 px-4 text-sm focus:outline-none focus:border-blue-500">
+                <option value="all">All Categories</option>
+                <option value="main">Main Categories</option>
+                <option value="sub">Subcategories</option>
+              </select>
+            </div>
             <div className="rounded-lg border lg:p-10 bg-white">
               <table className="w-full text-sm text-left text-gray-700">
                 <thead className="bg-white text-gray-900/50 font-semibold">

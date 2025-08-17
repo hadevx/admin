@@ -5,7 +5,8 @@ import {
   useGetProductsQuery,
   useUploadProductImageMutation,
   useCreateProductMutation,
-  useGetCategoriesQuery,
+  // useGetCategoriesQuery,
+  useGetAllCategoriesQuery,
   useGetDiscountStatusQuery,
   useGetCategoriesTreeQuery,
 } from "../../redux/queries/productApi";
@@ -58,8 +59,10 @@ function ProductList() {
 
   const { data: tree } = useGetCategoriesTreeQuery(undefined);
   const { data: discounts } = useGetDiscountStatusQuery(undefined);
-  const { data: categories } = useGetCategoriesQuery(undefined);
+  // const { data: categories } = useGetCategoriesQuery(undefined);
+  const { data: categories } = useGetAllCategoriesQuery(undefined);
 
+  console.log(categories);
   /* Create product fields */
   const [name, setName] = useState<string>("");
   const [price, setPrice] = useState<number | undefined>(undefined);
@@ -198,7 +201,7 @@ function ProductList() {
             {/* Filters */}
             <div className="mt-10 mb-2">
               <div className="flex flex-wrap items-center gap-4 mb-5">
-                <div className="relative w-full lg:w-64">
+                <div className="relative w-full lg:w-full">
                   <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400">
                     <Search className="h-5 w-5" />
                   </span>
