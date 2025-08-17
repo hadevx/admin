@@ -9,11 +9,17 @@ const userApi = api.injectEndpoints({
         body: data,
       }),
     }),
-    getUsers: builder.query({
+    /*  getUsers: builder.query({
       query: () => ({
         url: "/api/users",
       }),
+    }), */
+    getUsers: builder.query({
+      query: ({ pageNumber = 1, keyword = "" }) => ({
+        url: `/api/users?pageNumber=${pageNumber}&keyword=${keyword}`,
+      }),
     }),
+
     getAddress: builder.query({
       query: (userId: any) => ({
         url: `/api/users/address/${userId}`,

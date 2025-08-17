@@ -2,10 +2,16 @@ import { api } from "./api";
 
 export const productApi = api.injectEndpoints({
   endpoints: (builder) => ({
-    getProducts: builder.query({
+    /*     getProducts: builder.query({
       query: () => ({
         url: "/api/products",
       }),
+    }), */
+    getProducts: builder.query({
+      query: ({ pageNumber = 1, keyword = "" }) => ({
+        url: `/api/products?pageNumber=${pageNumber}&keyword=${keyword}`,
+      }),
+      providesTags: ["Product"],
     }),
     getProductById: builder.query({
       query: (productId) => ({

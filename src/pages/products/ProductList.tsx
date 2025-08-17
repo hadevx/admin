@@ -22,20 +22,40 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { toast } from "react-toastify";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
 
 function ProductList() {
+  const [page, setPage] = useState(1);
+  const [searchQuery, setSearchQuery] = useState("");
+
   const [selectedCategory, setSelectedCategory] = useState<string>("");
   const [minPrice, setMinPrice] = useState<string>("");
   const [maxPrice, setMaxPrice] = useState<string>("");
   const [stockStatus, setStockStatus] = useState<string>("");
-  const [searchQuery, setSearchQuery] = useState<string>("");
+  // const [searchQuery, setSearchQuery] = useState<string>("");
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [filteredProducts, setFilteredProducts] = useState<any>([]);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [isCancelled, setIsCancelled] = useState(false);
   const navigate = useNavigate();
 
-  const { data: products, refetch, isLoading: loadingProducts } = useGetProductsQuery(undefined);
+  // const { data: products, refetch, isLoading: loadingProducts } = useGetProductsQuery(undefined);
+
+  const { data: productsData, isLoading: loadingProducts } = useGetProductsQuery({
+    pageNumber: page,
+    keyword: searchQuery,
+  });
+
+  const products = productsData?.products || [];
+  const pages = productsData?.pages || 1;
+
   const { data: tree } = useGetCategoriesTreeQuery(undefined);
   const { data: discounts } = useGetDiscountStatusQuery(undefined);
   const { data: categories } = useGetCategoriesQuery(undefined);
@@ -129,7 +149,7 @@ function ProductList() {
         toast.error("Error creating product");
       } else {
         toast.success("Product created");
-        refetch();
+        // refetch();
         setIsModalOpen(false);
         resetForm();
       }
@@ -161,7 +181,7 @@ function ProductList() {
                 <Badge icon={false}>
                   <Box />
                   <p className="text-lg lg:text-sm">
-                    {products?.length ?? 0} <span className="hidden lg:inline">products</span>
+                    {productsData?.total ?? 0} <span className="hidden lg:inline">products</span>
                   </p>
                 </Badge>
               </h1>
@@ -314,6 +334,28 @@ function ProductList() {
                     )}
                   </tbody>
                 </table>
+                <Pagination>
+                  <PaginationContent>
+                    <PaginationItem>
+                      <PaginationPrevious onClick={() => page > 1 && setPage(page - 1)} href="#" />
+                    </PaginationItem>
+
+                    {[...Array(pages).keys()].map((x) => (
+                      <PaginationItem key={x + 1}>
+                        <PaginationLink
+                          href="#"
+                          isActive={page === x + 1}
+                          onClick={() => setPage(x + 1)}>
+                          {x + 1}
+                        </PaginationLink>
+                      </PaginationItem>
+                    ))}
+
+                    <PaginationItem>
+                      <PaginationNext onClick={() => page < pages && setPage(page + 1)} href="#" />
+                    </PaginationItem>
+                  </PaginationContent>
+                </Pagination>
               </div>
             </div>
           </div>

@@ -7,18 +7,31 @@ import { Users } from "lucide-react";
 import Badge from "../../components/Badge";
 import { Separator } from "../../components/ui/separator";
 import Loader from "../../components/Loader";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
 
 function Customers() {
   const [searchQuery, setSearchQuery] = useState("");
+  const [page, setPage] = useState(1);
+
   // const [isModalOpen, setIsModalOpen] = useState(false);
-  const { data, isLoading } = useGetUsersQuery<any>(undefined);
+  const { data, isLoading } = useGetUsersQuery<any>({ pageNumber: page, keyword: searchQuery });
+  const users = data?.users || [];
+  const pages = data?.pages || 1;
+  const totalUsers = data?.total || 0;
 
   const navigate = useNavigate();
   const [filteredUsers, setFilteredUsers] = useState([]);
 
   useEffect(() => {
     if (data) {
-      const filtered = data.filter((user: any) =>
+      const filtered = users.filter((user: any) =>
         user.email.toLowerCase().includes(searchQuery.toLowerCase())
       );
       setFilteredUsers(filtered);
@@ -41,7 +54,7 @@ function Customers() {
                 <Badge icon={false}>
                   <Users strokeWidth={1} />
                   <p className="text-lg lg:text-sm">
-                    {data?.length > 0 ? data?.length : "0"}{" "}
+                    {totalUsers > 0 ? totalUsers : "0"}{" "}
                     <span className="hidden lg:inline">users</span>
                   </p>
                 </Badge>
@@ -105,6 +118,28 @@ function Customers() {
                     )}
                   </tbody>
                 </table>
+                <Pagination>
+                  <PaginationContent>
+                    <PaginationItem>
+                      <PaginationPrevious onClick={() => page > 1 && setPage(page - 1)} href="#" />
+                    </PaginationItem>
+
+                    {[...Array(pages).keys()].map((x) => (
+                      <PaginationItem key={x + 1}>
+                        <PaginationLink
+                          href="#"
+                          isActive={page === x + 1}
+                          onClick={() => setPage(x + 1)}>
+                          {x + 1}
+                        </PaginationLink>
+                      </PaginationItem>
+                    ))}
+
+                    <PaginationItem>
+                      <PaginationNext onClick={() => page < pages && setPage(page + 1)} href="#" />
+                    </PaginationItem>
+                  </PaginationContent>
+                </Pagination>
               </div>
             </div>
           </div>
