@@ -53,7 +53,8 @@ function Categories() {
     data,
     isLoading: isLoadingCategories,
     refetch,
-  } = useGetCategoriesQuery({ pageNumber: 1, keyword: searchTerm });
+  } = useGetCategoriesQuery({ pageNumber: page, keyword: searchTerm });
+
   const categories = data?.categories || [];
   const pages = data?.pages || 1;
 

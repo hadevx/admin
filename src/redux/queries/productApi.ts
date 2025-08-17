@@ -13,6 +13,7 @@ export const productApi = api.injectEndpoints({
       }),
       providesTags: ["Product"],
     }),
+
     getProductById: builder.query({
       query: (productId) => ({
         url: `/api/products/product/${productId}`,
