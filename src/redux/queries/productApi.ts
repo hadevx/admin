@@ -122,9 +122,15 @@ export const productApi = api.injectEndpoints({
         url: "/api/category",
       }),
     }), */
+
     getCategories: builder.query({
       query: ({ pageNumber = 1, keyword = "" }) => ({
         url: `/api/category?pageNumber=${pageNumber}&keyword=${keyword}`,
+      }),
+    }),
+    getAllCategories: builder.query({
+      query: () => ({
+        url: `/api/category/all`,
       }),
     }),
     getCategoriesTree: builder.query({
@@ -162,4 +168,5 @@ export const {
   useCreateDiscountMutation,
   useDeleteDiscountMutation,
   useDeleteImageMutation,
+  useGetAllCategoriesQuery,
 } = productApi;

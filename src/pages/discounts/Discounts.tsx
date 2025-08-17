@@ -4,7 +4,7 @@ import type { ChangeEvent } from "react";
 import {
   useCreateDiscountMutation,
   useDeleteDiscountMutation,
-  useGetCategoriesQuery,
+  useGetAllCategoriesQuery,
   useGetDiscountStatusQuery,
 } from "../../redux/queries/productApi";
 import { toast } from "react-toastify";
@@ -26,7 +26,7 @@ interface Discount {
 }
 
 function Discounts() {
-  const { data: categories, isLoading: loadingCategories } = useGetCategoriesQuery(undefined);
+  const { data: categories, isLoading: loadingCategories } = useGetAllCategoriesQuery(undefined);
   const { data: discountStatus, refetch } = useGetDiscountStatusQuery(undefined);
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [discount, setDiscount] = useState<number>(0);
