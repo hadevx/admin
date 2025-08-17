@@ -116,9 +116,14 @@ export const productApi = api.injectEndpoints({
         body: category,
       }),
     }),
-    getCategories: builder.query({
+    /*    getCategories: builder.query({
       query: () => ({
         url: "/api/category",
+      }),
+    }), */
+    getCategories: builder.query({
+      query: ({ pageNumber = 1, keyword = "" }) => ({
+        url: `/api/category?pageNumber=${pageNumber}&keyword=${keyword}`,
       }),
     }),
     getCategoriesTree: builder.query({

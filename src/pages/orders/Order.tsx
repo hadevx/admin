@@ -8,13 +8,29 @@ import { Layers, Search } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import Loader from "../../components/Loader";
 import Error from "../../components/Error";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
 
 function Order() {
   const navigate = useNavigate();
-  const { data: orders, isLoading, isError } = useGetOrdersQuery<any>(undefined);
-
+  const [page, setPage] = useState(1);
+  // const { data: orders, isLoading, isError } = useGetOrdersQuery<any>(undefined);
   const [searchQuery, setSearchQuery] = useState<string>("");
-  console.log(orders);
+
+  const { data, isLoading, isError } = useGetOrdersQuery({
+    pageNumber: page,
+    keyword: searchQuery,
+  });
+
+  const orders = data?.orders || [];
+  const pages = data?.pages || 1;
+
   // Filtered orders based on the search query
   const filteredOrders = orders
     ? orders.filter((order: any) => {
@@ -170,6 +186,28 @@ function Order() {
                     )}
                   </tbody>
                 </table>
+                <Pagination>
+                  <PaginationContent>
+                    <PaginationItem>
+                      <PaginationPrevious onClick={() => page > 1 && setPage(page - 1)} href="#" />
+                    </PaginationItem>
+
+                    {[...Array(pages).keys()].map((x) => (
+                      <PaginationItem key={x + 1}>
+                        <PaginationLink
+                          href="#"
+                          isActive={page === x + 1}
+                          onClick={() => setPage(x + 1)}>
+                          {x + 1}
+                        </PaginationLink>
+                      </PaginationItem>
+                    ))}
+
+                    <PaginationItem>
+                      <PaginationNext onClick={() => page < pages && setPage(page + 1)} href="#" />
+                    </PaginationItem>
+                  </PaginationContent>
+                </Pagination>
               </div>
             </div>
           </div>

@@ -23,10 +23,18 @@ import { Separator } from "@/components/ui/separator";
 import { clsx } from "clsx";
 import CategoryTree from "./CategoryTree";
 import { useGetProductsQuery } from "../../redux/queries/productApi";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
 
 function Categories() {
   const [deletingCategoryId, setDeletingCategoryId] = useState(null);
-
+  const [page, setPage] = useState(1);
   const [category, setCategory] = useState("");
   const [parent, setParent] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
@@ -35,11 +43,19 @@ function Categories() {
   const { refetch: refetchProducts } = useGetProductsQuery(undefined);
   const [createCategory, { isLoading: isCreating }] = useCreateCategoryMutation();
   const [deleteCategory, { isLoading: isDeleting }] = useDeleteCategoryMutation();
-  const {
+  /*   const {
     data: categories = [],
     refetch,
     isLoading: isLoadingCategories,
-  } = useGetCategoriesQuery(undefined);
+  } = useGetCategoriesQuery(undefined); */
+
+  const {
+    data,
+    isLoading: isLoadingCategories,
+    refetch,
+  } = useGetCategoriesQuery({ pageNumber: 1, keyword: searchTerm });
+  const categories = data?.categories || [];
+  const pages = data?.pages || 1;
 
   const { data: tree, refetch: refetchTree } = useGetCategoriesTreeQuery(undefined);
 
@@ -114,7 +130,7 @@ function Categories() {
               <Badge icon={false}>
                 <Boxes strokeWidth={1} />
                 <p className="text-lg lg:text-sm">
-                  {categories.length || 0} <span className="hidden lg:inline">categories</span>
+                  {data?.total || 0} <span className="hidden lg:inline">categories</span>
                 </p>
               </Badge>
             </h1>
@@ -186,6 +202,28 @@ function Categories() {
                   )}
                 </tbody>
               </table>
+              <Pagination>
+                <PaginationContent>
+                  <PaginationItem>
+                    <PaginationPrevious onClick={() => page > 1 && setPage(page - 1)} href="#" />
+                  </PaginationItem>
+
+                  {[...Array(pages).keys()].map((x) => (
+                    <PaginationItem key={x + 1}>
+                      <PaginationLink
+                        href="#"
+                        isActive={page === x + 1}
+                        onClick={() => setPage(x + 1)}>
+                        {x + 1}
+                      </PaginationLink>
+                    </PaginationItem>
+                  ))}
+
+                  <PaginationItem>
+                    <PaginationNext onClick={() => page < pages && setPage(page + 1)} href="#" />
+                  </PaginationItem>
+                </PaginationContent>
+              </Pagination>
             </div>
           </div>
           {tree && <CategoryTree data={tree} />}

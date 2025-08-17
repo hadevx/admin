@@ -2,11 +2,17 @@ import { api } from "./api";
 
 export const orderApi = api.injectEndpoints({
   endpoints: (builder) => ({
-    getOrders: builder.query({
+    /*  getOrders: builder.query({
       query: () => ({
         url: "/api/orders",
       }),
       // keepUnusedDataFor: 5,
+    }), */
+    getOrders: builder.query({
+      query: ({ pageNumber = 1, keyword = "" }) => ({
+        url: `/api/orders?pageNumber=${pageNumber}&keyword=${keyword}`,
+      }),
+      keepUnusedDataFor: 5,
     }),
     getOrder: builder.query({
       query: (orderId) => ({
