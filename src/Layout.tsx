@@ -3,11 +3,11 @@ import { ToastContainer } from "react-toastify"; */
 import "react-toastify/dist/ReactToastify.css";
 import SideMenu2 from "./components/SideMenu2";
 import type { RootState } from "./redux/store";
-import { useSelector, useDispatch } from "react-redux";
-import { toggleLang } from "./redux/slices/languageSlice";
+import { useSelector } from "react-redux";
+// import { toggleLang } from "./redux/slices/languageSlice";
 
 function Layout({ children }: { children: React.ReactNode }) {
-  const dispatch = useDispatch();
+  // const dispatch = useDispatch();
   const lang = useSelector((state: RootState) => state.language.lang);
 
   if (lang === "en") {
