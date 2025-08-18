@@ -172,7 +172,7 @@ function Delivery() {
               <span className="block text-xs text-zinc-500">{t.shippingFee}</span>
               {isLoading ? (
                 <Spinner className="border-t-black" />
-              ) : deliveryStatus?.[0].shippingFee === 0 ? (
+              ) : deliveryStatus?.[0]?.shippingFee === 0 ? (
                 <p>{t.free}</p>
               ) : (
                 <p>{deliveryStatus?.[0]?.shippingFee.toFixed(3)} KD</p>
@@ -183,7 +183,7 @@ function Delivery() {
               <span className="block text-xs text-zinc-500">{t.minDeliveryCost}</span>
               {isLoading ? (
                 <Spinner className="border-t-black" />
-              ) : deliveryStatus?.[0].minDeliveryCost === 0 ? (
+              ) : deliveryStatus?.[0]?.minDeliveryCost === 0 ? (
                 <p>{t.noMinimum}</p>
               ) : (
                 <p>{deliveryStatus?.[0]?.minDeliveryCost.toFixed(3)} KD</p>
