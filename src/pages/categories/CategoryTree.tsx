@@ -1,4 +1,8 @@
+import { useSelector } from "react-redux";
+
 const CategoryTree = ({ data }: { data: any }) => {
+  const language = useSelector((state: any) => state.language.lang);
+
   const renderTree = (nodes: any, level = 0) => {
     return (
       <ul className="space-y-1">
@@ -18,10 +22,20 @@ const CategoryTree = ({ data }: { data: any }) => {
     );
   };
 
+  const render = () => {
+    if (language === "ar") {
+      return "لا يوجد فئات";
+    } else {
+      return "No categories found.";
+    }
+  };
+
   return (
     <div className="bg-white mb-4 p-4 rounded-lg  border text-sm max-h-[400px] overflow-y-auto">
-      <h3 className="text-lg font-semibold mb-3 text-gray-800"> Category Tree</h3>
-      {data?.length > 0 ? renderTree(data) : <p className="text-gray-500">No categories found.</p>}
+      <h3 className="text-lg font-semibold mb-3 text-gray-800">
+        {language === "ar" ? "شجرة الفئات" : "Category Tree"}{" "}
+      </h3>
+      {data?.length > 0 ? renderTree(data) : <p className="text-gray-500">{render()}</p>}
     </div>
   );
 };
