@@ -50,8 +50,8 @@ function UserDetails() {
 
       await deleteUser(userID).unwrap();
       toast.success(language === "ar" ? "تم حذف المستخدم بنجاح" : "User deleted successfully");
-
       refetch();
+
       navigate("/admin/userlist");
     } catch (error: any) {
       const errorMsg =
