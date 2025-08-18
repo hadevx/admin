@@ -71,7 +71,7 @@ function UserDetails() {
       ) : (
         <div
           className={clsx(
-            "px-4 min-h-screen lg:w-4xl py-3 w-full mb-10 flex gap-10 flex-col mt-[50px]",
+            "px-4 min-h-screen lg:w-4xl py-3 w-full mb-5 flex gap-10 flex-col mt-[50px]",
             dir === "rtl" ? "rtl" : "ltr"
           )}>
           {/* Header */}
@@ -93,7 +93,7 @@ function UserDetails() {
           {/* Personal Info */}
           <div className="relative mb-3 w-full p-7 bg-white shadow rounded-md">
             <section>
-              <h2 className="text-lg font-bold border-b border-gray-700 pb-2 mb-5">
+              <h2 className="text-lg font-bold border-b border-gray-700  mb-5">
                 {language === "ar" ? "المعلومات الشخصية" : "Personal Information"}
               </h2>
               <div className="grid grid-cols-2 gap-y-4 gap-x-10">
@@ -130,7 +130,7 @@ function UserDetails() {
           {/* Address */}
           <div className="bg-white rounded-md p-7 shadow">
             <section>
-              <h2 className="text-lg font-bold border-b border-gray-700 pb-2 mb-5">
+              <h2 className="text-lg font-bold border-b border-gray-700  mb-5">
                 {language === "ar" ? "العنوان" : "Address"}
               </h2>
               {userAddress ? (
@@ -159,11 +159,13 @@ function UserDetails() {
                   </div>
                 </div>
               ) : (
-                <Message dismiss={false}>
-                  {language === "ar"
-                    ? "المستخدم لم يقدم عنواناً بعد"
-                    : "User does not provide address yet"}
-                </Message>
+                <div className="md:text-lg">
+                  <Message dismiss={false}>
+                    {language === "ar"
+                      ? "المستخدم لم يقدم عنواناً بعد"
+                      : "User does not provide address yet"}
+                  </Message>
+                </div>
               )}
             </section>
           </div>
@@ -226,9 +228,11 @@ function UserDetails() {
                   </div>
                 ))
               ) : (
-                <Message dismiss={false}>
-                  {language === "ar" ? "المستخدم ليس لديه طلبات" : "User does not have orders"}
-                </Message>
+                <div className="md:text:lg">
+                  <Message dismiss={false}>
+                    {language === "ar" ? "المستخدم ليس لديه طلبات" : "User does not have orders"}
+                  </Message>
+                </div>
               )}
             </section>
           </div>

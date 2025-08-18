@@ -122,7 +122,9 @@ function OrderDetails() {
               <div className="text-sm lg:text-sm bg-white shadow rounded-lg p-6">
                 {/* User Info */}
                 <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-7">
-                  <h2 className="text-lg font-semibold col-span-full mb-4">Order ID {order._id}</h2>
+                  <h2 className="text-lg font-semibold col-span-full mb-4">
+                    Order ID: {order._id}
+                  </h2>
 
                   <div className="flex flex-col text-gray-700">
                     <span className="font-semibold">
@@ -194,7 +196,7 @@ function OrderDetails() {
                     </strong>
                   </p>
                   <p>
-                    {language === "ar" ? "الإجمالي:" : "Total Price:"}{" "}
+                    {language === "ar" ? "الإجمالي: " : "Total Price:"}{" "}
                     <strong>
                       {order.totalPrice.toFixed(3)}
                       {language === "ar" ? "دك" : "KD"}
@@ -230,9 +232,12 @@ function OrderDetails() {
 
                 {/* Payment & Status */}
                 <div className="flex flex-col sm:flex-row sm:justify-between items-center gap-4 p-4 rounded-lg shadow-sm">
-                  <p className="text-gray-700 font-medium">
+                  <p
+                    className={`text-gray-700 font-medium ${
+                      language === "ar" ? "flex-row-reverse" : ""
+                    }`}>
                     <span className="font-semibold">
-                      {language === "ar" ? "طريقة الدفع:" : "Payment Method:"}
+                      {language === "ar" ? ":طريقة الدفع" : "Payment Method:"}
                     </span>{" "}
                     {order.paymentMethod}
                   </p>
@@ -242,7 +247,7 @@ function OrderDetails() {
                       language === "ar" ? "flex-row-reverse" : ""
                     }`}>
                     <span className="font-semibold">
-                      {language === "ar" ? "حالة الطلب:" : "Order status:"}
+                      {language === "ar" ? ":حالة الطلب" : "Order status:"}
                     </span>
                     {order.isDelivered ? (
                       <Badge variant="success">
