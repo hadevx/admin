@@ -71,7 +71,7 @@ function UserDetails() {
       ) : (
         <div
           className={clsx(
-            "px-4 min-h-screen lg:w-4xl py-3 w-full mb-5 flex gap-10 flex-col mt-[50px]",
+            "px-4 min-h-screen lg:w-4xl py-3 w-full  flex gap-5 flex-col mt-[50px]",
             dir === "rtl" ? "rtl" : "ltr"
           )}>
           {/* Header */}
