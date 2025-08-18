@@ -63,7 +63,7 @@ function Settings() {
             {/* Language toggle button */}
             <button
               onClick={() => dispatch(toggleLang())}
-              className="px-4 py-2 bg-blue-500 text-white rounded-lg shadow hover:bg-blue-600 transition">
+              className="px-4 py-2 bg-blue-500 text-white rounded-lg drop-shadow-[0_6px_8px_rgba(59,130,246,0.5)] hover:bg-blue-600 transition">
               {language === "en" ? "العربية" : "English"}
             </button>
           </div>
@@ -92,7 +92,10 @@ function Settings() {
                 <button
                   onClick={handleUpdateStoreStatus}
                   disabled={loadingUpdateStatus}
-                  className="bg-zinc-900 hover:bg-zinc-800 text-white font-semibold px-6 py-2 rounded-lg shadow-lg transition-all duration-200 w-full flex justify-center items-center">
+                  className="bg-zinc-900 hover:bg-zinc-800 text-white font-semibold px-6 py-2 rounded-lg shadow-lg
+             drop-shadow-[0_0_10px_rgba(24,24,27,0.5)]
+           
+             transition-all duration-200 w-full flex justify-center items-center">
                   {loadingUpdateStatus ? (
                     <Loader2Icon className="animate-spin" />
                   ) : language === "en" ? (
@@ -172,7 +175,7 @@ function Settings() {
                     ? storeStatus[0].banner
                     : language === "en"
                     ? "No banner"
-                    : "لا يوجد بانر"}
+                    : "لا يوجد"}
                 </p>
               )}
             </div>

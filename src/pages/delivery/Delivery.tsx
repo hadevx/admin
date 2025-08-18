@@ -127,7 +127,7 @@ function Delivery() {
               <button
                 onClick={handleUpdateDelivery}
                 disabled={loadingUpdateDelivery}
-                className="bg-zinc-900 hover:bg-zinc-800 text-white font-semibold px-6 py-2 rounded-lg shadow-lg transition-all duration-200 w-full flex justify-center items-center">
+                className="bg-zinc-900  drop-shadow-[0_0_10px_rgba(24,24,27,0.5)] hover:bg-zinc-800 text-white font-semibold px-6 py-2 rounded-lg shadow-lg transition-all duration-200 w-full flex justify-center items-center">
                 {loadingUpdateDelivery ? <Loader2Icon className="animate-spin" /> : t.updateBtn}
               </button>
             </div>

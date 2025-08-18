@@ -204,7 +204,7 @@ function SideMenu() {
   return (
     <>
       <button
-        className="lg:hidden fixed top-4 left-4 z-50 p-2 rounded-md bg-zinc-900 text-white"
+        className="lg:hidden  drop-shadow-[0_0_10px_rgba(24,24,27,0.5)] fixed top-4 left-4 z-50 p-2 rounded-md bg-zinc-900 text-white"
         onClick={() => setIsMenuOpen((prev) => !prev)}
         aria-label="Toggle menu">
         {isMenuOpen ? <X size={24} /> : <Menu size={24} />}

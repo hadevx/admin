@@ -145,7 +145,7 @@ function Discounts() {
               <button
                 onClick={handleCreateDiscount}
                 disabled={loadingCreate}
-                className="bg-black gap-1 transition-all text-white text-sm lg:text-md px-3 py-2 rounded-lg font-semibold shadow-lg flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed">
+                className="bg-black  drop-shadow-[0_0_10px_rgba(24,24,27,0.5)] gap-1 transition-all text-white text-sm lg:text-md px-3 py-2 rounded-lg font-semibold shadow-lg flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed">
                 <Plus /> {t.createDiscount}
               </button>
             </div>

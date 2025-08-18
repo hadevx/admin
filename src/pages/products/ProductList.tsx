@@ -244,7 +244,7 @@ function ProductList() {
               </h1>
               <button
                 onClick={() => setIsModalOpen(true)}
-                className="bg-black cursor-pointer hover:bg-black/70 text-white font-bold flex items-center gap-1 text-sm lg:text-md shadow-md px-3 py-2 rounded-md">
+                className="bg-black  drop-shadow-[0_0_10px_rgba(24,24,27,0.5)] cursor-pointer hover:bg-black/70 text-white font-bold flex items-center gap-1 text-sm lg:text-md shadow-md px-3 py-2 rounded-md">
                 <Plus />
                 {texts[language].addProduct}
               </button>
