@@ -75,7 +75,9 @@ function Customers() {
         <div className="lg:px-4 mb-10 lg:w-4xl w-full min-h-screen lg:min-h-auto flex text-xs lg:text-lg justify-between py-3 mt-[50px] px-4">
           <div className="w-full">
             <div className="flex justify-between items-center">
-              <h1 className="text-lg lg:text-2xl font-black flex gap-2 lg:gap-5 items-center">
+              <h1
+                dir={language === "ar" ? "rtl" : "ltr"}
+                className="text-lg lg:text-2xl font-black flex gap-2 lg:gap-5 items-center">
                 {t.users}:{" "}
                 <Badge icon={false}>
                   <Users strokeWidth={1} />

@@ -1,19 +1,22 @@
-import React from "react";
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import Layout from "../../Layout";
 import { toast } from "react-toastify";
 import Loader from "../../components/Loader";
-import { PencilLine } from "lucide-react";
+import { PencilLine, Loader2Icon } from "lucide-react";
+import Lottie from "lottie-react";
+import upload from "./uploading.json";
+
 import {
   useGetProductByIdQuery,
   useDeleteProductMutation,
   useUpdateProductMutation,
   useGetProductsQuery,
   useUploadProductImageMutation,
+  useGetCategoriesTreeQuery,
 } from "../../redux/queries/productApi";
+
 import { Separator } from "@/components/ui/separator";
-import { useGetCategoriesTreeQuery } from "../../redux/queries/productApi";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -22,12 +25,12 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { Loader2Icon } from "lucide-react";
-
-import Lottie from "lottie-react";
-import upload from "./uploading.json";
+import { useSelector } from "react-redux";
 
 function ProductDetails() {
+  const language = useSelector((state: any) => state.language.lang); // 'ar' or 'en'
+  const dir = language === "ar" ? "rtl" : "ltr";
+
   const [newName, setNewName] = useState("");
   const [newPrice, setNewPrice] = useState<number>();
   const [newImage, setNewImage] = useState("");
@@ -35,19 +38,19 @@ function ProductDetails() {
   const [newCategory, setNewCategory] = useState("");
   const [newCountInStock, setNewCountInStock] = useState<number>();
   const [newDescription, setNewDescription] = useState("");
-
-  const { data: categoryTree } = useGetCategoriesTreeQuery(undefined);
+  const [clickEditProduct, setClickEditProduct] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
   const { id: productId } = useParams();
   const navigate = useNavigate();
-  const [clickEditProduct, setClickEditProduct] = useState(false);
   const { data: product, refetch, isLoading: loadingProduct } = useGetProductByIdQuery(productId);
+  const { data: categoryTree } = useGetCategoriesTreeQuery(undefined);
+
   const [deleteProduct, { isLoading: loadingDeleteProduct }] = useDeleteProductMutation();
   const [updateProduct, { isLoading: loadingUpdateProduct }] = useUpdateProductMutation();
   const { refetch: refetchProducts } = useGetProductsQuery(undefined);
   const [uploadProductImage, { isLoading: loadingUploadImage }] = useUploadProductImageMutation();
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
   useEffect(() => {
     if (product) {
@@ -64,7 +67,7 @@ function ProductDetails() {
   const handleDeleteProduct = async () => {
     if (product) {
       await deleteProduct(productId);
-      toast.success("Product deleted successfully");
+      toast.success(language === "ar" ? "تم حذف المنتج بنجاح" : "Product deleted successfully");
       refetchProducts();
       navigate("/admin/productlist");
     }
@@ -72,7 +75,9 @@ function ProductDetails() {
 
   const handleUpdateProduct = async () => {
     if (typeof newPrice === "number" && newPrice <= 0) {
-      toast.error("Price must be a positive number");
+      toast.error(
+        language === "ar" ? "السعر يجب أن يكون رقمًا موجبًا" : "Price must be a positive number"
+      );
       return;
     }
 
@@ -88,7 +93,11 @@ function ProductDetails() {
         imageUrl = res.image;
         newImagePublicId = res.publicId;
       } catch (error: any) {
-        toast.error(error?.data?.message || error?.error || "Image upload failed");
+        toast.error(
+          error?.data?.message ||
+            error?.error ||
+            (language === "ar" ? "فشل رفع الصورة" : "Image upload failed")
+        );
         return;
       }
     }
@@ -107,13 +116,15 @@ function ProductDetails() {
 
     try {
       await updateProduct(updatedProduct).unwrap();
-      toast.success("Product updated successfully");
+      toast.success(language === "ar" ? "تم تحديث المنتج بنجاح" : "Product updated successfully");
       setClickEditProduct(false);
       refetch();
       refetchProducts();
       setSelectedFile(null);
     } catch (err: any) {
-      toast.error(err?.data?.message || "Error updating product");
+      toast.error(
+        err?.data?.message || (language === "ar" ? "خطأ في تحديث المنتج" : "Error updating product")
+      );
     }
   };
 
@@ -122,17 +133,24 @@ function ProductDetails() {
       {loadingProduct ? (
         <Loader />
       ) : (
-        <div className="px-4 w-full lg:w-4xl py-6 mb-10  mt-10 min-h-screen">
+        <div
+          className={`px-4 w-full lg:w-4xl py-6 mb-10 mt-10 min-h-screen ${
+            dir === "rtl" ? "rtl" : "ltr"
+          } font-custom`}>
           <div className="flex justify-between items-center mb-6">
-            <h1 className="text-2xl font-bold">Product Details</h1>
+            <h1 className="text-2xl font-bold">
+              {language === "ar" ? "تفاصيل المنتج" : "Product Details"}
+            </h1>
             <button
               onClick={() => setIsModalOpen(true)}
-              className=" select-none   bg-gradient-to-t  from-rose-500 hover:opacity-90 to-rose-400 text-white px-3 py-2 rounded-lg font-bold shadow-md">
-              Delete Product
+              className="select-none bg-gradient-to-t from-rose-500 hover:opacity-90 to-rose-400 text-white px-3 py-2 rounded-lg font-bold shadow-md">
+              {language === "ar" ? "حذف المنتج" : "Delete Product"}
             </button>
           </div>
+
           <Separator className="my-4 bg-black/20" />
-          <div className="bg-white  border rounded-xl p-6 space-y-6">
+
+          <div className="bg-white border rounded-xl p-6 space-y-6">
             <div className="flex justify-between items-center">
               <h2 className="text-xl font-semibold">{product?.name}</h2>
               <div className="flex items-center gap-3">
@@ -141,61 +159,77 @@ function ProductDetails() {
                     onClick={handleUpdateProduct}
                     disabled={loadingUploadImage || loadingUpdateProduct}
                     className={`px-4 py-2 rounded-lg text-white font-semibold shadow transition
-    ${loadingUploadImage ? "bg-zinc-400 " : ""} 
-    ${loadingUpdateProduct ? "bg-zinc-400 " : ""} 
-    ${!loadingUploadImage && !loadingUpdateProduct ? "bg-black hover:opacity-90" : ""}`}>
+                      ${
+                        loadingUploadImage || loadingUpdateProduct
+                          ? "bg-zinc-400"
+                          : "bg-black hover:opacity-90"
+                      }`}>
                     {loadingUploadImage
-                      ? "Uploading..."
+                      ? language === "ar"
+                        ? "جاري الرفع..."
+                        : "Uploading..."
                       : loadingUpdateProduct
-                      ? "Updating..."
+                      ? language === "ar"
+                        ? "جاري التحديث..."
+                        : "Updating..."
+                      : language === "ar"
+                      ? "تحديث"
                       : "Update"}
                   </button>
                 )}
                 <button
                   onClick={() => setClickEditProduct(!clickEditProduct)}
                   className="bg-zinc-100 border px-4 py-2 rounded-lg text-black font-semibold shadow hover:opacity-70 transition flex items-center gap-2">
-                  {clickEditProduct ? "Cancel" : <PencilLine size={18} />}
+                  {clickEditProduct ? (
+                    language === "ar" ? (
+                      "إلغاء"
+                    ) : (
+                      "Cancel"
+                    )
+                  ) : (
+                    <PencilLine size={18} />
+                  )}
                 </button>
               </div>
             </div>
 
             <Separator />
 
-            <div className="flex  flex-col sm:flex-row lg:flex-row gap-5">
-              <div className="flex-shrink-0 h-70 sm:h-80 sm:w-80 lg:h-96 lg:w-96 ">
+            {/* Product Image & Details */}
+            <div className="flex flex-col sm:flex-row lg:flex-row gap-5">
+              <div className="flex-shrink-0 h-70 sm:h-80 sm:w-80 lg:h-96 lg:w-96">
                 {!clickEditProduct ? (
                   <img
                     src={product?.image}
                     alt="Product"
-                    className="w-full h-full  object-cover rounded-lg "
+                    className="w-full h-full object-cover rounded-lg"
                   />
                 ) : (
-                  <div className="space-y-2 h-full">
-                    {/* <label className="block text-gray-600 font-medium">Upload new image:</label> */}
-
-                    <label className="cursor-pointer h-full flex flex-col items-center justify-center w-full p-4 bg-gray-50 border-2 border-dashed border-gray-300 rounded-lg shadow hover:bg-gray-100 hover:border-gray-400 transition">
-                      {/* <UploadCloud className="w-8 h-8 text-gray-400 mb-2" /> */}
-                      <div className="w-44 h-44">
-                        <Lottie animationData={upload} loop={true} />
-                      </div>
-                      <span className="text-gray-700 font-medium">Upload new image</span>
-                      {selectedFile && (
-                        <p className="text-sm text-gray-600 mt-1">Selected: {selectedFile.name}</p>
-                      )}
-                      <input
-                        type="file"
-                        onChange={(e) => setSelectedFile(e.target.files ? e.target.files[0] : null)}
-                        className="hidden"
-                      />
-                    </label>
-                  </div>
+                  <label className="cursor-pointer h-full flex flex-col items-center justify-center w-full p-4 bg-gray-50 border-2 border-dashed border-gray-300 rounded-lg shadow hover:bg-gray-100 hover:border-gray-400 transition">
+                    <div className="w-44 h-44">
+                      <Lottie animationData={upload} loop />
+                    </div>
+                    <span className="text-gray-700 font-medium">
+                      {language === "ar" ? "رفع صورة جديدة" : "Upload new image"}
+                    </span>
+                    {selectedFile && (
+                      <p className="text-sm text-gray-600 mt-1">
+                        {language === "ar" ? "المحدد:" : "Selected:"} {selectedFile.name}
+                      </p>
+                    )}
+                    <input
+                      type="file"
+                      onChange={(e) => setSelectedFile(e.target.files ? e.target.files[0] : null)}
+                      className="hidden"
+                    />
+                  </label>
                 )}
               </div>
 
               <div className="flex-1 grid grid-cols-3 sm:grid-cols-3 lg:grid-cols-2 gap-6">
                 {/* Name */}
                 <div>
-                  <label className="text-gray-600">Name:</label>
+                  <label className="text-gray-600">{language === "ar" ? "الاسم:" : "Name:"}</label>
                   {!clickEditProduct ? (
                     <p className="font-bold">{product?.name}</p>
                   ) : (
@@ -209,7 +243,9 @@ function ProductDetails() {
 
                 {/* Category */}
                 <div>
-                  <label className="text-gray-600">Category:</label>
+                  <label className="text-gray-600">
+                    {language === "ar" ? "الفئة:" : "Category:"}
+                  </label>
                   {!clickEditProduct ? (
                     <p className="font-bold">
                       {categoryTree?.length > 0
@@ -221,18 +257,15 @@ function ProductDetails() {
                       value={newCategory}
                       onChange={(e) => setNewCategory(e.target.value)}
                       className="w-full px-4 py-2 bg-white border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm">
-                      {/* Show fallback if selected category no longer exists */}
                       {newCategory &&
                         findCategoryNameById(newCategory, categoryTree || []) === null && (
                           <option value={newCategory} disabled className="text-red-500">
-                            ❌ Deleted Category
+                            ❌ {language === "ar" ? "تم حذف الفئة" : "Deleted Category"}
                           </option>
                         )}
-
                       <option value="" disabled>
-                        -- Choose a category --
+                        -- {language === "ar" ? "اختر الفئة" : "Choose a category"} --
                       </option>
-
                       {categoryTree?.length > 0 && renderCategoryOptions(categoryTree)}
                     </select>
                   )}
@@ -240,7 +273,7 @@ function ProductDetails() {
 
                 {/* Price */}
                 <div>
-                  <label className="text-gray-600">Price:</label>
+                  <label className="text-gray-600">{language === "ar" ? "السعر:" : "Price:"}</label>
                   {!clickEditProduct ? (
                     <p className="font-bold">{product?.price.toFixed(3)} KD</p>
                   ) : (
@@ -254,17 +287,23 @@ function ProductDetails() {
 
                 {/* Stock */}
                 <div>
-                  <label className="text-gray-600">Stock:</label>
+                  <label className="text-gray-600">
+                    {language === "ar" ? "المخزون:" : "Stock:"}
+                  </label>
                   {!clickEditProduct ? (
                     <p className="font-bold">
                       {product?.countInStock > 0 ? (
                         product.countInStock < 5 ? (
-                          <span className="text-orange-500">{product?.countInStock} left</span>
+                          <span className="text-orange-500">
+                            {product?.countInStock} {language === "ar" ? "متبقي" : "left"}
+                          </span>
                         ) : (
                           product?.countInStock
                         )
                       ) : (
-                        <span className="text-rose-600">Out of stock</span>
+                        <span className="text-rose-600">
+                          {language === "ar" ? "غير متوفر" : "Out of stock"}
+                        </span>
                       )}
                     </p>
                   ) : (
@@ -278,19 +317,25 @@ function ProductDetails() {
 
                 {/* Created At */}
                 <div>
-                  <label className="text-gray-600">Created At:</label>
+                  <label className="text-gray-600">
+                    {language === "ar" ? "تاريخ الإنشاء:" : "Created At:"}
+                  </label>
                   <p className="font-bold">{product?.createdAt.substring(0, 10)}</p>
                 </div>
 
                 {/* Updated At */}
                 <div>
-                  <label className="text-gray-600">Updated At:</label>
+                  <label className="text-gray-600">
+                    {language === "ar" ? "آخر تحديث:" : "Updated At:"}
+                  </label>
                   <p className="font-bold">{product?.updatedAt.substring(0, 10)}</p>
                 </div>
 
                 {/* Description */}
                 <div className="col-span-3 lg:col-span-2">
-                  <label className="text-gray-600">Description:</label>
+                  <label className="text-gray-600">
+                    {language === "ar" ? "الوصف:" : "Description:"}
+                  </label>
                   {!clickEditProduct ? (
                     <p className="font-bold break-words whitespace-pre-line">
                       {product?.description}
@@ -306,53 +351,53 @@ function ProductDetails() {
               </div>
             </div>
           </div>
+
+          {/* Delete Modal */}
+          <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>{language === "ar" ? "حذف المنتج" : "Delete Product"}</DialogTitle>
+              </DialogHeader>
+              {language === "ar"
+                ? "هل أنت متأكد أنك تريد حذف هذا المنتج؟"
+                : "Are you sure you want to delete this product?"}
+              <DialogFooter className="mt-4 flex justify-end gap-2">
+                <Button variant="outline" onClick={() => setIsModalOpen(false)}>
+                  {language === "ar" ? "إلغاء" : "Cancel"}
+                </Button>
+                <Button
+                  disabled={loadingDeleteProduct}
+                  variant="destructive"
+                  className="bg-gradient-to-t from-rose-500 hover:opacity-90 to-rose-400"
+                  onClick={handleDeleteProduct}>
+                  {loadingDeleteProduct ? (
+                    <Loader2Icon className="animate-spin" />
+                  ) : language === "ar" ? (
+                    "حذف"
+                  ) : (
+                    "Delete"
+                  )}
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
         </div>
       )}
-      <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Delete Product</DialogTitle>
-          </DialogHeader>
-          Are you sure you want to delete this product ?
-          <DialogFooter className="mt-4 flex justify-end gap-2">
-            <Button variant="outline" onClick={() => setIsModalOpen(false)}>
-              Cancel
-            </Button>
-            <Button
-              disabled={loadingDeleteProduct}
-              variant="destructive"
-              className=" bg-gradient-to-t  from-rose-500 hover:opacity-90 to-rose-400"
-              onClick={() => {
-                // perform deletion logic here
-                handleDeleteProduct();
-              }}>
-              {loadingDeleteProduct ? (
-                <p>
-                  <Loader2Icon className="animate-spin" />
-                </p>
-              ) : (
-                <p> Delete</p>
-              )}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </Layout>
   );
 }
-const findCategoryNameById = (id: any, nodes: any) => {
-  if (!id || !Array.isArray(nodes)) return null; // Return null if no id or nodes
 
+// Category helpers
+const findCategoryNameById = (id: any, nodes: any) => {
+  if (!id || !Array.isArray(nodes)) return null;
   for (const node of nodes) {
-    if (String(node._id) === String(id)) return node.name; // Coerce IDs to string for safety
+    if (String(node._id) === String(id)) return node.name;
     if (node.children) {
       const result: any = findCategoryNameById(id, node.children);
       if (result) return result;
     }
   }
-
-  console.warn("Category ID not found:", id);
-  return null; // return null if not found
+  return null;
 };
 
 const renderCategoryOptions = (nodes: any, level = 0) =>

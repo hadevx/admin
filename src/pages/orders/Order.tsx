@@ -104,7 +104,9 @@ function Order() {
           {/* Header */}
           <div className="w-full">
             <div className="flex justify-between items-center flex-wrap gap-3">
-              <h1 className="text-lg lg:text-2xl font-black flex gap-2 lg:gap-5 items-center flex-wrap">
+              <h1
+                dir={language === "ar" ? "rtl" : "ltr"}
+                className="text-lg lg:text-2xl font-black flex gap-2 lg:gap-5 items-center flex-wrap">
                 {texts[language].orders}:
                 <Badge icon={false}>
                   <Layers />

@@ -41,7 +41,7 @@ const texts: any = {
     maxPrice: "Max Price",
     allStock: "All Stock",
     inStock: "In Stock",
-    lowStock: "Low Stock (<5)",
+    lowStock: "Low Stock",
     outOfStock: "Out of Stock",
     searchProducts: "Search products...",
     name: "Name",
@@ -69,7 +69,7 @@ const texts: any = {
     maxPrice: "السعر الأعلى",
     allStock: "جميع المخزون",
     inStock: "متوفر",
-    lowStock: "المخزون منخفض (<5)",
+    lowStock: "المخزون منخفض",
     outOfStock: "غير متوفر",
     searchProducts: "ابحث عن المنتجات...",
     name: "الاسم",
@@ -230,7 +230,9 @@ function ProductList() {
         <div className="flex w-full mb-10 lg:w-4xl min-h-screen lg:min-h-auto justify-between py-3 mt-[50px] px-4 ">
           <div className="w-full">
             <div className="flex justify-between items-center">
-              <h1 className="text-lg lg:text-2xl font-black flex gap-2 lg:gap-5 items-center">
+              <h1
+                dir={language === "ar" ? "rtl" : "ltr"}
+                className="text-lg lg:text-2xl  font-black flex gap-2 lg:gap-5 items-center">
                 {texts[language].products}:
                 <Badge icon={false}>
                   <Box />

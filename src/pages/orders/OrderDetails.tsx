@@ -1,4 +1,3 @@
-// import { useRef } from "react";
 import Layout from "../../Layout";
 import {
   useGetOrderQuery,
@@ -6,7 +5,6 @@ import {
   useUpdateOrderToCanceledMutation,
 } from "../../redux/queries/orderApi";
 import { useParams } from "react-router-dom";
-// import { useGetDeliveryStatusQuery } from "../../redux/queries/productApi";
 import { toast } from "react-toastify";
 import Badge from "../../components/Badge";
 import clsx from "clsx";
@@ -15,33 +13,38 @@ import Loader from "../../components/Loader";
 import { PDFDownloadLink } from "@react-pdf/renderer";
 import Invoise from "../../components/Invoise";
 import { Loader2Icon } from "lucide-react";
+import { useSelector } from "react-redux";
 
 function OrderDetails() {
   const { orderId } = useParams();
   const { data: order, isLoading, refetch } = useGetOrderQuery(orderId);
-  // const { data: deliveryStatus } = useGetDeliveryStatusQuery(undefined);
   const [updateOrderToDeliverd, { isLoading: loadingDelivered }] =
     useUpdateOrderToDeliverdMutation();
-
   const [updateOrderToCanceled, { isLoading: isCanceled }] = useUpdateOrderToCanceledMutation();
+
+  const language = useSelector((state: any) => state.language.lang); // 'ar' or 'en'
+
+  const dir = language === "ar" ? "rtl" : "ltr"; // set text direction
 
   const handleUpdateOrderToDelivered = async () => {
     try {
-      await updateOrderToDeliverd(orderId).unwrap(); // unwrap to catch errors
-      toast.success("Order is updated to delivered");
+      await updateOrderToDeliverd(orderId).unwrap();
+      toast.success(
+        language === "ar" ? "تم تحديث الطلب إلى تم التسليم" : "Order is updated to delivered"
+      );
       refetch();
     } catch (error) {
-      toast.error("Failed to update order");
+      toast.error(language === "ar" ? "فشل في تحديث الطلب" : "Failed to update order");
     }
   };
 
   const handleUpdateOrderToCanceled = async () => {
     try {
       await updateOrderToCanceled(orderId).unwrap();
-      toast.success("Order is canceled");
+      toast.success(language === "ar" ? "تم إلغاء الطلب" : "Order is canceled");
       refetch();
     } catch (error) {
-      toast.error("Failed to cancel order");
+      toast.error(language === "ar" ? "فشل في إلغاء الطلب" : "Failed to cancel order");
     }
   };
 
@@ -50,172 +53,208 @@ function OrderDetails() {
       {isLoading ? (
         <Loader />
       ) : (
-        <div className=" mb-10 mt-[50px] min-h-screen  w-full lg:w-4xl lg:py-3 lg:mt-[50px] ">
-          <div className=" px-4 py-6">
-            <div className="flex gap-2 flex-col lg:flex-row  justify-between lg:items-center">
-              <h1 className="text-lg  lg:text-2xl font-bold">Order details:</h1>
-              <div className="flex  text-xs items-center gap-3  lg:gap-2 sm:justify-end  lg:justify-end lg:items-center  ">
+        <div
+          className={`mb-10 mt-[50px] min-h-screen w-full lg:w-4xl lg:py-3 lg:mt-[50px] ${
+            dir === "rtl" ? "rtl" : "ltr"
+          } font-custom`}>
+          <div className="px-4 py-6">
+            {/* Header */}
+            <div className="flex gap-2 flex-col lg:flex-row justify-between lg:items-center">
+              <h1 className="text-lg lg:text-2xl font-bold">
+                {language === "ar" ? "تفاصيل الطلب:" : "Order details:"}
+              </h1>
+
+              <div className="flex text-xs items-center gap-3 lg:gap-2 sm:justify-end lg:justify-end lg:items-center">
                 <button
                   disabled={order?.isDelivered || order?.isCanceled || loadingDelivered}
                   onClick={handleUpdateOrderToDelivered}
                   className={clsx(
-                    "select-none  hover:opacity-70 lg:text-sm   transition-all duration-300  lg:float-right bg-gradient-to-t    px-3 py-2 rounded-lg font-bold shadow",
+                    "select-none hover:opacity-70 lg:text-sm transition-all duration-300 lg:float-right px-3 py-2 rounded-lg font-bold shadow bg-gradient-to-t",
                     order?.isDelivered || order?.isCanceled
                       ? "from-gray-200 to-gray-200 text-gray-600"
                       : "from-teal-500 to-teal-400 text-white"
                   )}>
-                  {loadingDelivered ? "Updating..." : "Mark as delivered"}
+                  {loadingDelivered
+                    ? language === "ar"
+                      ? "جارٍ التحديث..."
+                      : "Updating..."
+                    : language === "ar"
+                    ? "تعيين كتم التسليم"
+                    : "Mark as delivered"}
                 </button>
+
                 {isCanceled ? (
                   <Loader2Icon className="animate-spin" />
                 ) : (
                   <button
-                    disabled={order?.isDelivered || order?.isCanceled || order?.isCanceled} // disable if delivered or canceled
+                    disabled={order?.isDelivered || order?.isCanceled}
                     onClick={handleUpdateOrderToCanceled}
                     className={clsx(
-                      "select-none hover:opacity-70 transition-all duration-300 lg:text-sm    px-3 py-2 rounded-lg font-bold shadow lg:float-right bg-gradient-to-t",
+                      "select-none hover:opacity-70 transition-all duration-300 lg:text-sm px-3 py-2 rounded-lg font-bold shadow lg:float-right bg-gradient-to-t",
                       order?.isCanceled || order?.isDelivered
                         ? "from-gray-200 to-gray-200 text-gray-600"
                         : "from-red-500 to-red-400 text-white"
                     )}>
-                    {isCanceled ? "Updating..." : "Mark as canceled"}
+                    {isCanceled
+                      ? language === "ar"
+                        ? "جارٍ التحديث..."
+                        : "Updating..."
+                      : language === "ar"
+                      ? "إلغاء الطلب"
+                      : "Mark as canceled"}
                   </button>
                 )}
-                {/* Invoise */}
+
+                {/* Invoice Download */}
                 <PDFDownloadLink
                   document={<Invoise order={order} />}
                   fileName={`invoice-${order?._id}-${order?.createdAt?.substring(0, 10)}.pdf`}>
-                  <button className="select-none   hover:opacity-70 lg:text-sm   transition-all duration-300  float-right bg-gradient-to-t  from-rose-500 to-rose-400 text-white    px-3 py-2 rounded-lg font-bold shadow">
-                    Download Invoice
+                  <button className="select-none hover:opacity-70 lg:text-sm transition-all duration-300 float-right bg-gradient-to-t from-rose-500 to-rose-400 text-white px-3 py-2 rounded-lg font-bold shadow">
+                    {language === "ar" ? "تحميل الفاتورة" : "Download Invoice"}
                   </button>
                 </PDFDownloadLink>
-
-                {/* -- */}
               </div>
             </div>
+
             <Separator className="my-4 bg-black/20" />
 
-            {isLoading ? (
-              <Loader />
-            ) : (
-              order && (
-                <>
-                  <div className="text-sm lg:text-sm   bg-white shadow rounded-lg p-6 ">
-                    <div className="grid  grid-cols-2 lg:grid-cols-4 gap-4 mb-7">
-                      <h2 className="text-lg font-semibold col-span-full mb-4">
-                        Order ID: {order._id}
-                      </h2>
+            {order && (
+              <div className="text-sm lg:text-sm bg-white shadow rounded-lg p-6">
+                {/* User Info */}
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-7">
+                  <h2 className="text-lg font-semibold col-span-full mb-4">
+                    {language === "ar" ? "رقم الطلب:" : "Order ID:"} {order._id}
+                  </h2>
 
-                      <div className="flex flex-col text-gray-700">
-                        <span className="font-semibold">Created on:</span>
-                        <span>{order.createdAt.substring(0, 10)}</span>
-                      </div>
-
-                      <div className="flex flex-col text-gray-700">
-                        <span className="font-semibold">User name:</span>
-                        <span>{order.user.name}</span>
-                      </div>
-
-                      <div className="flex flex-col text-gray-700">
-                        <span className="font-semibold">User email:</span>
-                        <span>{order.user.email}</span>
-                      </div>
-
-                      <div className="flex flex-col text-gray-700">
-                        <span className="font-semibold">User phone:</span>
-                        <span>{order.user.phone}</span>
-                      </div>
-                    </div>
-
-                    <table className="w-full table-auto  border-collapse mb-5">
-                      <thead>
-                        <tr className="bg-gray-100  border-b">
-                          <th className="py-2 px-2 lg:px-4 text-left">Item</th>
-                          <th className="py-2 px-2 lg:px-4 text-left">Quantity</th>
-                          <th className="py-2 px-2 lg:px-4 text-left">Price</th>
-                          <th className="py-2 px-2 lg:px-4 text-left">Total</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {order?.orderItems.map((item: any) => (
-                          <tr key={item._id} className="border-b ">
-                            <td className="py-2 px-2 lg:px-4">{item.name}</td>
-                            <td className="py-2 px-2 lg:px-4">{item.qty}</td>
-                            <td className="py-2 px-2 lg:px-4">{item.price.toFixed(3)} KD</td>
-                            <td className="py-2 px-2 lg:px-4">
-                              {(item.qty * item.price).toFixed(3)} KD
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-
-                    <div className="flex gap-5  mb-5">
-                      <p className="  ">
-                        Delivery: <strong>{order?.shippingPrice.toFixed(3)} KD</strong>
-                      </p>
-                      <p className="  ">
-                        Total Price: <strong>{order?.totalPrice.toFixed(3)} KD</strong>
-                      </p>
-                    </div>
-                    <table className="w-full text-left border-collapse border border-gray-300 text-gray-700 mb-5">
-                      <tbody>
-                        <tr>
-                          <th className="border border-gray-300 px-3 py-2 font-semibold">
-                            Governorate
-                          </th>
-                          <td className="border border-gray-300 px-3 py-2">
-                            {order?.shippingAddress?.governorate}
-                          </td>
-                        </tr>
-                        <tr>
-                          <th className="border border-gray-300 px-3 py-2 font-semibold">City</th>
-                          <td className="border border-gray-300 px-3 py-2">
-                            {order?.shippingAddress?.city}
-                          </td>
-                        </tr>
-                        <tr>
-                          <th className="border border-gray-300 px-3 py-2 font-semibold">Block</th>
-                          <td className="border border-gray-300 px-3 py-2">
-                            {order?.shippingAddress?.block}
-                          </td>
-                        </tr>
-                        <tr>
-                          <th className="border border-gray-300 px-3 py-2 font-semibold">Street</th>
-                          <td className="border border-gray-300 px-3 py-2">
-                            {order?.shippingAddress?.street}
-                          </td>
-                        </tr>
-                        <tr>
-                          <th className="border border-gray-300 px-3 py-2 font-semibold">House</th>
-                          <td className="border border-gray-300 px-3 py-2">
-                            {order?.shippingAddress?.house}
-                          </td>
-                        </tr>
-                      </tbody>
-                    </table>
-                    <div className="flex flex-col sm:flex-row sm:justify-between items-center gap-4  p-4 rounded-lg shadow-sm">
-                      <p className="text-gray-700 font-medium">
-                        <span className="font-semibold">Payment Method:</span>{" "}
-                        {order?.paymentMethod}
-                      </p>
-
-                      <div className="flex items-center gap-3 text-gray-700 font-medium">
-                        <span className="font-semibold">Order status:</span>
-                        {order?.isDelivered ? (
-                          <Badge variant="success">
-                            Delivered on {order?.deliveredAt?.substring(0, 10)}
-                          </Badge>
-                        ) : order?.isCanceled ? (
-                          <Badge variant="danger">Canceled</Badge>
-                        ) : (
-                          <Badge variant="pending">Processing</Badge>
-                        )}
-                      </div>
-                    </div>
+                  <div className="flex flex-col text-gray-700">
+                    <span className="font-semibold">
+                      {language === "ar" ? "تاريخ الإنشاء:" : "Created on:"}
+                    </span>
+                    <span>{order.createdAt.substring(0, 10)}</span>
                   </div>
-                </>
-              )
+
+                  <div className="flex flex-col text-gray-700">
+                    <span className="font-semibold">
+                      {language === "ar" ? "اسم المستخدم:" : "User name:"}
+                    </span>
+                    <span>{order.user.name}</span>
+                  </div>
+
+                  <div className="flex flex-col text-gray-700">
+                    <span className="font-semibold">
+                      {language === "ar" ? "البريد الإلكتروني:" : "User email:"}
+                    </span>
+                    <span>{order.user.email}</span>
+                  </div>
+
+                  <div className="flex flex-col text-gray-700">
+                    <span className="font-semibold">
+                      {language === "ar" ? "الهاتف:" : "User phone:"}
+                    </span>
+                    <span>{order.user.phone}</span>
+                  </div>
+                </div>
+
+                {/* Order Items */}
+                <table className="w-full table-auto border-collapse mb-5">
+                  <thead>
+                    <tr className="bg-gray-100 border-b">
+                      <th className="py-2 px-2 lg:px-4 text-left">
+                        {language === "ar" ? "المنتج" : "Item"}
+                      </th>
+                      <th className="py-2 px-2 lg:px-4 text-left">
+                        {language === "ar" ? "الكمية" : "Quantity"}
+                      </th>
+                      <th className="py-2 px-2 lg:px-4 text-left">
+                        {language === "ar" ? "السعر" : "Price"}
+                      </th>
+                      <th className="py-2 px-2 lg:px-4 text-left">
+                        {language === "ar" ? "الإجمالي" : "Total"}
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {order.orderItems.map((item: any) => (
+                      <tr key={item._id} className="border-b">
+                        <td className="py-2 px-2 lg:px-4">{item.name}</td>
+                        <td className="py-2 px-2 lg:px-4">{item.qty}</td>
+                        <td className="py-2 px-2 lg:px-4">{item.price.toFixed(3)} KD</td>
+                        <td className="py-2 px-2 lg:px-4">
+                          {(item.qty * item.price).toFixed(3)} KD
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+
+                {/* Delivery & Total */}
+                <div className="flex gap-5 mb-5">
+                  <p>
+                    {language === "ar" ? "التوصيل:" : "Delivery:"}{" "}
+                    <strong>{order.shippingPrice.toFixed(3)} KD</strong>
+                  </p>
+                  <p>
+                    {language === "ar" ? "الإجمالي:" : "Total Price:"}{" "}
+                    <strong>{order.totalPrice.toFixed(3)} KD</strong>
+                  </p>
+                </div>
+
+                {/* Shipping Address */}
+                <table className="w-full text-left border-collapse border border-gray-300 text-gray-700 mb-5">
+                  <tbody>
+                    {["governorate", "city", "block", "street", "house"].map((field) => (
+                      <tr key={field}>
+                        <th className="border border-gray-300 px-3 py-2 font-semibold">
+                          {language === "ar"
+                            ? field === "governorate"
+                              ? "المحافظة"
+                              : field === "city"
+                              ? "المدينة"
+                              : field === "block"
+                              ? "القطعة"
+                              : field === "street"
+                              ? "الشارع"
+                              : "المنزل"
+                            : field.charAt(0).toUpperCase() + field.slice(1)}
+                        </th>
+                        <td className="border border-gray-300 px-3 py-2">
+                          {order.shippingAddress[field]}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+
+                {/* Payment & Status */}
+                <div className="flex flex-col sm:flex-row sm:justify-between items-center gap-4 p-4 rounded-lg shadow-sm">
+                  <p className="text-gray-700 font-medium">
+                    <span className="font-semibold">
+                      {language === "ar" ? "طريقة الدفع:" : "Payment Method:"}
+                    </span>{" "}
+                    {order.paymentMethod}
+                  </p>
+
+                  <div className="flex items-center gap-3 text-gray-700 font-medium">
+                    <span className="font-semibold">
+                      {language === "ar" ? "حالة الطلب:" : "Order status:"}
+                    </span>
+                    {order.isDelivered ? (
+                      <Badge variant="success">
+                        {language === "ar" ? "تم التسليم" : "Delivered"}{" "}
+                        {order.deliveredAt?.substring(0, 10)}
+                      </Badge>
+                    ) : order.isCanceled ? (
+                      <Badge variant="danger">
+                        {language === "ar" ? "تم الإلغاء" : "Canceled"}
+                      </Badge>
+                    ) : (
+                      <Badge variant="pending">
+                        {language === "ar" ? "قيد المعالجة" : "Processing"}
+                      </Badge>
+                    )}
+                  </div>
+                </div>
+              </div>
             )}
           </div>
         </div>
