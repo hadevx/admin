@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import Layout from "../../Layout";
 import {
   useCreateCategoryMutation,
@@ -6,7 +6,6 @@ import {
   useGetCategoriesQuery,
   useGetCategoriesTreeQuery,
 } from "../../redux/queries/productApi";
-
 import { toast } from "react-toastify";
 import Badge from "../../components/Badge";
 import Loader from "../../components/Loader";
@@ -31,8 +30,59 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination";
+import { useSelector } from "react-redux";
 
 function Categories() {
+  const language = useSelector((state: any) => state.language.lang);
+
+  const labels: any = {
+    en: {
+      categories: "Categories",
+      totalCategories: "categories",
+      addCategory: "Add new Category",
+      searchPlaceholder: "Search categories...",
+      allCategories: "All Categories",
+      mainCategories: "Main Categories",
+      subCategories: "Subcategories",
+      tableName: "Name",
+      tableParent: "Parent",
+      tableActions: "Actions",
+      noCategoriesFound: "No categories found.",
+      noParent: "No Parent (Main Category)",
+      enterCategoryName: "Enter category name",
+      cancel: "Cancel",
+      create: "Create",
+      creating: "Creating...",
+      pleaseEnterName: "Please enter a valid category name.",
+      categoryExists: "This category already exists.",
+      subOf: "Sub of",
+      main: "Main",
+    },
+    ar: {
+      categories: "الفئات",
+      totalCategories: "فئة",
+      addCategory: "إضافة فئة جديدة",
+      searchPlaceholder: "ابحث عن الفئات...",
+      allCategories: "جميع الفئات",
+      mainCategories: "الفئات الرئيسية",
+      subCategories: "الفئات الفرعية",
+      tableName: "الاسم",
+      tableParent: "الرئيسية",
+      tableActions: "الإجراءات",
+      noCategoriesFound: "لم يتم العثور على أي فئات.",
+      noParent: "بدون رئيسية (فئة رئيسية)",
+      enterCategoryName: "أدخل اسم الفئة",
+      cancel: "إلغاء",
+      create: "إنشاء",
+      creating: "جارٍ الإنشاء...",
+      pleaseEnterName: "يرجى إدخال اسم فئة صالح.",
+      categoryExists: "هذه الفئة موجودة بالفعل.",
+      subOf: "فرعي من",
+      main: "رئيسية",
+    },
+  };
+  const t = labels[language];
+
   const [deletingCategoryId, setDeletingCategoryId] = useState(null);
   const [page, setPage] = useState(1);
   const [category, setCategory] = useState("");
@@ -44,44 +94,41 @@ function Categories() {
   const [createCategory, { isLoading: isCreating }] = useCreateCategoryMutation();
   const [deleteCategory, { isLoading: isDeleting }] = useDeleteCategoryMutation();
 
-  const [filterType, setFilterType] = useState("all"); // new filter state
+  const [filterType, setFilterType] = useState("all");
 
   const {
     data,
     isLoading: isLoadingCategories,
     refetch,
-  } = useGetCategoriesQuery({ pageNumber: page, keyword: searchTerm });
+  } = useGetCategoriesQuery({
+    pageNumber: page,
+    keyword: searchTerm,
+  });
 
   const categories = data?.categories || [];
   const pages = data?.pages || 1;
 
   const { data: tree, refetch: refetchTree } = useGetCategoriesTreeQuery(undefined);
 
-  /*   const filteredCategories = categories.filter((cat: any) =>
-    cat.name.toLowerCase().includes(searchTerm.toLowerCase())
-  ); */
-
   const filteredCategories = categories
     .filter((cat: any) => cat.name.toLowerCase().includes(searchTerm.toLowerCase()))
     .filter((cat: any) => {
       if (filterType === "main") return !cat.parent;
       if (filterType === "sub") return !!cat.parent;
-      return true; // all
+      return true;
     });
 
   const handleCreateCategory = async () => {
     if (!category.trim()) {
       setCategoryError(true);
-      return toast.error("Please enter a valid category name.");
+      return toast.error(t.pleaseEnterName);
     }
 
     const isDuplicate = categories.some(
       (c: any) => c.name.toLowerCase() === category.trim().toLowerCase()
     );
 
-    if (isDuplicate) {
-      return toast.error("This category already exists.");
-    }
+    if (isDuplicate) return toast.error(t.categoryExists);
 
     try {
       await createCategory({
@@ -89,7 +136,7 @@ function Categories() {
         parent: parent || null,
       }).unwrap();
 
-      toast.success("Category created successfully.");
+      toast.success(t.create + " " + t.categories + " " + "successfully.");
       setCategory("");
       setParent("");
       setIsModalOpen(false);
@@ -97,7 +144,7 @@ function Categories() {
       refetchTree();
       refetchProducts();
     } catch (error) {
-      toast.error("Failed to create category.");
+      toast.error(t.categoryExists);
     }
   };
 
@@ -105,23 +152,19 @@ function Categories() {
     setDeletingCategoryId(id);
     try {
       await deleteCategory({ name }).unwrap();
-      toast.success("Category deleted successfully.");
+      toast.success(t.categories + " deleted successfully.");
       refetch();
       refetchTree();
       refetchProducts();
     } catch (error) {
-      toast.error("Error deleting category.");
+      toast.error("Error deleting " + t.categories);
     } finally {
       setDeletingCategoryId(null);
     }
   };
 
   useEffect(() => {
-    if (isModalOpen) {
-      setTimeout(() => {
-        document.querySelector("input")?.focus();
-      }, 100);
-    }
+    if (isModalOpen) setTimeout(() => document.querySelector("input")?.focus(), 100);
   }, [isModalOpen]);
 
   return (
@@ -129,14 +172,14 @@ function Categories() {
       {isLoadingCategories ? (
         <Loader />
       ) : (
-        <div className="px-4 mb-10 py-3 mt-[50px]  w-full lg:w-4xl min-h-screen lg:min-h-auto">
+        <div className="px-4 mb-10 py-3 mt-[50px] w-full lg:w-4xl min-h-screen lg:min-h-auto">
           <div className="flex justify-between items-center">
-            <h1 className="text-lg  lg:text-2xl font-black flex gap-2 lg:gap-5 items-center">
-              Categories:
+            <h1 className="text-lg lg:text-2xl font-black flex gap-2 lg:gap-5 items-center">
+              {t.categories}:
               <Badge icon={false}>
                 <Boxes strokeWidth={1} />
                 <p className="text-lg lg:text-sm">
-                  {data?.total || 0} <span className="hidden lg:inline">categories</span>
+                  {data?.total || 0} <span className="hidden lg:inline">{t.totalCategories}</span>
                 </p>
               </Badge>
             </h1>
@@ -144,43 +187,44 @@ function Categories() {
               onClick={() => setIsModalOpen(true)}
               className="bg-black hover:bg-black/70 transition-all duration-300 text-white font-bold flex items-center gap-1 text-sm lg:text-md shadow-md px-3 py-2 rounded-md">
               <Plus />
-              Add new Category
+              {t.addCategory}
             </button>
           </div>
+
           <Separator className="my-4 bg-black/20" />
-          <div className="  mt-10 mb-2 overflow-hidden">
+
+          <div className="mt-10 mb-2 overflow-hidden">
             <div className="flex flex-col lg:flex-row items-start lg:items-center gap-3 mb-5">
-              {/* Search box */}
               <div className="relative w-full lg:w-64">
                 <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400">
                   <Search className="h-5 w-5" />
                 </span>
                 <input
                   type="text"
-                  placeholder="Search categories..."
+                  placeholder={t.searchPlaceholder}
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="w-full border bg-white border-gray-300 rounded-lg py-3 pl-10 pr-4 text-sm focus:outline-none focus:border-blue-500 focus:border-2"
                 />
               </div>
 
-              {/* Filter dropdown */}
               <select
                 value={filterType}
                 onChange={(e) => setFilterType(e.target.value)}
                 className="border bg-white border-gray-300 rounded-lg py-3 px-4 text-sm focus:outline-none focus:border-blue-500">
-                <option value="all">All Categories</option>
-                <option value="main">Main Categories</option>
-                <option value="sub">Subcategories</option>
+                <option value="all">{t.allCategories}</option>
+                <option value="main">{t.mainCategories}</option>
+                <option value="sub">{t.subCategories}</option>
               </select>
             </div>
+
             <div className="rounded-lg border lg:p-10 bg-white">
               <table className="w-full text-sm text-left text-gray-700">
                 <thead className="bg-white text-gray-900/50 font-semibold">
                   <tr>
-                    <th className="px-4 py-3 border-b">Name</th>
-                    <th className="px-4 py-3 border-b">Parent</th>
-                    <th className="px-4 py-3 border-b">Actions</th>
+                    <th className="px-4 py-3 border-b">{t.tableName}</th>
+                    <th className="px-4 py-3 border-b">{t.tableParent}</th>
+                    <th className="px-4 py-3 border-b">{t.tableActions}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200 bg-white">
@@ -190,11 +234,11 @@ function Categories() {
                         <td className="px-4 py-5">{cat?.name}</td>
                         <td className="px-4 py-5">
                           {cat.parent?.name ? (
-                            <span className="text-gray-500  text-sm">
-                              Sub of {cat?.parent.name}
+                            <span className="text-gray-500 text-sm">
+                              {t.subOf} {cat?.parent.name}
                             </span>
                           ) : (
-                            <span className="text-sm  text-gray-500">Main</span>
+                            <span className="text-sm text-gray-500">{t.main}</span>
                           )}
                         </td>
                         <td className="px-4 py-5">
@@ -214,12 +258,13 @@ function Categories() {
                   ) : (
                     <tr>
                       <td colSpan={3} className="px-4 py-6 text-center text-gray-500">
-                        No categories found.
+                        {t.noCategoriesFound}
                       </td>
                     </tr>
                   )}
                 </tbody>
               </table>
+
               <Pagination>
                 <PaginationContent>
                   <PaginationItem>
@@ -244,22 +289,22 @@ function Categories() {
               </Pagination>
             </div>
           </div>
+
           {tree && <CategoryTree data={tree} />}
         </div>
       )}
 
-      {/* Modal */}
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Add Category</DialogTitle>
+            <DialogTitle>{t.addCategory}</DialogTitle>
           </DialogHeader>
 
           <input
             type="text"
             value={category}
             onChange={(e) => setCategory(e.target.value)}
-            placeholder="Enter category name"
+            placeholder={t.enterCategoryName}
             className={clsx(
               "w-full border bg-white border-gray-300 rounded-lg py-3 pl-4 pr-4 text-sm focus:outline-none focus:border-blue-500 focus:border-2",
               categoryError ? "border-rose-500 border-2" : "border-gray-300"
@@ -270,7 +315,7 @@ function Categories() {
             className="w-full border bg-white border-gray-300 rounded-lg py-3 pl-4 pr-4 text-sm focus:outline-none focus:border-blue-500"
             value={parent}
             onChange={(e) => setParent(e.target.value)}>
-            <option value="">No Parent (Main Category)</option>
+            <option value="">{t.noParent}</option>
             {categories.map((cat: any) => (
               <option key={cat._id} value={cat._id}>
                 {cat.name}
@@ -280,10 +325,10 @@ function Categories() {
 
           <DialogFooter className="mt-4 flex justify-end gap-2">
             <Button variant="outline" onClick={() => setIsModalOpen(false)}>
-              Cancel
+              {t.cancel}
             </Button>
             <Button variant="default" disabled={isCreating} onClick={handleCreateCategory}>
-              {isCreating ? "Creating..." : "Create"}
+              {isCreating ? t.creating : t.create}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -291,39 +336,5 @@ function Categories() {
     </Layout>
   );
 }
-const renderTreeRows = (
-  nodes: any,
-  level = 0,
-  isDeleting: boolean,
-  handleDeleteCategory: (name: any) => void
-) => {
-  return nodes.map((node: any) => (
-    <React.Fragment key={node._id}>
-      <tr className="font-bold transition-all duration-300">
-        <td className="px-4 py-5">
-          <span style={{ paddingLeft: `${level * 20}px` }}>
-            {level > 0 && "↳ "}
-            {node.name}
-          </span>
-        </td>
-        <td className="px-4 py-5">
-          {node.parent?.name ? (
-            <span className="text-gray-500 italic text-sm">Sub of {node.parent.name}</span>
-          ) : (
-            <span className="text-xs text-gray-400">Main</span>
-          )}
-        </td>
-        <td className="px-4 py-5">
-          <button
-            disabled={isDeleting}
-            onClick={() => handleDeleteCategory(node.name)}
-            className="text-rose-500 hover:bg-red-100 bg-red-50 p-2 rounded-lg transition-all duration-300">
-            <Trash2 />
-          </button>
-        </td>
-      </tr>
-      {node.children && renderTreeRows(node.children, level + 1, isDeleting, handleDeleteCategory)}
-    </React.Fragment>
-  ));
-};
+
 export default Categories;

@@ -5,7 +5,6 @@ import {
   useGetProductsQuery,
   useUploadProductImageMutation,
   useCreateProductMutation,
-  // useGetCategoriesQuery,
   useGetAllCategoriesQuery,
   useGetDiscountStatusQuery,
   useGetCategoriesTreeQuery,
@@ -31,23 +30,80 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination";
+import { useSelector } from "react-redux";
+
+const texts: any = {
+  en: {
+    products: "Products",
+    addProduct: "Add new Product",
+    allCategories: "All Categories",
+    minPrice: "Min Price",
+    maxPrice: "Max Price",
+    allStock: "All Stock",
+    inStock: "In Stock",
+    lowStock: "Low Stock (<5)",
+    outOfStock: "Out of Stock",
+    searchProducts: "Search products...",
+    name: "Name",
+    category: "Category",
+    stock: "Stock",
+    status: "Status",
+    price: "Price",
+    cancel: "Cancel",
+    create: "Create",
+    uploading: "Uploading...",
+    creating: "Creating...",
+    productName: "Product Name",
+    productDescription: "Product Description",
+    productPrice: "Product Price",
+    productBrand: "Product Brand (optional)",
+    selectCategory: "Select a category",
+    productStock: "Product Stock",
+    noProductsFound: "No products found.",
+  },
+  ar: {
+    products: "المنتجات",
+    addProduct: "إضافة منتج جديد",
+    allCategories: "جميع الفئات",
+    minPrice: "السعر الأدنى",
+    maxPrice: "السعر الأعلى",
+    allStock: "جميع المخزون",
+    inStock: "متوفر",
+    lowStock: "المخزون منخفض (<5)",
+    outOfStock: "غير متوفر",
+    searchProducts: "ابحث عن المنتجات...",
+    name: "الاسم",
+    category: "الفئة",
+    stock: "المخزون",
+    status: "الحالة",
+    price: "السعر",
+    cancel: "إلغاء",
+    create: "إنشاء",
+    uploading: "جارٍ الرفع...",
+    creating: "جارٍ الإنشاء...",
+    productName: "اسم المنتج",
+    productDescription: "وصف المنتج",
+    productPrice: "سعر المنتج",
+    productBrand: "ماركة المنتج (اختياري)",
+    selectCategory: "اختر الفئة",
+    productStock: "المخزون",
+    noProductsFound: "لا توجد منتجات.",
+  },
+};
 
 function ProductList() {
   const [page, setPage] = useState(1);
   const [searchQuery, setSearchQuery] = useState("");
-
+  const language = useSelector((state: any) => state.language.lang);
   const [selectedCategory, setSelectedCategory] = useState<string>("");
   const [minPrice, setMinPrice] = useState<string>("");
   const [maxPrice, setMaxPrice] = useState<string>("");
   const [stockStatus, setStockStatus] = useState<string>("");
-  // const [searchQuery, setSearchQuery] = useState<string>("");
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [filteredProducts, setFilteredProducts] = useState<any>([]);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [isCancelled, setIsCancelled] = useState(false);
   const navigate = useNavigate();
-
-  // const { data: products, refetch, isLoading: loadingProducts } = useGetProductsQuery(undefined);
 
   const { data: productsData, isLoading: loadingProducts } = useGetProductsQuery({
     pageNumber: page,
@@ -59,10 +115,8 @@ function ProductList() {
 
   const { data: tree } = useGetCategoriesTreeQuery(undefined);
   const { data: discounts } = useGetDiscountStatusQuery(undefined);
-  // const { data: categories } = useGetCategoriesQuery(undefined);
   const { data: categories } = useGetAllCategoriesQuery(undefined);
 
-  console.log(categories);
   /* Create product fields */
   const [name, setName] = useState<string>("");
   const [price, setPrice] = useState<number | undefined>(undefined);
@@ -116,7 +170,6 @@ function ProductList() {
       return;
     }
 
-    //  Upload image first
     let uploadedImage = "";
     let uploadedPublicId = "";
     if (imageFile) {
@@ -125,24 +178,22 @@ function ProductList() {
 
       try {
         const res = await uploadProductImage(formData).unwrap();
-        console.log(res);
-        if (isCancelled) return; // ignore result if cancelled
+        if (isCancelled) return;
         uploadedImage = res.image;
         uploadedPublicId = res.publicId;
       } catch (error: any) {
         toast.error(error?.data?.message || error?.error);
-        return; // stop creating product if image upload fails
+        return;
       }
     }
 
-    // Create product
     const newProduct = {
       name,
       price,
       image: uploadedImage,
       imagePublicId: uploadedPublicId,
       brand,
-      category /* category.charAt(0).toUpperCase() + category.slice(1), */,
+      category,
       countInStock,
       description,
     };
@@ -153,7 +204,6 @@ function ProductList() {
         toast.error("Error creating product");
       } else {
         toast.success("Product created");
-        // refetch();
         setIsModalOpen(false);
         resetForm();
       }
@@ -181,11 +231,12 @@ function ProductList() {
           <div className="w-full">
             <div className="flex justify-between items-center">
               <h1 className="text-lg lg:text-2xl font-black flex gap-2 lg:gap-5 items-center">
-                Products:
+                {texts[language].products}:
                 <Badge icon={false}>
                   <Box />
                   <p className="text-lg lg:text-sm">
-                    {productsData?.total ?? 0} <span className="hidden lg:inline">products</span>
+                    {productsData?.total ?? 0}{" "}
+                    <span className="hidden lg:inline">{texts[language].products}</span>
                   </p>
                 </Badge>
               </h1>
@@ -193,7 +244,7 @@ function ProductList() {
                 onClick={() => setIsModalOpen(true)}
                 className="bg-black cursor-pointer hover:bg-black/70 text-white font-bold flex items-center gap-1 text-sm lg:text-md shadow-md px-3 py-2 rounded-md">
                 <Plus />
-                Add new Product
+                {texts[language].addProduct}
               </button>
             </div>
 
@@ -208,7 +259,7 @@ function ProductList() {
                   </span>
                   <input
                     type="text"
-                    placeholder="Search products..."
+                    placeholder={texts[language].searchProducts}
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     className="w-full bg-white border border-gray-300 rounded-lg py-2.5 pl-10 pr-4 text-sm focus:outline-none focus:border-blue-500 focus:border-2"
@@ -220,7 +271,7 @@ function ProductList() {
                     value={selectedCategory}
                     onChange={(e) => setSelectedCategory(e.target.value)}
                     className="border bg-white border-gray-300 rounded-lg p-2 text-sm">
-                    <option value="">All Categories</option>
+                    <option value="">{texts[language].allCategories}</option>
                     {categories?.map((cat: any) => (
                       <option key={cat._id} value={cat._id}>
                         {cat.name}
@@ -230,14 +281,14 @@ function ProductList() {
 
                   <input
                     type="number"
-                    placeholder="Min Price"
+                    placeholder={texts[language].minPrice}
                     value={minPrice}
                     onChange={(e) => setMinPrice(e.target.value)}
                     className="border bg-white border-gray-300 rounded-lg p-2 text-sm"
                   />
                   <input
                     type="number"
-                    placeholder="Max Price"
+                    placeholder={texts[language].maxPrice}
                     value={maxPrice}
                     onChange={(e) => setMaxPrice(e.target.value)}
                     className="border bg-white border-gray-300 rounded-lg p-2 text-sm"
@@ -247,10 +298,10 @@ function ProductList() {
                     value={stockStatus}
                     onChange={(e) => setStockStatus(e.target.value)}
                     className="border bg-white border-gray-300 rounded-lg p-2 text-sm">
-                    <option value="">All Stock</option>
-                    <option value="in-stock">In Stock</option>
-                    <option value="low-stock">Low Stock (&lt; 5)</option>
-                    <option value="out-of-stock">Out of Stock</option>
+                    <option value="">{texts[language].allStock}</option>
+                    <option value="in-stock">{texts[language].inStock}</option>
+                    <option value="low-stock">{texts[language].lowStock}</option>
+                    <option value="out-of-stock">{texts[language].outOfStock}</option>
                   </select>
                 </div>
               </div>
@@ -260,11 +311,11 @@ function ProductList() {
                 <table className="w-full min-w-[700px] border-gray-200 text-sm text-left text-gray-700">
                   <thead className="bg-white text-gray-900/50 font-semibold">
                     <tr>
-                      <th className="px-4 py-3 border-b">Name</th>
-                      <th className="px-4 py-3 border-b">Category</th>
-                      <th className="px-4 py-3 border-b">Stock</th>
-                      <th className="px-4 py-3 border-b">Status</th>
-                      <th className="px-4 py-3 border-b">Price</th>
+                      <th className="px-4 py-3 border-b">{texts[language].name}</th>
+                      <th className="px-4 py-3 border-b">{texts[language].category}</th>
+                      <th className="px-4 py-3 border-b">{texts[language].stock}</th>
+                      <th className="px-4 py-3 border-b">{texts[language].status}</th>
+                      <th className="px-4 py-3 border-b">{texts[language].price}</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-200 bg-white">
@@ -290,15 +341,15 @@ function ProductList() {
                           <td className="px-4 py-3">
                             {product?.countInStock === 0 ? (
                               <p className="bg-red-50 rounded-xl py-1 text-red-600 text-center border-red-100 border">
-                                Out of stock
+                                {texts[language].outOfStock}
                               </p>
                             ) : product.countInStock < 5 ? (
                               <p className="bg-orange-50 py-1 rounded-xl text-orange-600 text-center border-orange-100 border">
-                                Low stock
+                                {texts[language].lowStock}
                               </p>
                             ) : (
                               <p className="bg-teal-50 py-1 rounded-xl text-teal-600 text-center border-teal-100 border">
-                                In stock
+                                {texts[language].inStock}
                               </p>
                             )}
                           </td>
@@ -327,12 +378,7 @@ function ProductList() {
                     ) : (
                       <tr>
                         <td colSpan={6} className="px-4 py-6 text-center text-gray-500">
-                          No products found.
-                          {/*      <Lottie
-                            animationData={thinking}
-                            loop={false}
-                            style={{ width: "500px" }}
-                          /> */}
+                          {texts[language].noProductsFound}
                         </td>
                       </tr>
                     )}
@@ -372,7 +418,7 @@ function ProductList() {
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Add Product</DialogTitle>
+            <DialogTitle>{texts[language].addProduct}</DialogTitle>
           </DialogHeader>
           <input
             type="file"
@@ -381,13 +427,13 @@ function ProductList() {
           />
           <input
             type="text"
-            placeholder="Product Name"
+            placeholder={texts[language].productName}
             value={name}
             onChange={(e) => setName(e.target.value)}
             className="p-2 w-full border rounded-md"
           />
           <textarea
-            placeholder="Product Description"
+            placeholder={texts[language].productDescription}
             rows={3}
             value={description}
             onChange={(e) => setDescription(e.target.value)}
@@ -398,27 +444,27 @@ function ProductList() {
             value={price ?? ""}
             onChange={(e) => setPrice(Number(e.target.value))}
             className="p-2 w-full border rounded-md"
-            placeholder="Product Price"
+            placeholder={texts[language].productPrice}
           />
           <input
             type="text"
             value={brand}
             onChange={(e) => setBrand(e.target.value)}
             className="p-2 w-full border rounded-md"
-            placeholder="Product Brand (optional)"
+            placeholder={texts[language].productBrand}
           />
           <select
             value={category}
             onChange={(e) => setCategory(e.target.value)}
             className="p-2 w-full border rounded-md">
             <option value="" disabled>
-              Select a category
+              {texts[language].selectCategory}
             </option>
             {tree?.length > 0 && renderCategoryOptions(tree)}
           </select>
           <input
             type="number"
-            placeholder="Product Stock"
+            placeholder={texts[language].productStock}
             value={countInStock ?? ""}
             onChange={(e) => setCountInStock(Number(e.target.value))}
             className="p-2 w-full border rounded-md"
@@ -428,16 +474,20 @@ function ProductList() {
               variant="outline"
               onClick={() => {
                 setIsModalOpen(false);
-                setIsCancelled(true); // cancel the creation handling
-                window.location.reload(); // refresh the page
+                setIsCancelled(true);
+                window.location.reload();
               }}>
-              Cancel
+              {texts[language].cancel}
             </Button>
             <Button
               variant="default"
               disabled={loadingCreateOrder || loadingUploadImage}
               onClick={handleCreateProduct}>
-              {loadingUploadImage ? "Uploading..." : loadingCreateOrder ? "Creating..." : "Create"}
+              {loadingUploadImage
+                ? texts[language].uploading
+                : loadingCreateOrder
+                ? texts[language].creating
+                : texts[language].create}
             </Button>
           </DialogFooter>
         </DialogContent>

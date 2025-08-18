@@ -8,6 +8,8 @@ import {
 import Spinner from "../../components/Spinner";
 import { Separator } from "../../components/ui/separator";
 import { Loader2Icon } from "lucide-react";
+import { toggleLang } from "../../redux/slices/languageSlice";
+import { useSelector, useDispatch } from "react-redux";
 
 function Settings() {
   const [updateStoreStatus, { isLoading: loadingUpdateStatus }] = useUpdateStoreStatusMutation();
@@ -16,8 +18,10 @@ function Settings() {
   const [status, setStatus] = useState("");
   const [banner, setBanner] = useState("");
 
+  const language = useSelector((state: any) => state.language.lang);
+  const dispatch = useDispatch();
   // language state
-  const [language, setLanguage] = useState<"en" | "ar">("en");
+  // const [language, setLanguage] = useState<"en" | "ar">("en");
 
   const handleUpdateStoreStatus = async () => {
     await updateStoreStatus({ status, banner: banner.trim() });
@@ -58,7 +62,7 @@ function Settings() {
             </h1>
             {/* Language toggle button */}
             <button
-              onClick={() => setLanguage(language === "en" ? "ar" : "en")}
+              onClick={() => dispatch(toggleLang())}
               className="px-4 py-2 bg-blue-500 text-white rounded-lg shadow hover:bg-blue-600 transition">
               {language === "en" ? "العربية" : "English"}
             </button>

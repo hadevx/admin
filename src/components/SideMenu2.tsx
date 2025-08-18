@@ -29,7 +29,7 @@ function SideMenu() {
   const location = useLocation();
   const navigate = useNavigate();
   const { pathname } = location;
-
+  const language = useSelector((state: any) => state.language.lang);
   const { adminUserInfo } = useSelector((state: any) => state.auth);
 
   const dispatch = useDispatch();
@@ -57,20 +57,47 @@ function SideMenu() {
     // Cleanup on unmount
     return () => document.body.classList.remove("overflow-hidden");
   }, [isMenuOpen]);
+
+  const labels: any = {
+    en: {
+      orders: "Orders",
+      products: "Products",
+      categories: "Categories",
+      customers: "Customers",
+      discounts: "Discounts",
+      delivery: "Delivery",
+      settings: "Settings",
+      logout: "Logout",
+      loggingOut: "Logging out...",
+    },
+    ar: {
+      orders: "الطلبات",
+      products: "المنتجات",
+      categories: "الفئات",
+      customers: "العملاء",
+      discounts: "الخصومات",
+      delivery: "التوصيل",
+      settings: "الإعدادات",
+      logout: "تسجيل الخروج",
+      loggingOut: "جاري تسجيل الخروج...",
+    },
+  };
+
+  const t = labels[language];
+
   // Your exact menu content JSX (same as desktop)
   const menuContent = (
-    <div className="flex flex-col h-full text-black px-2 lg:px-[2rem] py-[2rem]  border-r-[2px] w-64 lg:w-auto min-h-screen ">
-      <div className="mt-10  flex items-center gap-2  p-2">
-        <div className="rounded-full   select-none border-2 border-gray-400 hover:border-gray-900 size-12  flex justify-center items-center transition">
-          <div className="rounded-full hover:opacity-80  bg-gradient-to-r shadow-md from-zinc-600 to-zinc-800 text-white size-10  flex justify-center items-center font-semibold text-lg">
+    <div className="flex flex-col h-full text-black px-2 lg:px-[2rem] py-[2rem] border-r-[2px] w-64 lg:w-auto min-h-screen">
+      <div className="mt-10 flex items-center gap-2 p-2">
+        <div className="rounded-full select-none border-2 border-gray-400 hover:border-gray-900 size-12 flex justify-center items-center transition">
+          <div className="rounded-full hover:opacity-80 bg-gradient-to-r shadow-md from-zinc-600 to-zinc-800 text-white size-10 flex justify-center items-center font-semibold text-lg">
             {adminUserInfo?.name.charAt(0).toUpperCase()}
             {adminUserInfo?.name.charAt(adminUserInfo?.name.length - 1).toUpperCase()}
           </div>
         </div>
-
-        <div className="">
-          <p className="  text-sm font-bold ">{adminUserInfo?.name}</p>
-          <p className="text-sm text-gray-500 ">{adminUserInfo?.email}</p>
+        <div>
+          <p className="text-sm font-bold">{adminUserInfo?.name}</p>
+          <p className="text-sm text-gray-500">{adminUserInfo?.email}</p>
         </div>
       </div>
 
@@ -86,7 +113,7 @@ function SideMenu() {
               (pathname === "/admin" || pathname.startsWith("/admin/orders")) && "bg-white shadow"
             )}>
             <ShoppingBasket strokeWidth={1} />
-            <p className=" ">Orders</p>
+            <p>{t.orders}</p>
           </Link>
           <Link
             to="/admin/productlist"
@@ -96,7 +123,7 @@ function SideMenu() {
               pathname.startsWith("/admin/productlist") && "bg-white shadow"
             )}>
             <Box strokeWidth={1} />
-            <p className="">Products</p>
+            <p>{t.products}</p>
           </Link>
           <Link
             to="/admin/categories"
@@ -106,7 +133,7 @@ function SideMenu() {
               pathname === "/admin/categories" && "bg-white shadow-[0_0_5px_rgba(0,0,0,0.1)]"
             )}>
             <Boxes strokeWidth={1} />
-            <p className="">Categories</p>
+            <p>{t.categories}</p>
           </Link>
           <Link
             to="/admin/userlist"
@@ -116,7 +143,7 @@ function SideMenu() {
               pathname.startsWith("/admin/userlist") && "bg-white shadow"
             )}>
             <Users strokeWidth={1} />
-            <p className="">Customers</p>
+            <p>{t.customers}</p>
           </Link>
           <Link
             to="/admin/discounts"
@@ -126,7 +153,7 @@ function SideMenu() {
               pathname.startsWith("/admin/discounts") && "bg-white shadow"
             )}>
             <TicketPercent strokeWidth={1} />
-            <p className="">Discounts</p>
+            <p>{t.discounts}</p>
           </Link>
           <Link
             to="/admin/delivery"
@@ -136,7 +163,7 @@ function SideMenu() {
               pathname === "/admin/delivery" && "bg-white shadow"
             )}>
             <Truck strokeWidth={1} />
-            <p className="">Delivery</p>
+            <p>{t.delivery}</p>
           </Link>
           <Link
             to="/admin/settings"
@@ -146,11 +173,11 @@ function SideMenu() {
               pathname === "/admin/settings" && "bg-white shadow"
             )}>
             <Settings strokeWidth={1} />
-            <p className="">Settings</p>
+            <p>{t.settings}</p>
           </Link>
         </div>
 
-        <div className="">
+        <div>
           <Separator className="my-4 bg-black/20" />
           <button
             onClick={handleLogout}
@@ -158,12 +185,12 @@ function SideMenu() {
             {loadingLogout ? (
               <>
                 <Loader2Icon className="animate-spin" />
-                <p>Logging out...</p>
+                <p>{t.loggingOut}</p>
               </>
             ) : (
               <>
                 <LogOut strokeWidth={1} />
-                <p className="">Logout</p>
+                <p>{t.logout}</p>
               </>
             )}
           </button>
@@ -176,7 +203,6 @@ function SideMenu() {
 
   return (
     <>
-      {/* Hamburger button: visible only on mobile */}
       <button
         className="lg:hidden fixed top-4 left-4 z-50 p-2 rounded-md bg-zinc-900 text-white"
         onClick={() => setIsMenuOpen((prev) => !prev)}
@@ -184,22 +210,19 @@ function SideMenu() {
         {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
       </button>
 
-      {/* Desktop sidebar (unchanged) */}
       <div className="hidden lg:flex z-50">{menuContent}</div>
-
-      {/* Mobile menu drawer */}
 
       {isMenuOpen && (
         <div
-          className={clsx("fixed inset-0  backdrop-blur-sm z-40")}
+          className={clsx("fixed inset-0 backdrop-blur-sm z-40")}
           onClick={() => setIsMenuOpen(false)}
           aria-hidden="true">
           <motion.div
-            initial={{ x: "-100%" }} // start fully off-screen to the left
-            animate={{ x: 0 }} // animate to visible
-            exit={{ x: "-100%" }} // slide back out when closing
+            initial={{ x: "-100%" }}
+            animate={{ x: 0 }}
+            exit={{ x: "-100%" }}
             transition={{ type: "spring", stiffness: 300, damping: 30 }}
-            className="fixed left-0 top-0 h-full w-64 bg-zinc-100  shadow-lg z-50"
+            className="fixed left-0 top-0 h-full w-64 bg-zinc-100 shadow-lg z-50"
             onClick={(e) => e.stopPropagation()}>
             {menuContent}
           </motion.div>
