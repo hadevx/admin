@@ -199,7 +199,7 @@ function OrderDetails() {
                     {language === "ar" ? " الإجمالي: " : "Total Price:"}{" "}
                     <strong>
                       {order.totalPrice.toFixed(3)}
-                      {language === "ar" ? "دك" : "KD"}
+                      {language === "ar" ? " دك  " : "KD"}
                     </strong>
                   </p>
                 </div>
@@ -233,7 +233,7 @@ function OrderDetails() {
                 {/* Payment & Status */}
                 <div className="flex flex-col sm:flex-row sm:justify-between items-center gap-4 p-4 rounded-lg shadow-sm">
                   <p
-                    className={`flex items-center text-gray-700 font-medium ${
+                    className={`flex items-center gap-3 text-gray-700 font-medium ${
                       language === "ar" ? "flex-row-reverse" : ""
                     }`}>
                     <span className="font-semibold">
