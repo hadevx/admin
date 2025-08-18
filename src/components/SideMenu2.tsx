@@ -169,10 +169,13 @@ function SideMenu() {
             to="/admin/settings"
             onClick={() => setIsMenuOpen(false)}
             className={clsx(
-              "flex gap-3 hover:bg-white px-3 py-2 rounded-lg hover:shadow transition-all duration-300",
+              "group flex gap-3 hover:bg-white px-3 py-2 rounded-lg hover:shadow transition-all duration-300 ",
               pathname === "/admin/settings" && "bg-white shadow"
             )}>
-            <Settings strokeWidth={1} />
+            <Settings
+              strokeWidth={1}
+              className="transition-transform duration-300 group-hover:rotate-180"
+            />
             <p>{t.settings}</p>
           </Link>
         </div>
