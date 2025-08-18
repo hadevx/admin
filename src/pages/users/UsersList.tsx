@@ -90,7 +90,7 @@ function Customers() {
             </div>
             <Separator className="my-4 bg-black/20" />
 
-            <div className="mt-10 mb-2 overflow-hidden">
+            <div className="mt-5 mb-2 overflow-hidden">
               <div className="relative w-full lg:w-64 mb-5">
                 <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400">
                   <Search className="h-5 w-5" />

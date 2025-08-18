@@ -55,6 +55,22 @@ function Delivery() {
     refetch();
   };
 
+  const render = () => {
+    if (language === "ar") {
+      if (deliveryStatus?.[0].timeToDeliver === "today") {
+        return "اليوم";
+      }
+      if (deliveryStatus?.[0].timeToDeliver === "tomorrow") {
+        return "غدا";
+      }
+      if (deliveryStatus?.[0].timeToDeliver === "two days") {
+        return "يومين";
+      }
+    } else {
+      return deliveryStatus?.[0].timeToDeliver;
+    }
+  };
+
   return (
     <Layout>
       <div className="px-4 w-full lg:w-4xl min-h-screen lg:min-h-auto lg:text-lg py-6 mt-[50px] space-y-5">
@@ -147,7 +163,7 @@ function Delivery() {
               {isLoading ? (
                 <Spinner className="border-t-black" />
               ) : (
-                <p className="capitalize">{deliveryStatus?.[0].timeToDeliver}</p>
+                <p className="capitalize">{render()}</p>
               )}
             </div>
 

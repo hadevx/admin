@@ -120,7 +120,7 @@ function Order() {
             <Separator className="my-4 bg-black/20" />
 
             {/* Container */}
-            <div className="mt-10 mb-2 overflow-hidden w-full max-w-full lg:w-4xl">
+            <div className="mt-5 mb-2 overflow-hidden w-full max-w-full lg:w-4xl">
               <div className="flex flex-col lg:flex-row items-center gap-2 mb-5">
                 <div className="relative w-full lg:w-full">
                   <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400 pointer-events-none">
@@ -225,7 +225,7 @@ function Order() {
                 </table>
 
                 {/* Pagination */}
-                <Pagination>
+                <Pagination className="py-2">
                   <PaginationContent>
                     <PaginationItem>
                       <PaginationPrevious onClick={() => page > 1 && setPage(page - 1)} href="#" />

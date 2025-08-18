@@ -253,7 +253,7 @@ function ProductList() {
             <Separator className="my-4 bg-black/20" />
 
             {/* Filters */}
-            <div className="mt-10 mb-2">
+            <div className="mt-5 mb-2">
               <div className="flex flex-wrap items-center gap-4 mb-5">
                 <div className="relative w-full lg:w-full">
                   <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400">
@@ -388,7 +388,7 @@ function ProductList() {
                 </table>
 
                 {/* Pagination */}
-                <Pagination>
+                <Pagination className="py-2">
                   <PaginationContent>
                     <PaginationItem>
                       <PaginationPrevious onClick={() => page > 1 && setPage(page - 1)} href="#" />
