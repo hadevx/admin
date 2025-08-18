@@ -138,7 +138,7 @@ export const productApi = api.injectEndpoints({
         url: "/api/category/tree",
       }),
     }),
-    /*     deleteCategory: builder.mutation({
+    /*  deleteCategory: builder.mutation({
       query: (category) => ({
         url: "/api/products/category",
         method: "DELETE",
@@ -146,9 +146,10 @@ export const productApi = api.injectEndpoints({
       }),
     }), */
     deleteCategory: builder.mutation({
-      query: (name) => ({
-        url: `/api/products/category?name=${encodeURIComponent(name)}`,
+      query: (id) => ({
+        url: "/api/products/category",
         method: "DELETE",
+        body: { id }, // send as object with id
       }),
     }),
   }),
