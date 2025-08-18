@@ -39,7 +39,7 @@ const texts: any = {
     orders: "الطلبات",
     searchPlaceholder: "ابحث بالرقم، الاسم، أو طريقة الدفع",
     revenue: "الإيرادات",
-    itemsSold: "عدد العناصر المباعة",
+    itemsSold: " العناصر المباعة",
     orderId: "رقم الطلب",
     customer: "العميل",
     payment: "طريقة الدفع",
@@ -141,7 +141,6 @@ function Order() {
                   </div>
                   <div className="bg-blue-50 border flex-1 border-blue-200 text-blue-700 text-sm sm:text-sm font-semibold rounded-lg p-3 lg:px-4 lg:py-3 text-center">
                     {texts[language].itemsSold}: {totalItems}{" "}
-                    {language === "ar" ? "منتجات" : "items"}
                   </div>
                 </div>
               </div>
@@ -208,7 +207,7 @@ function Order() {
                             )}
                           </td>
                           <td className="px-4 py-5 whitespace-nowrap">
-                            {order?.totalPrice.toFixed(3)}
+                            {order?.totalPrice.toFixed(3)} KD
                           </td>
                         </tr>
                       ))
