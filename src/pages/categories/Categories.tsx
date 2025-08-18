@@ -101,8 +101,8 @@ function Categories() {
     isLoading: isLoadingCategories,
     refetch,
   } = useGetCategoriesQuery({
-    pageNumber: page,
-    keyword: searchTerm,
+    pageNumber: page || 1,
+    keyword: searchTerm || "",
   });
 
   const categories = data?.categories || [];
