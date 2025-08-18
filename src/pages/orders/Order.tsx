@@ -137,12 +137,11 @@ function Order() {
 
                 <div className="flex gap-2 items-center w-full">
                   <div className="bg-blue-50 border flex-1 border-blue-200 text-blue-700 text-sm sm:text-sm font-semibold rounded-lg p-3 lg:px-4 lg:py-3 text-center">
-                    {language === "ar" && "دك"} {texts[language].revenue}: {totalRevenue}{" "}
-                    {language === "en" && "KD"}
+                    {texts[language].revenue}: {totalRevenue} {language === "ar" ? "دك" : "KD"}
                   </div>
                   <div className="bg-blue-50 border flex-1 border-blue-200 text-blue-700 text-sm sm:text-sm font-semibold rounded-lg p-3 lg:px-4 lg:py-3 text-center">
-                    {language === "ar" && "منتجات"} {texts[language].itemsSold}: {totalItems}{" "}
-                    {language === "en" && "items"}
+                    {texts[language].itemsSold}: {totalItems}{" "}
+                    {language === "ar" ? "منتجات" : "items"}
                   </div>
                 </div>
               </div>
