@@ -137,10 +137,13 @@ function Discounts() {
       {loadingCategories ? (
         <Loader />
       ) : (
-        <div className="px-4 w-full lg:w-4xl min-h-screen lg:min-h-auto lg:px-4 lg:py-6 mt-[50px]">
+        <div className="px-4 w-full lg:w-4xl min-h-screen lg:min-h-auto lg:px-4 lg:py-6 mt-[70px] lg:mt-[50px]">
           {/* Discounts Section */}
           <section className="mx-auto w-full">
-            <div className="flex mt-5 lg:mt-0 justify-between items-center">
+            <div
+              className={`flex justify-between items-center ${
+                language === "ar" ? "flex-row-reverse" : ""
+              }`}>
               <h1 className="lg:text-2xl text-lg font-extrabold text-gray-900">{t.setDiscounts}</h1>
               <button
                 onClick={handleCreateDiscount}
@@ -236,7 +239,12 @@ function Discounts() {
 
           {/* Current Coupons Section */}
           <section className="mb-10 w-full">
-            <h1 className="text-lg lg:text-lg font-bold mb-4 mt-4">{t.currentDiscounts}</h1>
+            <h1
+              className={`text-lg lg:text-lg font-bold mb-4 mt-4 ${
+                language === "ar" ? "text-right" : ""
+              }`}>
+              {t.currentDiscounts}
+            </h1>
             <Separator className="my-3 bg-black/20" />
             {discountStatus && discountStatus.length > 0 ? (
               <div className="grid sm:grid-cols-2 md:grid-cols-2 gap-5">
@@ -261,7 +269,12 @@ function Discounts() {
                 ))}
               </div>
             ) : (
-              <p className="text-gray-600 text-base lg:text-lg">{t.noDiscounts}</p>
+              <p
+                className={`text-gray-600 text-base lg:text-lg ${
+                  language === "ar" ? "text-right" : ""
+                }`}>
+                {t.noDiscounts}
+              </p>
             )}
           </section>
         </div>

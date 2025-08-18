@@ -172,8 +172,11 @@ function Categories() {
       {isLoadingCategories ? (
         <Loader />
       ) : (
-        <div className="px-4 mb-10 py-3 mt-[50px] w-full lg:w-4xl min-h-screen lg:min-h-auto">
-          <div className="flex justify-between items-center">
+        <div className="px-4 mb-10 py-3 mt-[70px] lg:mt-[50px] w-full lg:w-4xl min-h-screen lg:min-h-auto">
+          <div
+            className={`flex justify-between items-center ${
+              language === "ar" ? "flex-row-reverse" : ""
+            }`}>
             <h1
               dir={language === "ar" ? "rtl" : "ltr"}
               className="text-lg lg:text-2xl font-black flex gap-2 lg:gap-5 items-center">
