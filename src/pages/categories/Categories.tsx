@@ -91,6 +91,7 @@ function Categories() {
   const [categoryError, setCategoryError] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const { refetch: refetchProducts } = useGetProductsQuery(undefined);
+
   const [createCategory, { isLoading: isCreating }] = useCreateCategoryMutation();
   const [deleteCategory, { isLoading: isDeleting }] = useDeleteCategoryMutation();
 
@@ -148,24 +149,10 @@ function Categories() {
     }
   };
 
-  /*   const handleDeleteCategory = async (id: any, name: any) => {
+  const handleDeleteCategory = async (id: any, name: any) => {
     setDeletingCategoryId(id);
     try {
       await deleteCategory({ name }).unwrap();
-      toast.success(t.categories + " deleted successfully.");
-      refetch();
-      refetchTree();
-      refetchProducts();
-    } catch (error) {
-      toast.error("Error deleting " + t.categories);
-    } finally {
-      setDeletingCategoryId(null);
-    }
-  }; */
-  const handleDeleteCategory = async (id: string) => {
-    // setDeletingCategoryId(id);
-    try {
-      await deleteCategory(id).unwrap(); // pass only id
       toast.success(t.categories + " deleted successfully.");
       refetch();
       refetchTree();
@@ -263,7 +250,7 @@ function Categories() {
                         <td className="px-4 py-5">
                           <button
                             disabled={isDeleting && deletingCategoryId === cat._id}
-                            onClick={() => handleDeleteCategory(cat._id)}
+                            onClick={() => handleDeleteCategory(cat._id, cat.name)}
                             className="text-black hover:bg-zinc-200 bg-zinc-100 p-2 rounded-lg transition-all duration-300 flex items-center justify-center min-w-[32px] min-h-[32px]">
                             {isDeleting && deletingCategoryId === cat._id ? (
                               <Loader2Icon className="animate-spin" />
