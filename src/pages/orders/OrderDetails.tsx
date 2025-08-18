@@ -122,9 +122,7 @@ function OrderDetails() {
               <div className="text-sm lg:text-sm bg-white shadow rounded-lg p-6">
                 {/* User Info */}
                 <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-7">
-                  <h2 className="text-lg font-semibold col-span-full mb-4">
-                    {language === "ar" ? "رقم الطلب:" : "Order ID:"} {order._id}
-                  </h2>
+                  <h2 className="text-lg font-semibold col-span-full mb-4">Order ID {order._id}</h2>
 
                   <div className="flex flex-col text-gray-700">
                     <span className="font-semibold">
@@ -191,11 +189,16 @@ function OrderDetails() {
                 <div className="flex gap-5 mb-5">
                   <p>
                     {language === "ar" ? "التوصيل:" : "Delivery:"}{" "}
-                    <strong>{order.shippingPrice.toFixed(3)} KD</strong>
+                    <strong>
+                      {order.shippingPrice.toFixed(3)} {language === "ar" ? "دك" : "KD"}
+                    </strong>
                   </p>
                   <p>
                     {language === "ar" ? "الإجمالي:" : "Total Price:"}{" "}
-                    <strong>{order.totalPrice.toFixed(3)} KD</strong>
+                    <strong>
+                      {order.totalPrice.toFixed(3)}
+                      {language === "ar" ? "دك" : "KD"}
+                    </strong>
                   </p>
                 </div>
 
@@ -234,7 +237,10 @@ function OrderDetails() {
                     {order.paymentMethod}
                   </p>
 
-                  <div className="flex items-center gap-3 text-gray-700 font-medium">
+                  <div
+                    className={`flex items-center gap-3 text-gray-700 font-medium ${
+                      language === "ar" ? "flex-row-reverse" : ""
+                    }`}>
                     <span className="font-semibold">
                       {language === "ar" ? "حالة الطلب:" : "Order status:"}
                     </span>
