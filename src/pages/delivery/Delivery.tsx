@@ -56,17 +56,19 @@ function Delivery() {
   };
 
   const render = () => {
-    const time = deliveryStatus?.[0]?.timeToDeliver;
-
-    if (!time) return ""; // handle undefined or empty
-
-    const arabicMap: Record<string, string> = {
-      today: "اليوم",
-      tomorrow: "غدا",
-      "two days": "يومين",
-    };
-
-    return language === "ar" ? arabicMap[time] || time : time;
+    if (language === "ar") {
+      if (deliveryStatus?.[0]?.timeToDeliver === "today") {
+        return "اليوم";
+      }
+      if (deliveryStatus?.[0]?.timeToDeliver === "tomorrow") {
+        return "غدا";
+      }
+      if (deliveryStatus?.[0]?.timeToDeliver === "two days") {
+        return "يومين";
+      }
+    } else {
+      return deliveryStatus?.[0]?.timeToDeliver;
+    }
   };
 
   return (
