@@ -56,19 +56,17 @@ function Delivery() {
   };
 
   const render = () => {
-    if (language === "ar") {
-      if (deliveryStatus?.[0].timeToDeliver === "today") {
-        return "اليوم";
-      }
-      if (deliveryStatus?.[0].timeToDeliver === "tomorrow") {
-        return "غدا";
-      }
-      if (deliveryStatus?.[0].timeToDeliver === "two days") {
-        return "يومين";
-      }
-    } else {
-      return deliveryStatus?.[0].timeToDeliver;
-    }
+    const time = deliveryStatus?.[0]?.timeToDeliver;
+
+    if (!time) return ""; // handle undefined or empty
+
+    const arabicMap: Record<string, string> = {
+      today: "اليوم",
+      tomorrow: "غدا",
+      "two days": "يومين",
+    };
+
+    return language === "ar" ? arabicMap[time] || time : time;
   };
 
   return (
@@ -177,7 +175,7 @@ function Delivery() {
               ) : deliveryStatus?.[0].shippingFee === 0 ? (
                 <p>{t.free}</p>
               ) : (
-                <p>{deliveryStatus?.[0].shippingFee.toFixed(3)} KD</p>
+                <p>{deliveryStatus?.[0]?.shippingFee.toFixed(3)} KD</p>
               )}
             </div>
 
@@ -188,7 +186,7 @@ function Delivery() {
               ) : deliveryStatus?.[0].minDeliveryCost === 0 ? (
                 <p>{t.noMinimum}</p>
               ) : (
-                <p>{deliveryStatus?.[0].minDeliveryCost.toFixed(3)} KD</p>
+                <p>{deliveryStatus?.[0]?.minDeliveryCost.toFixed(3)} KD</p>
               )}
             </div>
           </div>
