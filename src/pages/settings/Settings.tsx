@@ -94,6 +94,7 @@ function Settings() {
               />
             </div>
           </div>
+          <button>language toggle</button>
         </section>
 
         {/* Current Status Section */}

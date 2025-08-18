@@ -125,6 +125,7 @@ function ProductList() {
 
       try {
         const res = await uploadProductImage(formData).unwrap();
+        console.log(res);
         if (isCancelled) return; // ignore result if cancelled
         uploadedImage = res.image;
         uploadedPublicId = res.publicId;
@@ -337,6 +338,8 @@ function ProductList() {
                     )}
                   </tbody>
                 </table>
+
+                {/* Pagination */}
                 <Pagination>
                   <PaginationContent>
                     <PaginationItem>
