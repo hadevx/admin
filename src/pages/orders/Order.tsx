@@ -6,7 +6,7 @@ import { useGetOrdersQuery } from "../../redux/queries/orderApi";
 import { Layers, Search } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import Loader from "../../components/Loader";
-import Error from "../../components/Error";
+// import Error from "../../components/Error";
 import {
   Pagination,
   PaginationContent,
@@ -60,7 +60,7 @@ function Order() {
   const [page, setPage] = useState(1);
   const [searchQuery, setSearchQuery] = useState<string>("");
 
-  const { data, isLoading, isError } = useGetOrdersQuery({
+  const { data, isLoading } = useGetOrdersQuery({
     pageNumber: page,
     keyword: searchQuery,
   });
