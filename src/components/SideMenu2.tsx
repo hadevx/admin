@@ -38,9 +38,9 @@ function SideMenu() {
 
   const handleLogout = async () => {
     try {
-      const res: any = await logoutApiCall(undefined).unwrap();
+      await logoutApiCall(undefined).unwrap();
       dispatch(logout());
-      toast.success(res.message);
+      // toast.success(res.message);
       navigate("/admin/login");
       setIsMenuOpen(false);
     } catch (error: any) {
@@ -103,7 +103,7 @@ function SideMenu() {
 
       <Separator className="my-4 bg-black/20" />
 
-      <div className="flex flex-col lg:justify-between h-full">
+      <div className="flex flex-col lg:justify-start h-full">
         <div className="flex flex-col gap-3 overflow-auto max-h-[calc(100vh-320px)]">
           <Link
             to="/admin"
@@ -213,7 +213,7 @@ function SideMenu() {
         {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
       </button>
 
-      <div className="hidden lg:flex z-50">{menuContent}</div>
+      <div className="hidden lg:flex  z-50">{menuContent}</div>
 
       {isMenuOpen && (
         <div

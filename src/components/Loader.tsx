@@ -1,16 +1,20 @@
-import Lottie from "lottie-react";
+// import Lottie from "lottie-react";
 
-import wizard from "./Cycling in the park.json";
+// import wizard from "./Cycling in the park.json";
 const Loader = () => {
   return (
-    /*     <div className="flex absolute inset-0 items-center justify-center ">
-      <div className="w-14 h-14 border-4 border-t-4 border-t-white border-blue-500 border-solid rounded-full animate-spin"></div>
-    </div> */
-    <div className="flex absolute inset-0 items-center justify-center ">
+    <div className="flex absolute inset-0 items-center justify-center">
+      <div className="relative w-14 h-14 ">
+        <div className="absolute w-full h-full rounded-full border-4 border-black opacity-20"></div>
+        <div className="absolute w-full h-full rounded-full border-4 border-transparent border-t-black animate-spin"></div>
+      </div>
+    </div>
+
+    /*   <div className="flex absolute inset-0 items-center justify-center ">
       <div className="size-[500px]">
         <Lottie animationData={wizard} loop />
       </div>
-    </div>
+    </div> */
   );
 };
 

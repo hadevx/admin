@@ -10,7 +10,7 @@ import { Separator } from "../../components/ui/separator";
 import { Loader2Icon } from "lucide-react";
 import { toggleLang } from "../../redux/slices/languageSlice";
 import { useSelector, useDispatch } from "react-redux";
-
+import { Globe } from "lucide-react";
 function Settings() {
   const [updateStoreStatus, { isLoading: loadingUpdateStatus }] = useUpdateStoreStatusMutation();
   const { data: storeStatus, refetch, isLoading } = useGetStoreStatusQuery(undefined);
@@ -60,13 +60,18 @@ function Settings() {
             <h1 className="text-lg font-bold text-zinc-800">
               {language === "en" ? "Settings" : "الإعدادات"}
             </h1>
+
             {/* Language toggle button */}
             <button
               onClick={() => dispatch(toggleLang())}
-              className="px-4 py-2 bg-blue-500 text-white rounded-lg drop-shadow-[0_6px_8px_rgba(59,130,246,0.5)] hover:bg-blue-600 transition">
-              {language === "en" ? "العربية" : "English"}
+              className="flex items-center drop-shadow-[0_1px_5px_rgba(0,0,0,0.1)] gap-2 px-4 py-2 bg-white border rounded-full  hover:bg-zinc-100 transition">
+              <Globe className="w-4 h-4 text-blue-500" />
+              <span className="text-sm font-medium text-zinc-700">
+                {language === "en" ? "العربية" : "English"}
+              </span>
             </button>
           </div>
+
           <Separator className="my-4 bg-black/10" />
 
           <div className="bg-white border rounded-xl p-5  space-y-4">

@@ -93,17 +93,20 @@ function Order() {
     setSearchQuery(e.target.value);
   };
 
-  if (isError) return <Error />;
+  // if (isError) return <Error />;
 
   return (
     <Layout>
       {isLoading ? (
         <Loader />
       ) : (
-        <div className="px-4 flex flex-col w-full min-h-screen lg:min-h-auto py-3 mt-[50px]">
+        <div className="px-4 flex lg:w-4xl flex-col w-full min-h-screen lg:min-h-auto py-3 mt-[50px]">
           {/* Header */}
           <div className="w-full">
-            <div className="flex justify-between items-center flex-wrap gap-3">
+            <div
+              className={`flex justify-between items-center flex-wrap gap-3 ${
+                language === "ar" ? "justify-end" : ""
+              }`}>
               <h1
                 dir={language === "ar" ? "rtl" : "ltr"}
                 className="text-lg lg:text-2xl font-black flex gap-2 lg:gap-5 items-center flex-wrap">
