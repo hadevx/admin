@@ -89,12 +89,17 @@ function SideMenu() {
   const menuContent = (
     <div className="flex flex-col h-full text-black px-2 lg:px-[2rem] py-[2rem] border-r-[2px] w-64 lg:w-auto min-h-screen">
       <div className="mt-10 flex items-center gap-2 p-2">
-        <div className="rounded-full select-none border-2 border-gray-400 hover:border-gray-900 size-12 flex justify-center items-center transition">
-          <div className="rounded-full hover:opacity-80 bg-gradient-to-r shadow-md from-zinc-600 to-zinc-800 text-white size-10 flex justify-center items-center font-semibold text-lg">
-            {adminUserInfo?.name.charAt(0).toUpperCase()}
-            {adminUserInfo?.name.charAt(adminUserInfo?.name.length - 1).toUpperCase()}
-          </div>
-        </div>
+        <a href="https://ws-opal-alpha.vercel.app/" target="_blank">
+          <motion.div
+            whileHover={{ scale: 0.95 }}
+            className="rounded-full select-none border-2 border-gray-400 hover:border-gray-900 size-12 flex justify-center items-center transition">
+            <div className="rounded-full hover:opacity-80 bg-gradient-to-r shadow-md from-zinc-600 to-zinc-800 text-white size-10 flex justify-center items-center font-semibold text-lg">
+              {/*    {adminUserInfo?.name.charAt(0).toUpperCase()}
+            {adminUserInfo?.name.charAt(adminUserInfo?.name.length - 1).toUpperCase()} */}
+              <img src="./logo.png" alt="logo" width={"25px"} />
+            </div>
+          </motion.div>
+        </a>
         <div>
           <p className="text-sm font-bold">{adminUserInfo?.name}</p>
           <p className="text-sm text-gray-500">{adminUserInfo?.email}</p>
