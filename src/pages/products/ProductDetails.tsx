@@ -143,7 +143,7 @@ function ProductDetails() {
             </h1>
             <button
               onClick={() => setIsModalOpen(true)}
-              className="select-none bg-gradient-to-t from-rose-500 hover:opacity-90 to-rose-400 text-white px-3 py-2 rounded-lg font-bold shadow-md">
+              className="select-none bg-gradient-to-t drop-shadow-[0_4px_6px_rgba(236,72,153,0.5)]  from-rose-500 hover:opacity-90 to-rose-400 text-white px-3 py-2 rounded-lg font-bold shadow-md">
               {language === "ar" ? "حذف المنتج" : "Delete Product"}
             </button>
           </div>

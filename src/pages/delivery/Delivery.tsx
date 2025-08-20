@@ -73,10 +73,12 @@ function Delivery() {
 
   return (
     <Layout>
-      <div className="px-4 w-full lg:w-4xl min-h-screen lg:min-h-auto lg:text-lg py-6 mt-[70px] lg:mt-[50px] space-y-5">
+      <div
+        dir={language === "ar" ? "rtl" : ""}
+        className="px-4 w-full lg:w-4xl min-h-screen lg:min-h-auto lg:text-lg py-6 mt-[70px] lg:mt-[50px] space-y-5">
         {/* Update Section */}
         <section>
-          <div className={`flex items-center gap-2 mb-2 ${language === "ar" ? "justify-end" : ""}`}>
+          <div className={`flex items-center gap-2 mb-2 `}>
             <h1 className="text-lg font-bold text-zinc-800 ">{t.updateSettings}</h1>
           </div>
           <Separator className="my-4 bg-black/10" />
@@ -139,7 +141,7 @@ function Delivery() {
             </div>
 
             {/* Update Button */}
-            <div className="w-full lg:w-[200px]">
+            <div className="w-full mt-5 lg:w-[200px]">
               <button
                 onClick={handleUpdateDelivery}
                 disabled={loadingUpdateDelivery}
@@ -152,10 +154,7 @@ function Delivery() {
 
         {/* Current Status Section */}
         <section>
-          <div
-            className={`flex lg:text-lg items-center gap-2 mb-2 ${
-              language === "ar" ? "justify-end" : ""
-            }`}>
+          <div className={`flex lg:text-lg items-center gap-2 mb-2 `}>
             <h1 className="text-lg font-bold text-zinc-800">{t.currentStatus}</h1>
           </div>
           <Separator className="my-4 bg-black/10" />

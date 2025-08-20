@@ -23,6 +23,7 @@ import { useState } from "react";
 import { Mail, User } from "lucide-react"; */
 import { motion } from "framer-motion";
 import { useEffect } from "react";
+import logo from "../assets/logo.png";
 
 function SideMenu() {
   const [logoutApiCall, { isLoading: loadingLogout }] = useLogoutMutation();
@@ -96,7 +97,7 @@ function SideMenu() {
             <div className="rounded-full hover:opacity-80 bg-gradient-to-r shadow-md from-zinc-600 to-zinc-800 text-white size-10 flex justify-center items-center font-semibold text-lg">
               {/*    {adminUserInfo?.name.charAt(0).toUpperCase()}
             {adminUserInfo?.name.charAt(adminUserInfo?.name.length - 1).toUpperCase()} */}
-              <img src="./logo.png" alt="logo" width={"25px"} />
+              <img src={logo} alt="logo" width={"25px"} />
             </div>
           </motion.div>
         </a>

@@ -53,7 +53,9 @@ function Settings() {
 
   return (
     <Layout>
-      <div className="px-4 w-full min-h-screen lg:w-4xl text-lg py-6 mt-[50px] space-y-5">
+      <div
+        dir={language === "ar" ? "rtl" : ""}
+        className="px-4 w-full min-h-screen lg:w-4xl text-lg py-6 mt-[50px] space-y-5">
         {/* Update Section */}
         <section>
           <div className="flex items-center justify-between mb-2">
@@ -64,7 +66,7 @@ function Settings() {
             {/* Language toggle button */}
             <button
               onClick={() => dispatch(toggleLang())}
-              className="flex items-center drop-shadow-[0_1px_5px_rgba(0,0,0,0.1)] gap-2 px-4 py-2 bg-white border rounded-full  hover:bg-zinc-100 transition">
+              className="flex items-center drop-shadow-[0_1px_1px_rgba(0,0,0,0.1)] gap-2 px-4 py-2 bg-white border rounded-full  hover:bg-zinc-100 transition">
               <Globe className="w-4 h-4 text-blue-500" />
               <span className="text-sm font-medium text-zinc-700">
                 {language === "en" ? "العربية" : "English"}

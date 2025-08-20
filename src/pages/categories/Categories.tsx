@@ -224,21 +224,21 @@ function Categories() {
               </select>
             </div>
 
-            <div className="rounded-lg border lg:p-10 bg-white">
+            <div className="rounded-lg border p-5 lg:p-10 bg-white">
               <table className="w-full text-sm text-left text-gray-700">
-                <thead className="bg-white text-gray-900/50 font-semibold">
+                <thead className="bg-white text-gray-900/50 font-semibold ">
                   <tr>
-                    <th className="px-4 py-3 border-b">{t.tableName}</th>
-                    <th className="px-4 py-3 border-b">{t.tableParent}</th>
-                    <th className="px-4 py-3 border-b">{t.tableActions}</th>
+                    <th className="pb-2 border-b">{t.tableName}</th>
+                    <th className=" border-b">{t.tableParent}</th>
+                    <th className=" border-b">{t.tableActions}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200 bg-white">
                   {filteredCategories.length > 0 ? (
                     filteredCategories.map((cat: any) => (
                       <tr key={cat._id} className="font-bold transition-all duration-300">
-                        <td className="px-4 py-5">{cat?.name}</td>
-                        <td className="px-4 py-5">
+                        <td className="">{cat?.name}</td>
+                        <td className="">
                           {cat.parent?.name ? (
                             <span className="text-gray-500 text-sm">
                               {t.subOf} {cat?.parent.name}
@@ -247,7 +247,7 @@ function Categories() {
                             <span className="text-sm text-gray-500">{t.main}</span>
                           )}
                         </td>
-                        <td className="px-4 py-5">
+                        <td className="py-2">
                           <button
                             disabled={isDeleting && deletingCategoryId === cat._id}
                             onClick={() => handleDeleteCategory(cat._id, cat.name)}
@@ -271,7 +271,7 @@ function Categories() {
                 </tbody>
               </table>
 
-              <Pagination className="py-2">
+              <Pagination className="pt-5">
                 <PaginationContent>
                   <PaginationItem>
                     <PaginationPrevious onClick={() => page > 1 && setPage(page - 1)} href="#" />

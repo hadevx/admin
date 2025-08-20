@@ -159,11 +159,14 @@ function Discounts() {
               <div className="flex flex-col gap-5 lg:gap-8">
                 {/* Discount Selector */}
                 <div className="flex flex-col w-full">
-                  <label className="mb-2 text-base lg:text-sm font-semibold text-gray-700 tracking-wide">
+                  <label
+                    dir={language === "ar" ? "rtl" : ""}
+                    className={`mb-2 text-base lg:text-sm font-semibold text-gray-700 tracking-wide`}>
                     {t.discountBy}
                   </label>
                   <select
                     onChange={handleDiscountChange}
+                    dir={language === "ar" ? "rtl" : ""}
                     value={discount}
                     className="w-full text-base lg:text-lg cursor-pointer px-5 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition">
                     {discountOptions.map((value) => (
@@ -175,8 +178,10 @@ function Discounts() {
                 </div>
 
                 {/* Categories */}
-                <div className="flex flex-col w-full">
-                  <p className="mb-2 text-base lg:text-sm font-semibold text-gray-700 tracking-wide">
+                <div className="flex flex-col w-full" dir={language === "ar" ? "rtl" : ""}>
+                  <p
+                    dir={language === "ar" ? "rtl" : ""}
+                    className="mb-2 text-base lg:text-sm font-semibold text-gray-700 tracking-wide">
                     {t.categories}
                   </p>
                   {categories?.length === 0 ? (
@@ -213,13 +218,16 @@ function Discounts() {
 
               {/* Calculate Discount */}
               <div className="lg:mt-6 p-4 border rounded-lg bg-gray-50 w-full">
-                <p className="block mb-2 text-sm font-semibold text-gray-700">
+                <p
+                  dir={language === "ar" ? "rtl" : ""}
+                  className="block mb-2 text-sm font-semibold text-gray-700">
                   {t.calculateDiscount}
                 </p>
                 <input
                   type="number"
                   min="0"
                   step="0.01"
+                  dir={language === "ar" ? "rtl" : ""}
                   placeholder={t.enterOriginalPrice}
                   value={originalPrice}
                   onChange={handleOriginalPriceChange}
@@ -229,7 +237,9 @@ function Discounts() {
                   className="w-full text-base px-4 py-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
                 />
                 {originalPrice && (
-                  <p className="mt-3 text-lg font-semibold text-teal-500">
+                  <p
+                    className="mt-3 text-lg font-semibold text-teal-500"
+                    dir={language === "ar" ? "rtl" : ""}>
                     {calculateDiscountedPrice()} KD
                   </p>
                 )}

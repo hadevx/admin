@@ -71,18 +71,21 @@ function UserDetails() {
       ) : (
         <div
           className={clsx(
-            "px-4 min-h-screen lg:w-4xl py-3 w-full  flex gap-5 flex-col mt-[50px]",
+            "px-4 min-h-screen lg:w-4xl py-3 w-full mb-10  flex flex-col mt-[70px] lg:mt-[50px]",
             dir === "rtl" ? "rtl" : "ltr"
           )}>
           {/* Header */}
-          <div className="flex justify-between items-center">
-            <h1 className="text-lg font-bold">
+          <div
+            className={`flex justify-between items-center ${
+              language === "ar" ? "flex-row-reverse" : ""
+            }`}>
+            <h1 className="text-lg font-bold" dir={language === "ar" ? "rtl" : "ltr"}>
               {language === "ar" ? "معلومات العميل:" : "Customer's Information:"}
             </h1>
             {!user?.isAdmin && (
               <button
                 onClick={() => setIsModalOpen(true)}
-                className="select-none lg:text-lg bg-gradient-to-t from-rose-500 to-rose-400 text-white px-3 py-2 rounded-lg font-bold shadow-md">
+                className="select-none lg:text-lg drop-shadow-[0_4px_6px_rgba(236,72,153,0.5)]  bg-gradient-to-t from-rose-500 to-rose-400 text-white px-3 py-2 rounded-lg font-bold  hover:opacity-80">
                 {language === "ar" ? "حذف المستخدم" : "Delete User"}
               </button>
             )}
@@ -93,7 +96,7 @@ function UserDetails() {
           {/* Personal Info */}
           <div className="relative mb-3 w-full p-7 bg-white shadow rounded-md">
             <section>
-              <h2 className="text-lg font-bold border-b border-gray-700  mb-5">
+              <h2 className="text-lg font-bold border-b border-gray-300  mb-5">
                 {language === "ar" ? "المعلومات الشخصية" : "Personal Information"}
               </h2>
               <div className="grid grid-cols-2 gap-y-4 gap-x-10">
@@ -117,9 +120,9 @@ function UserDetails() {
                   <p className="text-gray-400">{language === "ar" ? "مسؤول:" : "Admin:"}</p>
                   <div>
                     {user?.isAdmin ? (
-                      <Badge variant="admin">{language === "ar" ? "مسؤول" : "Admin"}</Badge>
+                      <p>{language === "ar" ? "مسؤول" : "Admin"}</p>
                     ) : (
-                      <Badge>{language === "ar" ? "غير مسؤول" : "Not admin"}</Badge>
+                      <p>{language === "ar" ? "غير مسؤول" : "Not admin"}</p>
                     )}
                   </div>
                 </div>
@@ -130,7 +133,7 @@ function UserDetails() {
           {/* Address */}
           <div className="bg-white rounded-md p-7 shadow">
             <section>
-              <h2 className="text-lg font-bold border-b border-gray-700  mb-5">
+              <h2 className="text-lg font-bold border-b border-gray-300  mb-5">
                 {language === "ar" ? "العنوان" : "Address"}
               </h2>
               {userAddress ? (
@@ -173,42 +176,58 @@ function UserDetails() {
           {/* Orders */}
           <div className="bg-white mt-3 rounded-md p-7 shadow">
             <section>
-              <h2 className="text-lg font-bold border-b border-gray-700 pb-2 mb-5">
-                {language === "ar" ? "الطلبات" : "Orders"}
+              <h2 className="text-lg font-bold border-b border-gray-300 pb-2 mb-5">
+                {language === "ar" ? "الطلبات" : "Orders"} :{userOrders?.length}
               </h2>
               {userOrders?.length > 0 ? (
                 userOrders.map((order: any) => (
                   <div
+                    dir={language === "ar" ? "rtl" : ""}
                     key={order._id}
-                    className="flex mb-2 flex-col hover:bg-gray-100 transition-all duration-300 gap-4 border bg-zinc-50 p-4 shadow-md rounded-lg w-full">
+                    className="flex mb-2 flex-col hover:bg-gray-100 transition-all duration-300 gap-4 border bg-zinc-50 p-4  rounded-lg w-full">
                     <Link
                       to={`/admin/orders/${order._id}`}
-                      className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
-                      <div className="flex gap-2 flex-wrap">
+                      className="grid grid-cols-3  md:grid-cols-2 lg:grid-cols-5 gap-3">
+                      <div
+                        className={`flex gap-2 flex-wrap ${
+                          language === "ar" ? "flex-col items-center" : ""
+                        }`}>
                         <span className="text-gray-700">
                           {language === "ar" ? "تاريخ الطلب:" : "Placed in:"}
                         </span>
                         <span className="font-bold">{order.createdAt.substring(0, 10)}</span>
                       </div>
-                      <div className="flex gap-2 flex-wrap">
-                        <span className="text-gray-700">
+                      <div
+                        className={`flex gap-2 flex-wrap  ${
+                          language === "ar" ? "flex-col items-center" : ""
+                        }`}>
+                        <span className="text-gray-700 ">
                           {language === "ar" ? "طريقة الدفع:" : "Payment method:"}
                         </span>
                         <span className="font-bold break-words">{order.paymentMethod}</span>
                       </div>
-                      <div className="flex gap-2 flex-wrap">
+                      <div
+                        className={`flex gap-2 flex-wrap ${
+                          language === "ar" ? "flex-col items-center" : ""
+                        }`}>
                         <span className="text-gray-700">
                           {language === "ar" ? "السعر الإجمالي:" : "Total price:"}
                         </span>
                         <span className="font-bold">{order.totalPrice.toFixed(3)} KD</span>
                       </div>
-                      <div className="flex gap-2 flex-wrap">
+                      <div
+                        className={`flex gap-2 flex-wrap ${
+                          language === "ar" ? "flex-col items-center" : ""
+                        }`}>
                         <span className="text-gray-700">
                           {language === "ar" ? "المنتجات:" : "Products:"}
                         </span>
                         <span className="font-bold">{order?.orderItems.length}</span>
                       </div>
-                      <div className="flex gap-2 flex-wrap">
+                      <div
+                        className={`flex gap-2 flex-wrap ${
+                          language === "ar" ? "flex-col items-center" : ""
+                        }`}>
                         <span className="text-gray-700">
                           {language === "ar" ? "حالة الطلب:" : "Order status:"}
                         </span>
