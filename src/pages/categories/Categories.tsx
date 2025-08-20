@@ -200,7 +200,7 @@ function Categories() {
           <Separator className="my-4 bg-black/20" />
 
           <div className="mt-5 mb-2 overflow-hidden">
-            <div className="flex flex-row lg:flex-row items-start lg:items-center gap-3 mb-5">
+            <div className="flex flex-row lg:flex-row items-center lg:items-center gap-3 mb-5">
               <div className="relative w-full lg:w-64">
                 <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400">
                   <Search className="h-5 w-5" />
@@ -217,7 +217,7 @@ function Categories() {
               <select
                 value={filterType}
                 onChange={(e) => setFilterType(e.target.value)}
-                className="border bg-white border-gray-300 rounded-lg py-3 px-4 text-sm focus:outline-none focus:border-blue-500">
+                className="border bg-white border-gray-300 rounded-lg py-3 px-4 text-sm outline-none focus:border-blue-500">
                 <option value="all">{t.allCategories}</option>
                 <option value="main">{t.mainCategories}</option>
                 <option value="sub">{t.subCategories}</option>
