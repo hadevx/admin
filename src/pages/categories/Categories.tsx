@@ -200,7 +200,7 @@ function Categories() {
           <Separator className="my-4 bg-black/20" />
 
           <div className="mt-5 mb-2 overflow-hidden">
-            <div className="flex flex-col lg:flex-row items-start lg:items-center gap-3 mb-5">
+            <div className="flex flex-row lg:flex-row items-start lg:items-center gap-3 mb-5">
               <div className="relative w-full lg:w-64">
                 <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400">
                   <Search className="h-5 w-5" />

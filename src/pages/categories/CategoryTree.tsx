@@ -31,7 +31,9 @@ const CategoryTree = ({ data }: { data: any }) => {
   };
 
   return (
-    <div className="bg-white mb-4 p-4 rounded-lg  border text-sm max-h-[400px] overflow-y-auto">
+    <div
+      dir={language === "ar" ? "rtl" : ""}
+      className="bg-white mb-4 p-4 rounded-lg  border text-sm max-h-[400px] overflow-y-auto">
       <h3 className="text-lg font-semibold mb-3 text-gray-800">
         {language === "ar" ? "شجرة الفئات" : "Category Tree"}{" "}
       </h3>

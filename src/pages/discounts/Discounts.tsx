@@ -238,9 +238,9 @@ function Discounts() {
                 />
                 {originalPrice && (
                   <p
-                    className="mt-3 text-lg font-semibold text-teal-500"
+                    className="mt-3 text-lg font-semibold text-black"
                     dir={language === "ar" ? "rtl" : ""}>
-                    {calculateDiscountedPrice()} KD
+                    {calculateDiscountedPrice()} {language === "ar" ? "دك" : "KD"}
                   </p>
                 )}
               </div>

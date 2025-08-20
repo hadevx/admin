@@ -116,7 +116,7 @@ function Delivery() {
                 </option>
                 {[0, 1, 2, 3, 4, 5].map((fee) => (
                   <option key={fee} value={fee}>
-                    {fee === 0 ? t.free : `${fee}.000 KD`}
+                    {fee === 0 ? t.free : `${fee}.000 ${language === "ar" ? "دك" : "KD"}`}
                   </option>
                 ))}
               </select>
@@ -134,7 +134,7 @@ function Delivery() {
                 </option>
                 {[0, 1, 2, 3, 4, 5].map((fee) => (
                   <option key={fee} value={fee}>
-                    {fee === 0 ? t.noMinimum : `${fee}.000 KD`}
+                    {fee === 0 ? t.noMinimum : `${fee}.000 ${language === "ar" ? "دك" : "KD"}`}
                   </option>
                 ))}
               </select>
@@ -176,7 +176,10 @@ function Delivery() {
               ) : deliveryStatus?.[0]?.shippingFee === 0 ? (
                 <p>{t.free}</p>
               ) : (
-                <p>{deliveryStatus?.[0]?.shippingFee.toFixed(3)} KD</p>
+                <p>
+                  {deliveryStatus?.[0]?.shippingFee.toFixed(3)}
+                  {language === "ar" ? " دك" : "KD"}
+                </p>
               )}
             </div>
 
@@ -187,7 +190,10 @@ function Delivery() {
               ) : deliveryStatus?.[0]?.minDeliveryCost === 0 ? (
                 <p>{t.noMinimum}</p>
               ) : (
-                <p>{deliveryStatus?.[0]?.minDeliveryCost.toFixed(3)} KD</p>
+                <p>
+                  {deliveryStatus?.[0]?.minDeliveryCost.toFixed(3)}{" "}
+                  {language === "ar" ? " دك" : "KD"}
+                </p>
               )}
             </div>
           </div>
