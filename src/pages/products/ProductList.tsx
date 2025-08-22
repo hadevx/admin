@@ -178,6 +178,7 @@ function ProductList() {
 
       try {
         const res = await uploadProductImage(formData).unwrap();
+        console.log("test", res);
         if (isCancelled) return;
         uploadedImage = res.image;
         uploadedPublicId = res.publicId;
