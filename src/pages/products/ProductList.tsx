@@ -187,6 +187,7 @@ function ProductList() {
       }
     }
 
+    console.log("uploaded image ", uploadedImage);
     const newProduct = {
       name,
       price,
@@ -200,6 +201,8 @@ function ProductList() {
 
     try {
       const result = await createProduct(newProduct);
+      console.log("result creating product: ", result);
+
       if ("error" in result) {
         toast.error("Error creating product");
       } else {
