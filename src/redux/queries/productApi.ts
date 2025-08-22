@@ -89,6 +89,8 @@ export const productApi = api.injectEndpoints({
         url: `/api/products/${productId}`,
         method: "DELETE",
       }),
+      // Invalidate the "Product" tag so all queries providing it will refetch
+      invalidatesTags: ["Product"],
     }),
     updateProduct: builder.mutation({
       query: (data) => ({
@@ -96,7 +98,7 @@ export const productApi = api.injectEndpoints({
         method: "PUT",
         body: data,
       }),
-      // invalidatesTags: ["Products"],
+      invalidatesTags: ["Product"],
     }),
     deleteImage: builder.mutation({
       query: (data) => ({
