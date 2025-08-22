@@ -90,7 +90,7 @@ function ProductDetails() {
 
       try {
         const res = await uploadProductImage(formData).unwrap();
-        imageUrl = res.image;
+        imageUrl = res.imageUrl;
         newImagePublicId = res.publicId;
       } catch (error: any) {
         toast.error(
