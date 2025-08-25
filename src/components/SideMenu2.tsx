@@ -88,9 +88,9 @@ function SideMenu() {
 
   // Your exact menu content JSX (same as desktop)
   const menuContent = (
-    <div className="flex flex-col h-full text-black px-2 lg:px-[2rem] py-[2rem] border-r-[2px] w-64 lg:w-auto min-h-screen">
+    <div className="flex flex-col h-full text-black px-2 lg:px-[2rem] py-[2rem] border-r-[2px] w-64 lg:w-auto min-h-screen ">
       <div className="mt-10 flex items-center gap-2 p-2">
-        <a href="https://ws-opal-alpha.vercel.app/" target="_blank">
+        <a href="https://webschema.online" target="_blank">
           <motion.div
             whileHover={{ scale: 0.95 }}
             className="rounded-full select-none border-2 border-gray-400 hover:border-gray-900 size-12 flex justify-center items-center transition">

@@ -31,70 +31,11 @@ import {
   PaginationPrevious,
 } from "@/components/ui/pagination";
 import { useSelector } from "react-redux";
-
-const texts: any = {
-  en: {
-    products: "Products",
-    addProduct: "Add new Product",
-    allCategories: "All Categories",
-    minPrice: "Min Price",
-    maxPrice: "Max Price",
-    allStock: "All Stock",
-    inStock: "In Stock",
-    lowStock: "Low Stock",
-    outOfStock: "Out of Stock",
-    searchProducts: "Search products...",
-    name: "Name",
-    category: "Category",
-    stock: "Stock",
-    status: "Status",
-    price: "Price",
-    cancel: "Cancel",
-    create: "Create",
-    uploading: "Uploading...",
-    creating: "Creating...",
-    productName: "Product Name",
-    productDescription: "Product Description",
-    productPrice: "Product Price",
-    productBrand: "Product Brand (optional)",
-    selectCategory: "Select a category",
-    productStock: "Product Stock",
-    noProductsFound: "No products found.",
-  },
-  ar: {
-    products: "المنتجات",
-    addProduct: "إضافة منتج جديد",
-    allCategories: "جميع الفئات",
-    minPrice: "السعر الأدنى",
-    maxPrice: "السعر الأعلى",
-    allStock: "جميع المخزون",
-    inStock: "متوفر",
-    lowStock: "المخزون منخفض",
-    outOfStock: "غير متوفر",
-    searchProducts: "ابحث عن المنتجات...",
-    name: "الاسم",
-    category: "الفئة",
-    stock: "المخزون",
-    status: "الحالة",
-    price: "السعر",
-    cancel: "إلغاء",
-    create: "إنشاء",
-    uploading: "جارٍ الرفع...",
-    creating: "جارٍ الإنشاء...",
-    productName: "اسم المنتج",
-    productDescription: "وصف المنتج",
-    productPrice: "سعر المنتج",
-    productBrand: "ماركة المنتج (اختياري)",
-    selectCategory: "اختر الفئة",
-    productStock: "المخزون",
-    noProductsFound: "لا توجد منتجات.",
-  },
-};
+import { texts } from "./translation";
 
 function ProductList() {
   const [page, setPage] = useState(1);
   const [searchQuery, setSearchQuery] = useState("");
-  const language = useSelector((state: any) => state.language.lang);
   const [selectedCategory, setSelectedCategory] = useState<string>("");
   const [minPrice, setMinPrice] = useState<string>("");
   const [maxPrice, setMaxPrice] = useState<string>("");
@@ -103,6 +44,8 @@ function ProductList() {
   const [filteredProducts, setFilteredProducts] = useState<any>([]);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [isCancelled, setIsCancelled] = useState(false);
+
+  const language = useSelector((state: any) => state.language.lang);
   const navigate = useNavigate();
 
   const { data: productsData, isLoading: loadingProducts } = useGetProductsQuery({
@@ -120,7 +63,7 @@ function ProductList() {
   /* Create product fields */
   const [name, setName] = useState<string>("");
   const [price, setPrice] = useState<number | undefined>(undefined);
-  const [brand, setBrand] = useState<string>("");
+  // const [brand, setBrand] = useState<string>("");
   const [category, setCategory] = useState<string>("");
   const [countInStock, setCountInStock] = useState<number | undefined>(undefined);
   const [description, setDescription] = useState<string>("");
@@ -196,7 +139,7 @@ function ProductList() {
       price,
       image: uploadedImage,
       imagePublicId: uploadedPublicId,
-      brand,
+      // brand,
       category,
       countInStock,
       description,
@@ -222,7 +165,7 @@ function ProductList() {
     setName("");
     setPrice(undefined);
     setImageFile(null);
-    setBrand("");
+    // setBrand("");
     setCategory("");
     setCountInStock(undefined);
     setDescription("");
@@ -316,7 +259,6 @@ function ProductList() {
                   </select>
                 </div>
               </div>
-
               {/* Table */}
               <div className="rounded-lg mb-10 border lg:p-10 bg-white overflow-x-auto">
                 <table className="w-full min-w-[700px] border-gray-200 text-sm text-left text-gray-700">
@@ -349,9 +291,9 @@ function ProductList() {
                             {tree?.length ? findCategoryNameById(product?.category, tree) : "---"}
                           </td>
                           <td className="px-4 py-3">{product?.countInStock}</td>
-                          <td className="px-4 py-3">
+                          <td className="px-4 py-3 ">
                             {product?.countInStock === 0 ? (
-                              <p className="bg-red-50 rounded-xl py-1 text-red-600 text-center border-red-100 border">
+                              <p className="bg-red-50 rounded-xl  py-1 text-red-600 text-center border-red-100 border">
                                 {texts[language].outOfStock}
                               </p>
                             ) : product.countInStock < 5 ? (
@@ -359,7 +301,7 @@ function ProductList() {
                                 {texts[language].lowStock}
                               </p>
                             ) : (
-                              <p className="bg-teal-50 py-1 rounded-xl text-teal-600 text-center border-teal-100 border">
+                              <p className="bg-teal-50 py-1  rounded-xl text-teal-600 text-center border-teal-100 border">
                                 {texts[language].inStock}
                               </p>
                             )}
@@ -457,13 +399,13 @@ function ProductList() {
             className="p-2 w-full border rounded-md"
             placeholder={texts[language].productPrice}
           />
-          <input
+          {/*  <input
             type="text"
             value={brand}
             onChange={(e) => setBrand(e.target.value)}
             className="p-2 w-full border rounded-md"
             placeholder={texts[language].productBrand}
-          />
+          /> */}
           <select
             value={category}
             onChange={(e) => setCategory(e.target.value)}
@@ -506,7 +448,7 @@ function ProductList() {
     </Layout>
   );
 }
-
+// Recursively render category options for dropdown
 const renderCategoryOptions = (nodes: any, level = 0): JSX.Element[] => {
   return nodes.flatMap((node: any) => [
     <option key={node._id} value={node._id}>
@@ -516,7 +458,7 @@ const renderCategoryOptions = (nodes: any, level = 0): JSX.Element[] => {
     ...(node.children ? renderCategoryOptions(node.children, level + 1) : []),
   ]);
 };
-
+// Find category name by id in category tree
 const findCategoryNameById = (id: string, nodes?: any): string => {
   if (!nodes || !id) return "---";
   for (const node of nodes) {
@@ -528,7 +470,7 @@ const findCategoryNameById = (id: string, nodes?: any): string => {
   }
   return "---";
 };
-
+// Get discount percentage for a given category
 const getDiscountForCategory = (categoryName: string, discounts?: any): number => {
   if (!discounts || !Array.isArray(discounts)) return 0;
   const discountEntry = discounts.find((d) => d.category.includes(categoryName));

@@ -41,6 +41,9 @@ function ProductDetails() {
   const [clickEditProduct, setClickEditProduct] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [featured, setFeatured] = useState(false);
+
+  console.log(featured);
 
   const { id: productId } = useParams();
   const navigate = useNavigate();
@@ -61,6 +64,7 @@ function ProductDetails() {
       setNewCategory(product.category);
       setNewCountInStock(product.countInStock);
       setNewDescription(product.description);
+      setFeatured(product.featured ?? false); // ✅ initialize featured state
     }
   }, [product]);
 
@@ -112,6 +116,7 @@ function ProductDetails() {
       category: newCategory || product.category,
       countInStock: typeof newCountInStock === "number" ? newCountInStock : product.countInStock,
       description: newDescription.trim() || product.description,
+      featured: featured, // ✅ send to backend
     };
 
     try {
@@ -318,7 +323,7 @@ function ProductDetails() {
                 {/* Created At */}
                 <div>
                   <label className="text-gray-600">
-                    {language === "ar" ? "تاريخ الإنشاء:" : "Created At:"}
+                    {language === "ar" ? ":تاريخ الإنشاء" : "Created At:"}
                   </label>
                   <p className="font-bold">{product?.createdAt.substring(0, 10)}</p>
                 </div>
@@ -326,7 +331,7 @@ function ProductDetails() {
                 {/* Updated At */}
                 <div>
                   <label className="text-gray-600">
-                    {language === "ar" ? "آخر تحديث:" : "Updated At:"}
+                    {language === "ar" ? ":آخر تحديث" : "Updated At:"}
                   </label>
                   <p className="font-bold">{product?.updatedAt.substring(0, 10)}</p>
                 </div>
@@ -334,7 +339,7 @@ function ProductDetails() {
                 {/* Description */}
                 <div className="col-span-3 lg:col-span-2">
                   <label className="text-gray-600">
-                    {language === "ar" ? "الوصف:" : "Description:"}
+                    {language === "ar" ? ":الوصف" : "Description:"}
                   </label>
                   {!clickEditProduct ? (
                     <p className="font-bold break-words whitespace-pre-line">
@@ -346,6 +351,32 @@ function ProductDetails() {
                       onChange={(e) => setNewDescription(e.target.value)}
                       className="w-full h-24 p-2 bg-gray-50 border rounded-lg shadow"
                     />
+                  )}
+                </div>
+
+                {/* Featured */}
+                <div className="col-span-2 flex flex-row-reverse items-center gap-2">
+                  <label className="text-gray-600">
+                    {language === "ar" ? ":منتج مميز" : "Featured Product:"}
+                  </label>
+                  {!clickEditProduct ? (
+                    <p className="font-bold">
+                      {product?.featured
+                        ? language === "ar"
+                          ? "نعم"
+                          : "Yes"
+                        : language === "ar"
+                        ? "لا"
+                        : "No"}
+                    </p>
+                  ) : (
+                    <div>
+                      <input
+                        type="checkbox"
+                        checked={featured}
+                        onChange={(e) => setFeatured(e.target.checked)}
+                      />
+                    </div>
                   )}
                 </div>
               </div>
