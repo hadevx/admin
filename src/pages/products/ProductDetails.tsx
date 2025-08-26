@@ -41,15 +41,17 @@ function ProductDetails() {
 
   const [newName, setNewName] = useState("");
   const [newPrice, setNewPrice] = useState<number>();
-  const [newImage, setNewImage] = useState("");
+  const [newImages, setNewImages] = useState<{ url: string; publicId: string }[]>([]);
   const [newBrand, setNewBrand] = useState("");
   const [newCategory, setNewCategory] = useState("");
   const [newCountInStock, setNewCountInStock] = useState<number>();
   const [newDescription, setNewDescription] = useState("");
   const [clickEditProduct, setClickEditProduct] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  // const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [featured, setFeatured] = useState(false);
+
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
 
   const { id: productId } = useParams();
   const navigate = useNavigate();
@@ -65,7 +67,7 @@ function ProductDetails() {
     if (product) {
       setNewName(product.name);
       setNewPrice(product.price);
-      setNewImage(product.image);
+      setNewImages(product.image);
       setNewBrand(product.brand);
       setNewCategory(product.category);
       setNewCountInStock(product.countInStock);
@@ -73,6 +75,8 @@ function ProductDetails() {
       setFeatured(product.featured ?? false); // ✅ initialize featured state
     }
   }, [product]);
+
+  console.log(product);
 
   const handleDeleteProduct = async () => {
     if (product) {
@@ -91,7 +95,7 @@ function ProductDetails() {
       return;
     }
 
-    let imageUrl = newImage;
+    /*     let imageUrl = newImage;
     let newImagePublicId = product?.imagePublicId;
 
     if (selectedFile) {
@@ -110,14 +114,39 @@ function ProductDetails() {
         );
         return;
       }
+    } */
+    let uploadedImages = [...product.image]; // keep existing images
+
+    if (selectedFiles.length > 0) {
+      uploadedImages = []; // reset if new images selected
+      for (const file of selectedFiles) {
+        const formData = new FormData();
+        formData.append("images", file);
+        try {
+          const res = await uploadProductImage(formData).unwrap();
+
+          // ✅ FIX: push each uploaded image instead of overwriting
+          if (Array.isArray(res.images)) {
+            res.images.forEach((img: any) =>
+              uploadedImages.push({ url: img.imageUrl, publicId: img.publicId })
+            );
+          } else {
+            uploadedImages.push({ url: res.imageUrl, publicId: res.publicId });
+          }
+        } catch (error: any) {
+          toast.error(error?.data?.message || "Image upload failed");
+          return;
+        }
+      }
     }
 
     const updatedProduct = {
       _id: productId,
       name: newName.trim() || product.name,
       price: typeof newPrice === "number" ? newPrice : product.price,
-      image: imageUrl,
-      imagePublicId: newImagePublicId,
+      // image: imageUrl,
+      image: uploadedImages, // update with array of images,
+      // imagePublicId: newImagePublicId,
       brand: newBrand.trim() || product.brand,
       category: newCategory || product.category,
       countInStock: typeof newCountInStock === "number" ? newCountInStock : product.countInStock,
@@ -131,7 +160,7 @@ function ProductDetails() {
       setClickEditProduct(false);
       refetch();
       refetchProducts();
-      setSelectedFile(null);
+      setSelectedFiles([]);
     } catch (err: any) {
       toast.error(
         err?.data?.message || (language === "ar" ? "خطأ في تحديث المنتج" : "Error updating product")
@@ -224,10 +253,10 @@ function ProductDetails() {
                         ))}
                       </CarouselContent>
 
-                      <CarouselPrevious className="absolute top-1/2 left-2 -translate-y-1/2 bg-black/50 text-white rounded-full p-2 hover:bg-black">
+                      <CarouselPrevious className="absolute top-1/2 left-2 -translate-y-1/2 bg-black/50 text-white rounded-full p-2 hover:bg-white/50">
                         &#8592;
                       </CarouselPrevious>
-                      <CarouselNext className="absolute top-1/2 right-2 -translate-y-1/2 bg-black/50 text-white rounded-full p-2 hover:bg-black">
+                      <CarouselNext className="absolute top-1/2 right-2 -translate-y-1/2 bg-black/50 text-white rounded-full p-2 hover:bg-white/50">
                         &#8594;
                       </CarouselNext>
                     </Carousel>
@@ -239,24 +268,37 @@ function ProductDetails() {
                     />
                   )
                 ) : (
-                  <label className="cursor-pointer h-full flex flex-col items-center justify-center w-full p-4 bg-gray-50 border-2 border-dashed border-gray-300 rounded-lg shadow hover:bg-gray-100 hover:border-gray-400 transition">
-                    <div className="w-44 h-44">
-                      <Lottie animationData={upload} loop />
-                    </div>
-                    <span className="text-gray-700 font-medium">
-                      {language === "ar" ? "رفع صورة جديدة" : "Upload new image"}
-                    </span>
-                    {selectedFile && (
-                      <p className="text-sm text-gray-600 mt-1">
-                        {language === "ar" ? "المحدد:" : "Selected:"} {selectedFile.name}
-                      </p>
-                    )}
-                    <input
-                      type="file"
-                      onChange={(e) => setSelectedFile(e.target.files ? e.target.files[0] : null)}
-                      className="hidden"
-                    />
-                  </label>
+                  <div>
+                    <label className="cursor-pointer h-full flex flex-col items-center justify-center w-full p-4 bg-gray-50 border-2 border-dashed border-gray-300 rounded-lg shadow hover:bg-gray-100 hover:border-gray-400 transition">
+                      <div className="w-44 h-44">
+                        <Lottie animationData={upload} loop />
+                      </div>
+                      <span className="text-gray-700 font-medium">
+                        {language === "ar" ? "رفع صور/ه جديدة" : "Upload new image/s"}
+                      </span>
+                      {selectedFiles && selectedFiles.length > 0 && (
+                        <div className="mt-2">
+                          <p className="text-sm font-medium text-gray-700">
+                            {language === "ar" ? "الملفات المحددة:" : "Selected files:"}
+                          </p>
+                          <ul className="list-disc list-inside text-sm text-gray-600">
+                            {Array.from(selectedFiles).map((file, index) => (
+                              <li key={index}>{file.name}</li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+
+                      <input
+                        type="file"
+                        multiple
+                        onChange={(e) =>
+                          setSelectedFiles(e.target.files ? Array.from(e.target.files) : [])
+                        }
+                        className="hidden"
+                      />
+                    </label>
+                  </div>
                 )}
               </div>
 
