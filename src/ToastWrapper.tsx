@@ -5,7 +5,7 @@ import "react-toastify/dist/ReactToastify.css";
 function ToastWrapper({ children }: { children: React.ReactElement }) {
   return (
     <>
-      <ToastContainer autoClose={2000} />
+      <ToastContainer autoClose={1000} />
       {children}
     </>
   );

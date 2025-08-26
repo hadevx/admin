@@ -27,6 +27,14 @@ import {
 } from "@/components/ui/dialog";
 import { useSelector } from "react-redux";
 
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+} from "@/components/ui/carousel";
+
 function ProductDetails() {
   const language = useSelector((state: any) => state.language.lang); // 'ar' or 'en'
   const dir = language === "ar" ? "rtl" : "ltr";
@@ -42,8 +50,6 @@ function ProductDetails() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [featured, setFeatured] = useState(false);
-
-  console.log(featured);
 
   const { id: productId } = useParams();
   const navigate = useNavigate();
@@ -202,13 +208,36 @@ function ProductDetails() {
 
             {/* Product Image & Details */}
             <div className="flex flex-col sm:flex-row lg:flex-row gap-5">
-              <div className="flex-shrink-0 h-70 sm:h-80 sm:w-80 lg:h-96 lg:w-96">
+              <div className="flex-shrink-0 w-full sm:w-80 lg:w-96 h-80 lg:h-96">
                 {!clickEditProduct ? (
-                  <img
-                    src={product?.image}
-                    alt="Product"
-                    className="w-full h-full object-cover rounded-lg"
-                  />
+                  product?.image?.length > 1 ? (
+                    <Carousel className="h-full">
+                      <CarouselContent>
+                        {product.image.map((img: any, index: number) => (
+                          <CarouselItem key={index}>
+                            <img
+                              src={img.url}
+                              alt={`Product ${index + 1}`}
+                              className="w-full h-80 lg:h-96 object-cover rounded-lg"
+                            />
+                          </CarouselItem>
+                        ))}
+                      </CarouselContent>
+
+                      <CarouselPrevious className="absolute top-1/2 left-2 -translate-y-1/2 bg-black/50 text-white rounded-full p-2 hover:bg-black">
+                        &#8592;
+                      </CarouselPrevious>
+                      <CarouselNext className="absolute top-1/2 right-2 -translate-y-1/2 bg-black/50 text-white rounded-full p-2 hover:bg-black">
+                        &#8594;
+                      </CarouselNext>
+                    </Carousel>
+                  ) : (
+                    <img
+                      src={product?.image[0]?.url}
+                      alt="Product"
+                      className="w-full h-80 lg:h-96 object-cover rounded-lg"
+                    />
+                  )
                 ) : (
                   <label className="cursor-pointer h-full flex flex-col items-center justify-center w-full p-4 bg-gray-50 border-2 border-dashed border-gray-300 rounded-lg shadow hover:bg-gray-100 hover:border-gray-400 transition">
                     <div className="w-44 h-44">

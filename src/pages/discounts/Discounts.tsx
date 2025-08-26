@@ -193,7 +193,7 @@ function Discounts() {
                     </p>
                   ) : (
                     <div className="flex flex-wrap gap-3 overflow-y-auto px-2 py-2 border border-gray-300 rounded-lg scrollbar-thin scrollbar-thumb-zinc-400 scrollbar-track-gray-100">
-                      {categories.map((cat: Category) => (
+                      {categories?.map((cat: Category) => (
                         <label
                           key={cat._id}
                           className={`flex items-center gap-2 px-4 py-2 rounded-lg cursor-pointer transition-all duration-300 border ${

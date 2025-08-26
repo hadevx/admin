@@ -32,6 +32,7 @@ import {
 } from "@/components/ui/pagination";
 import { useSelector } from "react-redux";
 import { texts } from "./translation";
+import Error from "@/components/Error";
 
 function ProductList() {
   const [page, setPage] = useState(1);
@@ -42,13 +43,20 @@ function ProductList() {
   const [stockStatus, setStockStatus] = useState<string>("");
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [filteredProducts, setFilteredProducts] = useState<any>([]);
-  const [imageFile, setImageFile] = useState<File | null>(null);
+
+  // const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imageFiles, setImageFiles] = useState<File[]>([]);
+  console.log(imageFiles);
   const [isCancelled, setIsCancelled] = useState(false);
 
   const language = useSelector((state: any) => state.language.lang);
   const navigate = useNavigate();
 
-  const { data: productsData, isLoading: loadingProducts } = useGetProductsQuery({
+  const {
+    data: productsData,
+    isLoading: loadingProducts,
+    error: errorGettingProducts,
+  } = useGetProductsQuery({
     pageNumber: page,
     keyword: searchQuery,
   });
@@ -108,12 +116,35 @@ function ProductList() {
       toast.error("Price must be a positive number");
       return;
     }
-    if (!name || !price || !imageFile || !category || !countInStock || !description) {
+    if (!name || !price || !imageFiles || !category || !countInStock || !description) {
       toast.error("All fields are required");
       return;
     }
 
-    let uploadedImage = "";
+    let uploadedImages: { url: string; publicId: string }[] = [];
+
+    if (imageFiles.length > 0) {
+      try {
+        const formData = new FormData();
+        imageFiles.forEach((file) => formData.append("images", file));
+
+        // Send all images in a single request
+        const res = await uploadProductImage(formData).unwrap();
+
+        // res.images is now an array of uploaded images
+        uploadedImages = res.images.map((img: any) => ({
+          url: img.imageUrl,
+          publicId: img.publicId,
+        }));
+
+        console.log(uploadedImages);
+      } catch (error: any) {
+        toast.error(error?.data?.message || error?.error);
+        return;
+      }
+    }
+
+    /*  let uploadedImage = "";
     let uploadedPublicId = "";
     if (imageFile) {
       const formData = new FormData();
@@ -131,14 +162,14 @@ function ProductList() {
         toast.error(error?.data?.message || error?.error);
         return;
       }
-    }
+    } */
 
-    console.log("uploaded image ", uploadedImage);
     const newProduct = {
       name,
       price,
-      image: uploadedImage,
-      imagePublicId: uploadedPublicId,
+      image: uploadedImages,
+      // image: uploadedImage,
+      // imagePublicId: uploadedPublicId,
       // brand,
       category,
       countInStock,
@@ -164,7 +195,7 @@ function ProductList() {
   const resetForm = () => {
     setName("");
     setPrice(undefined);
-    setImageFile(null);
+    setImageFiles([]);
     // setBrand("");
     setCategory("");
     setCountInStock(undefined);
@@ -173,7 +204,9 @@ function ProductList() {
 
   return (
     <Layout>
-      {loadingProducts ? (
+      {errorGettingProducts ? (
+        <Error />
+      ) : loadingProducts ? (
         <Loader />
       ) : (
         <div className="flex w-full mb-10 lg:w-4xl min-h-screen lg:min-h-auto justify-between py-3 mt-[70px] lg:mt-[50px] px-4 ">
@@ -281,7 +314,7 @@ function ProductList() {
                           <td className="px-4 py-3 flex items-center gap-2 max-w-64">
                             <img
                               className="w-16 h-16 object-cover "
-                              src={product?.image}
+                              src={product?.image[0].url}
                               alt="thumbnail"
                               loading="lazy"
                             />
@@ -375,8 +408,10 @@ function ProductList() {
           </DialogHeader>
           <input
             type="file"
-            onChange={(e) => setImageFile(e.target.files?.[0] || null)}
-            className="p-2 w-full border rounded-md"
+            multiple
+            accept="image/*"
+            onChange={(e) => setImageFiles(Array.from(e.target.files || []))}
+            className="p-4 w-full border rounded-md"
           />
           <input
             type="text"
