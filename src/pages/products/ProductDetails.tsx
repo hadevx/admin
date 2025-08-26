@@ -41,7 +41,7 @@ function ProductDetails() {
 
   const [newName, setNewName] = useState("");
   const [newPrice, setNewPrice] = useState<number>();
-  const [newImages, setNewImages] = useState<{ url: string; publicId: string }[]>([]);
+  // const [newImages, setNewImages] = useState<{ url: string; publicId: string }[]>([]);
   const [newBrand, setNewBrand] = useState("");
   const [newCategory, setNewCategory] = useState("");
   const [newCountInStock, setNewCountInStock] = useState<number>();
@@ -67,7 +67,7 @@ function ProductDetails() {
     if (product) {
       setNewName(product.name);
       setNewPrice(product.price);
-      setNewImages(product.image);
+      // setNewImages(product.image);
       setNewBrand(product.brand);
       setNewCategory(product.category);
       setNewCountInStock(product.countInStock);
