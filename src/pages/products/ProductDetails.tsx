@@ -177,7 +177,10 @@ function ProductDetails() {
           className={`px-4 w-full lg:w-4xl py-6 mb-10 mt-10 min-h-screen ${
             dir === "rtl" ? "rtl" : "ltr"
           } font-custom`}>
-          <div className="flex justify-between items-center mb-6">
+          <div
+            className={`flex justify-between items-center  mb-6 ${
+              language === "ar" ? "flex-row-reverse" : ""
+            }`}>
             <h1 className="text-2xl font-bold">
               {language === "ar" ? "تفاصيل المنتج" : "Product Details"}
             </h1>
@@ -237,7 +240,7 @@ function ProductDetails() {
 
             {/* Product Image & Details */}
             <div className="flex flex-col sm:flex-row lg:flex-row gap-5">
-              <div className="flex-shrink-0 w-full sm:w-80 lg:w-96 h-80 lg:h-96">
+              <div className="flex-shrink-0 w-full sm:w-80 lg:w-96 h-96 lg:h-96">
                 {!clickEditProduct ? (
                   product?.image?.length > 1 ? (
                     <Carousel className="h-full">
@@ -247,6 +250,7 @@ function ProductDetails() {
                             <img
                               src={img.url}
                               alt={`Product ${index + 1}`}
+                              loading="lazy"
                               className="w-full h-80 lg:h-96 object-cover rounded-lg"
                             />
                           </CarouselItem>
@@ -264,48 +268,46 @@ function ProductDetails() {
                     <img
                       src={product?.image[0]?.url}
                       alt="Product"
-                      className="w-full h-80 lg:h-96 object-cover rounded-lg"
+                      className="w-full h-96 lg:h-96 object-cover rounded-lg"
                     />
                   )
                 ) : (
-                  <div>
-                    <label className="cursor-pointer h-full flex flex-col items-center justify-center w-full p-4 bg-gray-50 border-2 border-dashed border-gray-300 rounded-lg shadow hover:bg-gray-100 hover:border-gray-400 transition">
-                      <div className="w-44 h-44">
-                        <Lottie animationData={upload} loop />
+                  <label className="cursor-pointer h-full flex flex-col items-center justify-center w-full p-4 bg-gray-50 border-2 border-dashed border-gray-300 rounded-lg shadow hover:bg-gray-100 hover:border-gray-400 transition">
+                    <div className="w-44 h-44">
+                      <Lottie animationData={upload} loop />
+                    </div>
+                    <span className="text-gray-700 font-medium">
+                      {language === "ar" ? "رفع صور/ه جديدة" : "Upload new image/s"}
+                    </span>
+                    {selectedFiles && selectedFiles.length > 0 && (
+                      <div className="mt-2">
+                        <p className="text-sm font-medium text-gray-700">
+                          {language === "ar" ? "الملفات المحددة:" : "Selected files:"}
+                        </p>
+                        <ul className="list-disc list-inside text-sm text-gray-600">
+                          {Array.from(selectedFiles).map((file, index) => (
+                            <li key={index}>{file.name}</li>
+                          ))}
+                        </ul>
                       </div>
-                      <span className="text-gray-700 font-medium">
-                        {language === "ar" ? "رفع صور/ه جديدة" : "Upload new image/s"}
-                      </span>
-                      {selectedFiles && selectedFiles.length > 0 && (
-                        <div className="mt-2">
-                          <p className="text-sm font-medium text-gray-700">
-                            {language === "ar" ? "الملفات المحددة:" : "Selected files:"}
-                          </p>
-                          <ul className="list-disc list-inside text-sm text-gray-600">
-                            {Array.from(selectedFiles).map((file, index) => (
-                              <li key={index}>{file.name}</li>
-                            ))}
-                          </ul>
-                        </div>
-                      )}
+                    )}
 
-                      <input
-                        type="file"
-                        multiple
-                        onChange={(e) =>
-                          setSelectedFiles(e.target.files ? Array.from(e.target.files) : [])
-                        }
-                        className="hidden"
-                      />
-                    </label>
-                  </div>
+                    <input
+                      type="file"
+                      multiple
+                      onChange={(e) =>
+                        setSelectedFiles(e.target.files ? Array.from(e.target.files) : [])
+                      }
+                      className="hidden"
+                    />
+                  </label>
                 )}
               </div>
 
               <div className="flex-1 grid grid-cols-3 sm:grid-cols-3 lg:grid-cols-2 gap-6">
                 {/* Name */}
                 <div>
-                  <label className="text-gray-600">{language === "ar" ? "الاسم:" : "Name:"}</label>
+                  <label className="text-gray-600">{language === "ar" ? ":الاسم" : "Name:"}</label>
                   {!clickEditProduct ? (
                     <p className="font-bold">{product?.name}</p>
                   ) : (
@@ -320,7 +322,7 @@ function ProductDetails() {
                 {/* Category */}
                 <div>
                   <label className="text-gray-600">
-                    {language === "ar" ? "الفئة:" : "Category:"}
+                    {language === "ar" ? ":الفئة" : "Category:"}
                   </label>
                   {!clickEditProduct ? (
                     <p className="font-bold">
@@ -349,7 +351,7 @@ function ProductDetails() {
 
                 {/* Price */}
                 <div>
-                  <label className="text-gray-600">{language === "ar" ? "السعر:" : "Price:"}</label>
+                  <label className="text-gray-600">{language === "ar" ? ":السعر" : "Price:"}</label>
                   {!clickEditProduct ? (
                     <p className="font-bold">{product?.price.toFixed(3)} KD</p>
                   ) : (
@@ -364,7 +366,7 @@ function ProductDetails() {
                 {/* Stock */}
                 <div>
                   <label className="text-gray-600">
-                    {language === "ar" ? "المخزون:" : "Stock:"}
+                    {language === "ar" ? ":المخزون" : "Stock:"}
                   </label>
                   {!clickEditProduct ? (
                     <p className="font-bold">
