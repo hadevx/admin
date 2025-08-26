@@ -47,7 +47,7 @@ function ProductList() {
   // const [imageFile, setImageFile] = useState<File | null>(null);
   const [imageFiles, setImageFiles] = useState<File[]>([]);
   console.log(imageFiles);
-  const [isCancelled, setIsCancelled] = useState(false);
+  // const [isCancelled, setIsCancelled] = useState(false);
 
   const language = useSelector((state: any) => state.language.lang);
   const navigate = useNavigate();
@@ -462,7 +462,7 @@ function ProductList() {
               variant="outline"
               onClick={() => {
                 setIsModalOpen(false);
-                setIsCancelled(true);
+                // setIsCancelled(true);
                 window.location.reload();
               }}>
               {texts[language].cancel}
