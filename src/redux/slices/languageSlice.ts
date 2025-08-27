@@ -3,7 +3,7 @@ import { createSlice } from "@reduxjs/toolkit";
 type Lang = "en" | "ar";
 
 const initialState: { lang: Lang } = {
-  lang: (localStorage.getItem("lang") as Lang) || "en",
+  lang: (localStorage.getItem("lang") as Lang) || "ar",
 };
 
 const languageSlice = createSlice({

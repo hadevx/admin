@@ -95,26 +95,6 @@ function ProductDetails() {
       return;
     }
 
-    /*     let imageUrl = newImage;
-    let newImagePublicId = product?.imagePublicId;
-
-    if (selectedFile) {
-      const formData = new FormData();
-      formData.append("image", selectedFile);
-
-      try {
-        const res = await uploadProductImage(formData).unwrap();
-        imageUrl = res.imageUrl;
-        newImagePublicId = res.publicId;
-      } catch (error: any) {
-        toast.error(
-          error?.data?.message ||
-            error?.error ||
-            (language === "ar" ? "فشل رفع الصورة" : "Image upload failed")
-        );
-        return;
-      }
-    } */
     let uploadedImages = [...product.image]; // keep existing images
 
     if (selectedFiles.length > 0) {
@@ -167,7 +147,15 @@ function ProductDetails() {
       );
     }
   };
+  /*   const addVariant = () => {
+    setVariants([...variants, { name: "", value: "", price: 0, countInStock: 0, sku: "" }]);
+  };
 
+  const updateVariant = (index: number, field: string, value: string | number) => {
+    const updated = [...variants];
+    updated[index] = { ...updated[index], [field]: value };
+    setVariants(updated);
+  }; */
   return (
     <Layout>
       {loadingProduct ? (
@@ -304,7 +292,7 @@ function ProductDetails() {
                 )}
               </div>
 
-              <div className="flex-1 grid grid-cols-3 sm:grid-cols-3 lg:grid-cols-2 gap-6">
+              <div className="flex-1 grid grid-cols-3 sm:grid-cols-3 lg:grid-cols-3 gap-6">
                 {/* Name */}
                 <div>
                   <label className="text-gray-600">{language === "ar" ? ":الاسم" : "Name:"}</label>
@@ -428,7 +416,7 @@ function ProductDetails() {
                 </div>
 
                 {/* Featured */}
-                <div className="col-span-2 flex flex-row-reverse items-center gap-2">
+                <div className=" flex  flex-col items-center gap-2">
                   <label className="text-gray-600">
                     {language === "ar" ? ":منتج مميز" : "Featured Product:"}
                   </label>
@@ -455,6 +443,82 @@ function ProductDetails() {
               </div>
             </div>
           </div>
+
+          {/* Variants Section */}
+          {/*   <div className="col-span-2 mt-4">
+            <h3 className="font-semibold mb-3 text-lg">
+              {language === "ar" ? "الأنواع" : "Variants"}
+            </h3>
+
+            {clickEditProduct ? (
+              <div className="space-y-3">
+                {product?.variants.map((v, idx) => (
+                  <div
+                    key={idx}
+                    className="flex flex-wrap gap-2 items-center p-2 border rounded-lg shadow-sm bg-gray-50">
+                    <input
+                      type="text"
+                      placeholder={language === "ar" ? "النوع" : "Name"}
+                      value={v.name}
+                      onChange={(e) => updateVariant(idx, "name", e.target.value)}
+                      className="flex-1 p-2 border rounded-md focus:ring-2 focus:ring-blue-400"
+                    />
+                    <input
+                      type="text"
+                      placeholder={language === "ar" ? "القيمة" : "Value"}
+                      value={v.value}
+                      onChange={(e) => updateVariant(idx, "value", e.target.value)}
+                      className="flex-1 p-2 border rounded-md focus:ring-2 focus:ring-blue-400"
+                    />
+                    <input
+                      type="number"
+                      placeholder={language === "ar" ? "السعر" : "Price"}
+                      value={v.price}
+                      onChange={(e) => updateVariant(idx, "price", Number(e.target.value))}
+                      className="w-28 p-2 border rounded-md focus:ring-2 focus:ring-blue-400"
+                    />
+                    <input
+                      type="number"
+                      placeholder={language === "ar" ? "المخزون" : "Stock"}
+                      value={v.countInStock}
+                      onChange={(e) => updateVariant(idx, "countInStock", Number(e.target.value))}
+                      className="w-28 p-2 border rounded-md focus:ring-2 focus:ring-blue-400"
+                    />
+                    <button
+                      onClick={() => removeVariant(idx)}
+                      className="text-red-500 font-semibold hover:text-red-700"
+                      title={language === "ar" ? "حذف النوع" : "Remove Variant"}>
+                      &times;
+                    </button>
+                  </div>
+                ))}
+                <Button onClick={addVariant} className="mt-2">
+                  {language === "ar" ? "إضافة نوع" : "Add Variant"}
+                </Button>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                {product?.variants.map((v, idx) => (
+                  <div
+                    key={idx}
+                    className="p-2 border rounded-lg bg-gray-50 shadow-sm flex flex-col">
+                    <span className="font-semibold text-gray-700">
+                      {language === "ar" ? "النوع" : "Name"}: {v.name}
+                    </span>
+                    <span className="font-semibold text-gray-700">
+                      {language === "ar" ? "القيمة" : "Value"}: {v.value}
+                    </span>
+                    <span className="text-gray-600">
+                      {language === "ar" ? "السعر" : "Price"}: {v.price} KD
+                    </span>
+                    <span className="text-gray-600">
+                      {language === "ar" ? "المخزون" : "Stock"}: {v.countInStock}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div> */}
 
           {/* Delete Modal */}
           <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>

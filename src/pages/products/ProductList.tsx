@@ -116,12 +116,13 @@ function ProductList() {
       toast.error("Price must be a positive number");
       return;
     }
-    if (!name || !price || !imageFiles || !category || !countInStock || !description) {
+    if (!name || !price || imageFiles.length === 0 || !category || !countInStock || !description) {
       toast.error("All fields are required");
       return;
     }
 
     let uploadedImages: { url: string; publicId: string }[] = [];
+    // let variantPayload: any[] = [];
 
     if (imageFiles.length > 0) {
       try {
@@ -144,36 +145,14 @@ function ProductList() {
       }
     }
 
-    /*  let uploadedImage = "";
-    let uploadedPublicId = "";
-    if (imageFile) {
-      const formData = new FormData();
-      formData.append("image", imageFile);
-
-      try {
-        const res = await uploadProductImage(formData).unwrap();
-        console.log("test", res);
-
-        if (isCancelled) return;
-
-        uploadedImage = res.imageUrl;
-        uploadedPublicId = res.publicId;
-      } catch (error: any) {
-        toast.error(error?.data?.message || error?.error);
-        return;
-      }
-    } */
-
     const newProduct = {
       name,
       price,
       image: uploadedImages,
-      // image: uploadedImage,
-      // imagePublicId: uploadedPublicId,
-      // brand,
       category,
       countInStock,
       description,
+      // variants: variantPayload,
     };
 
     try {
@@ -413,6 +392,17 @@ function ProductList() {
             onChange={(e) => setImageFiles(Array.from(e.target.files || []))}
             className="p-4 w-full border rounded-md"
           />
+          <div className="flex gap-2 flex-wrap">
+            {imageFiles.map((file, i) => (
+              <img
+                key={i}
+                src={URL.createObjectURL(file)}
+                alt="preview"
+                className="w-20 h-20 object-cover rounded"
+              />
+            ))}
+          </div>
+
           <input
             type="text"
             placeholder={texts[language].productName}
@@ -434,13 +424,49 @@ function ProductList() {
             className="p-2 w-full border rounded-md"
             placeholder={texts[language].productPrice}
           />
-          {/*  <input
-            type="text"
-            value={brand}
-            onChange={(e) => setBrand(e.target.value)}
-            className="p-2 w-full border rounded-md"
-            placeholder={texts[language].productBrand}
-          /> */}
+          {/* <div>
+            <button onClick={addColorVariant}>Add Color Variant</button>
+            {variants.map((v, i) => (
+              <div key={i} className="border p-2 mb-2">
+                <input
+                  type="text"
+                  placeholder="Color Name"
+                  value={v.color}
+                  onChange={(e) => updateColorVariant(i, "color", e.target.value)}
+                />
+                <input
+                  type="file"
+                  multiple
+                  onChange={(e) => handleColorImages(i, Array.from(e.target.files || []))}
+                />
+                <button onClick={() => addSizeToVariant(i)}>Add Size</button>
+                {v.sizes?.map((s, idx) => (
+                  <div key={idx}>
+                    <input
+                      type="text"
+                      placeholder="Size"
+                      value={s.size}
+                      onChange={(e) => updateSizeInVariant(i, idx, "size", e.target.value)}
+                    />
+                    <input
+                      type="number"
+                      placeholder="Price"
+                      value={s.price}
+                      onChange={(e) => updateSizeInVariant(i, idx, "price", Number(e.target.value))}
+                    />
+                    <input
+                      type="number"
+                      placeholder="Stock"
+                      value={s.countInStock}
+                      onChange={(e) =>
+                        updateSizeInVariant(i, idx, "countInStock", Number(e.target.value))
+                      }
+                    />
+                  </div>
+                ))}
+              </div>
+            ))}
+          </div> */}
           <select
             value={category}
             onChange={(e) => setCategory(e.target.value)}
@@ -457,6 +483,7 @@ function ProductList() {
             onChange={(e) => setCountInStock(Number(e.target.value))}
             className="p-2 w-full border rounded-md"
           />
+
           <DialogFooter className="mt-4 flex justify-end gap-2">
             <Button
               variant="outline"

@@ -44,6 +44,16 @@ export const orderApi = api.injectEndpoints({
         method: "PUT",
       }),
     }),
+    getOrderStats: builder.query({
+      query: () => ({
+        url: `/api/orders/stats`,
+      }),
+    }),
+    getRevenuStats: builder.query({
+      query: () => ({
+        url: `/api/orders/revenu`,
+      }),
+    }),
   }),
 });
 
@@ -54,4 +64,6 @@ export const {
   useUpdateDeliverMutation,
   useUpdateOrderToDeliverdMutation,
   useUpdateOrderToCanceledMutation,
+  useGetOrderStatsQuery,
+  useGetRevenuStatsQuery,
 } = orderApi;

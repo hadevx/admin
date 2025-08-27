@@ -12,6 +12,7 @@ import {
   Menu,
   X,
   Loader2Icon,
+  ScrollText,
 } from "lucide-react";
 import { useSelector, useDispatch } from "react-redux";
 import { logout } from "../redux/slices/authSlice";
@@ -61,6 +62,7 @@ function SideMenu() {
 
   const labels: any = {
     en: {
+      summary: "Summary",
       orders: "Orders",
       products: "Products",
       categories: "Categories",
@@ -72,6 +74,7 @@ function SideMenu() {
       loggingOut: "Logging out...",
     },
     ar: {
+      summary: "الملخص",
       orders: "الطلبات",
       products: "المنتجات",
       categories: "الفئات",
@@ -111,6 +114,16 @@ function SideMenu() {
 
       <div className="flex flex-col lg:justify-start h-full">
         <div className="flex flex-col gap-3 overflow-auto max-h-[calc(100vh-320px)]">
+          <Link
+            to="/admin/summary"
+            onClick={() => setIsMenuOpen(false)}
+            className={clsx(
+              "flex gap-3 hover:bg-white px-3 py-2 rounded-lg hover:shadow transition-all duration-300",
+              pathname === "/admin/summary" && "bg-white shadow"
+            )}>
+            <ScrollText strokeWidth={1} />
+            <p>{t.summary}</p>
+          </Link>
           <Link
             to="/admin"
             onClick={() => setIsMenuOpen(false)}

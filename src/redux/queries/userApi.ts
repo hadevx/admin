@@ -59,6 +59,11 @@ const userApi = api.injectEndpoints({
         body: data,
       }),
     }),
+    getGovernorate: builder.query({
+      query: () => ({
+        url: `/api/users/governorates`,
+      }),
+    }),
   }),
 });
 
@@ -70,4 +75,5 @@ export const {
   useLogoutMutation,
   useDeleteUserMutation,
   useUpdateUserMutation,
+  useGetGovernorateQuery,
 } = userApi;

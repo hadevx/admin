@@ -15,6 +15,7 @@ import Settings from "./pages/settings/Settings";
 import ProductDetails from "./pages/products/ProductDetails";
 import ForgotPassword from "./pages/auth/ForgetPassword";
 import ResetPassword from "./pages/auth/ResetPassword";
+import Summary from "./pages/summary/Summary";
 
 function App() {
   const { adminUserInfo } = useSelector((state: any) => state.auth);
@@ -25,7 +26,11 @@ function App() {
       <Route
         path="/"
         element={
-          adminUserInfo ? <Navigate to="/admin" replace /> : <Navigate to="/admin/login" replace />
+          adminUserInfo ? (
+            <Navigate to="/admin/summary" replace />
+          ) : (
+            <Navigate to="/admin/login" replace />
+          )
         }
       />
 
@@ -39,6 +44,7 @@ function App() {
       <Route path="/admin/reset-password/:token" element={<ResetPassword />} />
 
       {/* Admin routes */}
+      <Route path="/admin/summary" element={<PrivateRoute element={<Summary />} />} />
       <Route path="/admin" element={<PrivateRoute element={<Order />} />} />
       <Route path="/admin/orders/:orderId" element={<PrivateRoute element={<OrderDetails />} />} />
       <Route path="/admin/userlist" element={<PrivateRoute element={<UsersList />} />} />
