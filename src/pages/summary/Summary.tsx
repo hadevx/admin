@@ -23,6 +23,11 @@ const SummaryBarChart = () => {
   const { data: orderStats, isLoading: loadingOrders } = useGetOrderStatsQuery<any>(undefined);
   const { data: revenuStats, isLoading: loadingRevenue } = useGetRevenuStatsQuery<any>(undefined);
 
+  const arabicOnly = usersData?.governorates?.map((item: any) => {
+    const match = item.governorate.match(/[\u0600-\u06FF].*/);
+    return { ...item, governorate: match ? match[0].trim() : item.governorate };
+  });
+
   const summaryStats = [
     { title: { en: "Total Users", ar: "المستخدمين" }, value: usersData?.totalUsers },
     { title: { en: "Total Orders", ar: "الطلبات" }, value: orderStats?.total },
@@ -35,7 +40,7 @@ const SummaryBarChart = () => {
   const [activeChart, setActiveChart] = useState<"users" | "orders" | "revenue">("users");
 
   // Users chart data
-  const usersChartData = usersData?.governorates?.map((gov: any) => ({
+  const usersChartData = arabicOnly?.map((gov: any) => ({
     month: gov.governorate || "",
     value: gov.count || 0,
   }));
@@ -99,11 +104,11 @@ const SummaryBarChart = () => {
         <Loader />
       ) : (
         <div
-          className={`px-4 flex flex-col lg:w-4xl w-full min-h-screen lg:min-h-auto py-3 mt-[50px] ${
+          className={`px-4 flex flex-col lg:w-4xl w-full min-h-screen lg:min-h-auto py-3 mt-[70px] ${
             language === "ar" ? "rtl" : "ltr"
           }`}>
           {/* Summary Cards */}
-          <div className="flex lg:flex-row items-center gap-1 mb-5">
+          <div className="flex lg:flex-row items-center sm:gap-3 mb-5">
             {summaryStats.map((stat: any, idx) => (
               <Card key={idx} className="flex-1 text-center">
                 <CardHeader>
@@ -119,22 +124,30 @@ const SummaryBarChart = () => {
           {/* Chart Navigation */}
           <div className="flex gap-2 mb-5">
             <button
-              className={`px-4 py-2 rounded-full ${
-                activeChart === "users" ? "bg-blue-500 text-white" : "bg-gray-200"
+              className={`px-4 py-2 rounded-full transition ${
+                activeChart === "users"
+                  ? "bg-blue-500 text-white drop-shadow-[0_4px_6px_rgba(59,130,246,0.5)]"
+                  : "bg-gray-200 drop-shadow-[0_4px_6px_rgba(229,231,235,0.6)]"
               }`}
               onClick={() => setActiveChart("users")}>
               {language === "ar" ? "المستخدمون" : "Users"}
             </button>
+
             <button
-              className={`px-4 py-2 rounded-full ${
-                activeChart === "orders" ? "bg-blue-500 text-white" : "bg-gray-200"
+              className={`px-4 py-2 rounded-full transition ${
+                activeChart === "orders"
+                  ? "bg-blue-500 text-white drop-shadow-[0_4px_6px_rgba(59,130,246,0.5)]"
+                  : "bg-gray-200 drop-shadow-[0_4px_6px_rgba(229,231,235,0.6)]"
               }`}
               onClick={() => setActiveChart("orders")}>
               {language === "ar" ? "الطلبات" : "Orders"}
             </button>
+
             <button
-              className={`px-4 py-2 rounded-full ${
-                activeChart === "revenue" ? "bg-blue-500 text-white" : "bg-gray-200"
+              className={`px-4 py-2 rounded-full transition ${
+                activeChart === "revenue"
+                  ? "bg-blue-500 text-white drop-shadow-[0_4px_6px_rgba(59,130,246,0.5)]"
+                  : "bg-gray-200 drop-shadow-[0_4px_6px_rgba(229,231,235,0.6)]"
               }`}
               onClick={() => setActiveChart("revenue")}>
               {language === "ar" ? "الإيرادات" : "Revenue"}
@@ -156,7 +169,7 @@ const SummaryBarChart = () => {
                     tickLine={false}
                     axisLine={false}
                     tickFormatter={(value) =>
-                      value ? (value.length > 10 ? value.slice(0, 18) + "…" : value) : ""
+                      value ? (value.length > 12 ? value.slice(0, 20) + "…" : value) : ""
                     }
                   />
                   <Tooltip
