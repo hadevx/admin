@@ -44,7 +44,7 @@ function ProductList() {
   const [stockStatus, setStockStatus] = useState<string>("");
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [filteredProducts, setFilteredProducts] = useState<any>([]);
-
+  const [isVariantsModalOpen, setIsVariantsModalOpen] = useState<boolean>(false);
   // For product variants
   const [variants, setVariants] = useState<
     {
@@ -168,6 +168,20 @@ function ProductList() {
       return;
     }
 
+    // Calculate total stock from variants if variants exist
+    let totalStock = countInStock ?? 0;
+    if (variants.length > 0) {
+      totalStock = variants.reduce((acc, v) => {
+        const variantStock = v.sizes.reduce((sum, s) => sum + s.stock, 0);
+        return acc + variantStock;
+      }, 0);
+    } else {
+      if (!countInStock) {
+        toast.error("Stock is required if no variants exist");
+        return;
+      }
+    }
+
     let uploadedImages: { url: string; publicId: string }[] = [];
 
     if (imageFiles.length > 0) {
@@ -223,7 +237,7 @@ function ProductList() {
       price,
       image: uploadedImages,
       category,
-      countInStock,
+      countInStock: totalStock, // ✅ use total stock from variants
       description,
       variants: variantPayload,
     };
@@ -520,34 +534,17 @@ function ProductList() {
                 onChange={(e) => setCountInStock(Number(e.target.value))}
                 className="p-2 w-full border rounded-md"
               />
+              <Button variant="outline" onClick={() => setIsVariantsModalOpen(true)}>
+                Manage Variants
+              </Button>
             </div>
 
             {/* RIGHT SIDE – Variants */}
+            {/* RIGHT SIDE – Variants preview */}
             <div className="space-y-4">
-              <button
-                type="button"
-                className="bg-blue-500 text-white px-3 py-1 rounded"
-                onClick={addColorVariant}>
-                + Add Color Variant
-              </button>
-
               {variants.map((v, i) => (
                 <div key={i} className="border p-3 rounded space-y-3">
-                  <input
-                    type="text"
-                    placeholder="Color Name"
-                    value={v.color}
-                    onChange={(e) => updateColorVariant(i, "color", e.target.value)}
-                    className="p-2 w-full border rounded"
-                  />
-
-                  <input
-                    type="file"
-                    multiple
-                    accept="image/*"
-                    onChange={(e) => handleColorImages(i, Array.from(e.target.files || []))}
-                    className="mb-2"
-                  />
+                  <p className="font-bold">{v.color || "No Color"}</p>
                   <div className="flex gap-2 flex-wrap">
                     {v.images.map((file, idx) => (
                       <img
@@ -558,42 +555,10 @@ function ProductList() {
                       />
                     ))}
                   </div>
-
-                  <button
-                    type="button"
-                    className="bg-green-500 text-white px-3 py-1 rounded"
-                    onClick={() => addSizeToVariant(i)}>
-                    + Add Size
-                  </button>
-
                   {v.sizes.map((s, idx) => (
-                    <div key={idx} className="flex gap-2">
-                      <input
-                        type="text"
-                        placeholder="Size"
-                        value={s.size}
-                        onChange={(e) => updateSizeInVariant(i, idx, "size", e.target.value)}
-                        className="p-2 border rounded w-20"
-                      />
-                      <input
-                        type="number"
-                        placeholder="Price"
-                        value={s.price}
-                        onChange={(e) =>
-                          updateSizeInVariant(i, idx, "price", Number(e.target.value))
-                        }
-                        className="p-2 border rounded w-24"
-                      />
-                      <input
-                        type="number"
-                        placeholder="Stock"
-                        value={s.stock}
-                        onChange={(e) =>
-                          updateSizeInVariant(i, idx, "stock", Number(e.target.value))
-                        }
-                        className="p-2 border rounded w-24"
-                      />
-                    </div>
+                    <p key={idx}>
+                      {s.size || "No Size"} - {s.stock} in stock - {s.price} KD
+                    </p>
                   ))}
                 </div>
               ))}
@@ -614,6 +579,86 @@ function ProductList() {
                 : loadingCreateOrder
                 ? texts[language].creating
                 : texts[language].create}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      {/* VARIANTS MODAL */}
+      <Dialog open={isVariantsModalOpen} onOpenChange={setIsVariantsModalOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Manage Variants</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <Button
+              type="button"
+              onClick={addColorVariant}
+              className="bg-blue-500 text-white px-3 py-1 rounded">
+              + Add Color Variant
+            </Button>
+            {variants.map((v, i) => (
+              <div key={i} className="border p-3 rounded space-y-3">
+                <input
+                  type="text"
+                  placeholder="Color Name"
+                  value={v.color}
+                  onChange={(e) => updateColorVariant(i, "color", e.target.value)}
+                  className="p-2 w-full border rounded"
+                />
+                <input
+                  type="file"
+                  multiple
+                  accept="image/*"
+                  onChange={(e) => handleColorImages(i, Array.from(e.target.files || []))}
+                  className="mb-2"
+                />
+                <div className="flex gap-2 flex-wrap">
+                  {v.images.map((file, idx) => (
+                    <img
+                      key={idx}
+                      src={URL.createObjectURL(file)}
+                      alt="preview"
+                      className="w-16 h-16 object-cover rounded"
+                    />
+                  ))}
+                </div>
+                <Button
+                  type="button"
+                  onClick={() => addSizeToVariant(i)}
+                  className="bg-green-500 text-white px-3 py-1 rounded">
+                  + Add Size
+                </Button>
+                {v.sizes.map((s, idx) => (
+                  <div key={idx} className="flex gap-2">
+                    <input
+                      type="text"
+                      placeholder="Size"
+                      value={s.size}
+                      onChange={(e) => updateSizeInVariant(i, idx, "size", e.target.value)}
+                      className="p-2 border rounded w-20"
+                    />
+                    <input
+                      type="number"
+                      placeholder="Price"
+                      value={s.price}
+                      onChange={(e) => updateSizeInVariant(i, idx, "price", Number(e.target.value))}
+                      className="p-2 border rounded w-24"
+                    />
+                    <input
+                      type="number"
+                      placeholder="Stock"
+                      value={s.stock}
+                      onChange={(e) => updateSizeInVariant(i, idx, "stock", Number(e.target.value))}
+                      className="p-2 border rounded w-24"
+                    />
+                  </div>
+                ))}
+              </div>
+            ))}
+          </div>
+          <DialogFooter className="mt-4 flex justify-end gap-2">
+            <Button variant="default" onClick={() => setIsVariantsModalOpen(false)}>
+              Done
             </Button>
           </DialogFooter>
         </DialogContent>

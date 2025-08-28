@@ -41,17 +41,15 @@ function ProductDetails() {
 
   const [newName, setNewName] = useState("");
   const [newPrice, setNewPrice] = useState<number>();
-  // const [newImages, setNewImages] = useState<{ url: string; publicId: string }[]>([]);
   const [newBrand, setNewBrand] = useState("");
   const [newCategory, setNewCategory] = useState("");
   const [newCountInStock, setNewCountInStock] = useState<number>();
   const [newDescription, setNewDescription] = useState("");
   const [clickEditProduct, setClickEditProduct] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  // const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [featured, setFeatured] = useState(false);
-
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const [variants, setVariants] = useState<any[]>([]);
 
   const { id: productId } = useParams();
   const navigate = useNavigate();
@@ -63,20 +61,47 @@ function ProductDetails() {
   const { refetch: refetchProducts } = useGetProductsQuery(undefined);
   const [uploadProductImage, { isLoading: loadingUploadImage }] = useUploadProductImageMutation();
 
+  // --- Variant functions ---
+  const addVariant = () => {
+    setVariants([
+      ...variants,
+      { options: { color: "", size: "" }, price: 0, stock: 0, _id: Date.now().toString() },
+    ]);
+  };
+
+  const updateVariant = (index: number, field: string, value: string | number) => {
+    const updated = [...variants];
+    if (field.startsWith("options.")) {
+      const optionKey = field.split(".")[1];
+      updated[index] = {
+        ...updated[index],
+        options: { ...updated[index].options, [optionKey]: value },
+      };
+    } else {
+      updated[index] = { ...updated[index], [field]: value };
+    }
+    setVariants(updated);
+  };
+
+  const removeVariant = (index: number) => {
+    const updated = [...variants];
+    updated.splice(index, 1);
+    setVariants(updated);
+  };
+
+  // --- Initialize state from product ---
   useEffect(() => {
     if (product) {
       setNewName(product.name);
       setNewPrice(product.price);
-      // setNewImages(product.image);
       setNewBrand(product.brand);
       setNewCategory(product.category);
       setNewCountInStock(product.countInStock);
       setNewDescription(product.description);
-      setFeatured(product.featured ?? false); // ✅ initialize featured state
+      setFeatured(product.featured ?? false);
+      setVariants(product.variants || []);
     }
   }, [product]);
-
-  console.log(product);
 
   const handleDeleteProduct = async () => {
     if (product) {
@@ -89,23 +114,18 @@ function ProductDetails() {
 
   const handleUpdateProduct = async () => {
     if (typeof newPrice === "number" && newPrice <= 0) {
-      toast.error(
-        language === "ar" ? "السعر يجب أن يكون رقمًا موجبًا" : "Price must be a positive number"
-      );
+      toast.error(language === "ar" ? "السعر يجب أن يكون رقمًا موجبًا" : "Price must be positive");
       return;
     }
 
     let uploadedImages = [...product.image]; // keep existing images
-
     if (selectedFiles.length > 0) {
-      uploadedImages = []; // reset if new images selected
+      uploadedImages = [];
       for (const file of selectedFiles) {
         const formData = new FormData();
         formData.append("images", file);
         try {
           const res = await uploadProductImage(formData).unwrap();
-
-          // ✅ FIX: push each uploaded image instead of overwriting
           if (Array.isArray(res.images)) {
             res.images.forEach((img: any) =>
               uploadedImages.push({ url: img.imageUrl, publicId: img.publicId })
@@ -124,14 +144,13 @@ function ProductDetails() {
       _id: productId,
       name: newName.trim() || product.name,
       price: typeof newPrice === "number" ? newPrice : product.price,
-      // image: imageUrl,
-      image: uploadedImages, // update with array of images,
-      // imagePublicId: newImagePublicId,
+      image: uploadedImages,
       brand: newBrand.trim() || product.brand,
       category: newCategory || product.category,
       countInStock: typeof newCountInStock === "number" ? newCountInStock : product.countInStock,
       description: newDescription.trim() || product.description,
-      featured: featured, // ✅ send to backend
+      featured,
+      variants, // ✅ send variants to backend
     };
 
     try {
@@ -147,26 +166,17 @@ function ProductDetails() {
       );
     }
   };
-  /*   const addVariant = () => {
-    setVariants([...variants, { name: "", value: "", price: 0, countInStock: 0, sku: "" }]);
-  };
 
-  const updateVariant = (index: number, field: string, value: string | number) => {
-    const updated = [...variants];
-    updated[index] = { ...updated[index], [field]: value };
-    setVariants(updated);
-  }; */
+  console.log(product);
   return (
     <Layout>
       {loadingProduct ? (
         <Loader />
       ) : (
-        <div
-          className={`px-4 w-full lg:w-4xl py-6 mb-10 mt-10 min-h-screen ${
-            dir === "rtl" ? "rtl" : "ltr"
-          } font-custom`}>
+        <div className={`px-4 w-full lg:w-4xl py-6 mb-10 mt-10 min-h-screen ${dir} font-custom`}>
+          {/* Header */}
           <div
-            className={`flex justify-between items-center  mb-6 ${
+            className={`flex justify-between items-center mb-6 ${
               language === "ar" ? "flex-row-reverse" : ""
             }`}>
             <h1 className="text-2xl font-bold">
@@ -174,13 +184,14 @@ function ProductDetails() {
             </h1>
             <button
               onClick={() => setIsModalOpen(true)}
-              className="select-none bg-gradient-to-t drop-shadow-[0_4px_6px_rgba(236,72,153,0.5)]  from-rose-500 hover:opacity-90 to-rose-400 text-white px-3 py-2 rounded-lg font-bold shadow-md">
+              className="select-none bg-gradient-to-t from-rose-500 hover:opacity-90 to-rose-400 text-white px-3 py-2 rounded-lg font-bold shadow-md">
               {language === "ar" ? "حذف المنتج" : "Delete Product"}
             </button>
           </div>
 
           <Separator className="my-4 bg-black/20" />
 
+          {/* Main Content */}
           <div className="bg-white border rounded-xl p-6 space-y-6">
             <div className="flex justify-between items-center">
               <h2 className="text-xl font-semibold">{product?.name}</h2>
@@ -226,7 +237,7 @@ function ProductDetails() {
 
             <Separator />
 
-            {/* Product Image & Details */}
+            {/* Images & Details */}
             <div className="flex flex-col sm:flex-row lg:flex-row gap-5">
               <div className="flex-shrink-0 w-full sm:w-80 lg:w-96 h-96 lg:h-96">
                 {!clickEditProduct ? (
@@ -244,7 +255,6 @@ function ProductDetails() {
                           </CarouselItem>
                         ))}
                       </CarouselContent>
-
                       <CarouselPrevious className="absolute top-1/2 left-2 -translate-y-1/2 bg-black/50 text-white rounded-full p-2 hover:bg-white/50">
                         &#8592;
                       </CarouselPrevious>
@@ -267,19 +277,18 @@ function ProductDetails() {
                     <span className="text-gray-700 font-medium">
                       {language === "ar" ? "رفع صور/ه جديدة" : "Upload new image/s"}
                     </span>
-                    {selectedFiles && selectedFiles.length > 0 && (
+                    {selectedFiles.length > 0 && (
                       <div className="mt-2">
                         <p className="text-sm font-medium text-gray-700">
                           {language === "ar" ? "الملفات المحددة:" : "Selected files:"}
                         </p>
                         <ul className="list-disc list-inside text-sm text-gray-600">
-                          {Array.from(selectedFiles).map((file, index) => (
+                          {selectedFiles.map((file, index) => (
                             <li key={index}>{file.name}</li>
                           ))}
                         </ul>
                       </div>
                     )}
-
                     <input
                       type="file"
                       multiple
@@ -292,6 +301,7 @@ function ProductDetails() {
                 )}
               </div>
 
+              {/* Product Fields */}
               <div className="flex-1 grid grid-cols-3 sm:grid-cols-3 lg:grid-cols-3 gap-6">
                 {/* Name */}
                 <div>
@@ -323,16 +333,10 @@ function ProductDetails() {
                       value={newCategory}
                       onChange={(e) => setNewCategory(e.target.value)}
                       className="w-full px-4 py-2 bg-white border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm">
-                      {newCategory &&
-                        findCategoryNameById(newCategory, categoryTree || []) === null && (
-                          <option value={newCategory} disabled className="text-red-500">
-                            ❌ {language === "ar" ? "تم حذف الفئة" : "Deleted Category"}
-                          </option>
-                        )}
                       <option value="" disabled>
                         -- {language === "ar" ? "اختر الفئة" : "Choose a category"} --
                       </option>
-                      {categoryTree?.length > 0 && renderCategoryOptions(categoryTree)}
+                      {categoryTree && renderCategoryOptions(categoryTree)}
                     </select>
                   )}
                 </div>
@@ -357,21 +361,7 @@ function ProductDetails() {
                     {language === "ar" ? ":المخزون" : "Stock:"}
                   </label>
                   {!clickEditProduct ? (
-                    <p className="font-bold">
-                      {product?.countInStock > 0 ? (
-                        product.countInStock < 5 ? (
-                          <span className="text-orange-500">
-                            {product?.countInStock} {language === "ar" ? "متبقي" : "left"}
-                          </span>
-                        ) : (
-                          product?.countInStock
-                        )
-                      ) : (
-                        <span className="text-rose-600">
-                          {language === "ar" ? "غير متوفر" : "Out of stock"}
-                        </span>
-                      )}
-                    </p>
+                    <p className="font-bold">{product?.countInStock}</p>
                   ) : (
                     <input
                       value={newCountInStock}
@@ -379,22 +369,6 @@ function ProductDetails() {
                       className="w-full p-2 bg-gray-50 border rounded-lg shadow"
                     />
                   )}
-                </div>
-
-                {/* Created At */}
-                <div>
-                  <label className="text-gray-600">
-                    {language === "ar" ? ":تاريخ الإنشاء" : "Created At:"}
-                  </label>
-                  <p className="font-bold">{product?.createdAt.substring(0, 10)}</p>
-                </div>
-
-                {/* Updated At */}
-                <div>
-                  <label className="text-gray-600">
-                    {language === "ar" ? ":آخر تحديث" : "Updated At:"}
-                  </label>
-                  <p className="font-bold">{product?.updatedAt.substring(0, 10)}</p>
                 </div>
 
                 {/* Description */}
@@ -416,7 +390,7 @@ function ProductDetails() {
                 </div>
 
                 {/* Featured */}
-                <div className=" flex  flex-col items-center gap-2">
+                <div className="flex flex-col items-center gap-2">
                   <label className="text-gray-600">
                     {language === "ar" ? ":منتج مميز" : "Featured Product:"}
                   </label>
@@ -431,13 +405,11 @@ function ProductDetails() {
                         : "No"}
                     </p>
                   ) : (
-                    <div>
-                      <input
-                        type="checkbox"
-                        checked={featured}
-                        onChange={(e) => setFeatured(e.target.checked)}
-                      />
-                    </div>
+                    <input
+                      type="checkbox"
+                      checked={featured}
+                      onChange={(e) => setFeatured(e.target.checked)}
+                    />
                   )}
                 </div>
               </div>
@@ -445,80 +417,109 @@ function ProductDetails() {
           </div>
 
           {/* Variants Section */}
-          {/*   <div className="col-span-2 mt-4">
+          <div className="col-span-3 mt-6">
             <h3 className="font-semibold mb-3 text-lg">
-              {language === "ar" ? "الأنواع" : "Variants"}
+              {variants?.length}: {language === "ar" ? "الأنواع" : "Variants"}
             </h3>
 
-            {clickEditProduct ? (
-              <div className="space-y-3">
-                {product?.variants.map((v, idx) => (
-                  <div
-                    key={idx}
-                    className="flex flex-wrap gap-2 items-center p-2 border rounded-lg shadow-sm bg-gray-50">
-                    <input
-                      type="text"
-                      placeholder={language === "ar" ? "النوع" : "Name"}
-                      value={v.name}
-                      onChange={(e) => updateVariant(idx, "name", e.target.value)}
-                      className="flex-1 p-2 border rounded-md focus:ring-2 focus:ring-blue-400"
-                    />
-                    <input
-                      type="text"
-                      placeholder={language === "ar" ? "القيمة" : "Value"}
-                      value={v.value}
-                      onChange={(e) => updateVariant(idx, "value", e.target.value)}
-                      className="flex-1 p-2 border rounded-md focus:ring-2 focus:ring-blue-400"
-                    />
-                    <input
-                      type="number"
-                      placeholder={language === "ar" ? "السعر" : "Price"}
-                      value={v.price}
-                      onChange={(e) => updateVariant(idx, "price", Number(e.target.value))}
-                      className="w-28 p-2 border rounded-md focus:ring-2 focus:ring-blue-400"
-                    />
-                    <input
-                      type="number"
-                      placeholder={language === "ar" ? "المخزون" : "Stock"}
-                      value={v.countInStock}
-                      onChange={(e) => updateVariant(idx, "countInStock", Number(e.target.value))}
-                      className="w-28 p-2 border rounded-md focus:ring-2 focus:ring-blue-400"
-                    />
-                    <button
-                      onClick={() => removeVariant(idx)}
-                      className="text-red-500 font-semibold hover:text-red-700"
-                      title={language === "ar" ? "حذف النوع" : "Remove Variant"}>
-                      &times;
-                    </button>
-                  </div>
-                ))}
-                <Button onClick={addVariant} className="mt-2">
-                  {language === "ar" ? "إضافة نوع" : "Add Variant"}
-                </Button>
-              </div>
+            {variants.length === 0 ? (
+              <p>{language === "ar" ? "لا توجد أنواع" : "No variants"}</p>
             ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                {product?.variants.map((v, idx) => (
-                  <div
-                    key={idx}
-                    className="p-2 border rounded-lg bg-gray-50 shadow-sm flex flex-col">
-                    <span className="font-semibold text-gray-700">
-                      {language === "ar" ? "النوع" : "Name"}: {v.name}
-                    </span>
-                    <span className="font-semibold text-gray-700">
-                      {language === "ar" ? "القيمة" : "Value"}: {v.value}
-                    </span>
-                    <span className="text-gray-600">
-                      {language === "ar" ? "السعر" : "Price"}: {v.price} KD
-                    </span>
-                    <span className="text-gray-600">
-                      {language === "ar" ? "المخزون" : "Stock"}: {v.countInStock}
-                    </span>
+              variants.map((v, idx) => (
+                <div
+                  key={v._id || idx}
+                  className="p-3 border rounded-lg mb-2 flex flex-col sm:flex-col gap-2 items-start bg-gray-50">
+                  {/* Variant Image */}
+                  <div className="w-24 h-24 flex-shrink-0">
+                    {clickEditProduct ? (
+                      <input
+                        type="file"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (!file) return;
+                          const updated = [...variants];
+                          updated[idx].image = URL.createObjectURL(file);
+                          setVariants(updated);
+                        }}
+                        className="w-full h-full cursor-pointer"
+                      />
+                    ) : v.images ? (
+                      <img
+                        src={v.images[0].url}
+                        alt={`Variant ${idx + 1}`}
+                        className="w-full h-full object-cover rounded"
+                      />
+                    ) : (
+                      <div className="w-full h-full bg-gray-200 rounded flex items-center justify-center text-gray-400">
+                        {language === "ar" ? "لا توجد صورة" : "No Image"}
+                      </div>
+                    )}
                   </div>
-                ))}
-              </div>
+
+                  {/* Variant Options */}
+                  {Object.entries(v.options).map(([key, value]) => (
+                    <div key={key} className="flex-1">
+                      <span className="font-semibold">{key}:</span>
+                      {clickEditProduct ? (
+                        <input
+                          value={String(value)}
+                          onChange={(e) => updateVariant(idx, `options.${key}`, e.target.value)}
+                          className="ml-2 w-full p-1 border rounded"
+                        />
+                      ) : (
+                        <span className="ml-1">{String(value)}</span>
+                      )}
+                    </div>
+                  ))}
+
+                  {/* Price */}
+                  <div className="flex-1">
+                    <span className="font-semibold">{language === "ar" ? "السعر:" : "Price:"}</span>
+                    {clickEditProduct ? (
+                      <input
+                        type="number"
+                        value={v.price}
+                        onChange={(e) => updateVariant(idx, "price", Number(e.target.value))}
+                        className="ml-2 w-full p-1 border rounded"
+                      />
+                    ) : (
+                      <span className="ml-1">{v.price} KD</span>
+                    )}
+                  </div>
+
+                  {/* Stock */}
+                  <div className="flex-1">
+                    <span className="font-semibold">
+                      {language === "ar" ? "المخزون:" : "Stock:"}
+                    </span>
+                    {clickEditProduct ? (
+                      <input
+                        type="number"
+                        value={v.stock}
+                        onChange={(e) => updateVariant(idx, "stock", Number(e.target.value))}
+                        className="ml-2 w-full p-1 border rounded"
+                      />
+                    ) : (
+                      <span className="ml-1">{v.stock}</span>
+                    )}
+                  </div>
+
+                  {/* Remove Button */}
+                  {clickEditProduct && (
+                    <button className="text-red-500 font-bold" onClick={() => removeVariant(idx)}>
+                      {language === "ar" ? "حذف" : "Remove"}
+                    </button>
+                  )}
+                </div>
+              ))
             )}
-          </div> */}
+
+            {clickEditProduct && (
+              <Button onClick={addVariant} className="mt-2">
+                {language === "ar" ? "إضافة نوع" : "Add Variant"}
+              </Button>
+            )}
+          </div>
 
           {/* Delete Modal */}
           <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
@@ -555,7 +556,7 @@ function ProductDetails() {
   );
 }
 
-// Category helpers
+// --- Helpers ---
 const findCategoryNameById = (id: any, nodes: any) => {
   if (!id || !Array.isArray(nodes)) return null;
   for (const node of nodes) {
