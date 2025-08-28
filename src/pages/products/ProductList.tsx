@@ -8,6 +8,7 @@ import {
   useGetAllCategoriesQuery,
   useGetDiscountStatusQuery,
   useGetCategoriesTreeQuery,
+  useUploadVariantImageMutation,
 } from "../../redux/queries/productApi";
 import Badge from "../../components/Badge";
 import { Box, Plus, Search } from "lucide-react";
@@ -44,6 +45,51 @@ function ProductList() {
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [filteredProducts, setFilteredProducts] = useState<any>([]);
 
+  // For product variants
+  const [variants, setVariants] = useState<
+    {
+      color: string;
+      images: File[];
+      sizes: { size: string; price: number; stock: number }[];
+    }[]
+  >([]);
+
+  /*Variants helpers  */
+  const addColorVariant = () => {
+    setVariants([...variants, { color: "", images: [], sizes: [] }]);
+  };
+
+  const updateColorVariant = (index: number, field: string, value: any) => {
+    const updated = [...variants];
+    (updated[index] as any)[field] = value;
+    setVariants(updated);
+  };
+
+  const handleColorImages = (index: number, files: File[]) => {
+    const updated = [...variants];
+    updated[index].images = files;
+    setVariants(updated);
+  };
+
+  const addSizeToVariant = (index: number) => {
+    const updated = [...variants];
+    updated[index].sizes.push({ size: "", price: 0, stock: 0 });
+    setVariants(updated);
+  };
+
+  const updateSizeInVariant = (
+    colorIndex: number,
+    sizeIndex: number,
+    field: string,
+    value: any
+  ) => {
+    const updated = [...variants];
+    (updated[colorIndex].sizes[sizeIndex] as any)[field] = value;
+    setVariants(updated);
+  };
+
+  /* -- */
+
   // const [imageFile, setImageFile] = useState<File | null>(null);
   const [imageFiles, setImageFiles] = useState<File[]>([]);
   console.log(imageFiles);
@@ -78,6 +124,7 @@ function ProductList() {
 
   const [uploadProductImage, { isLoading: loadingUploadImage }] = useUploadProductImageMutation();
   const [createProduct, { isLoading: loadingCreateOrder }] = useCreateProductMutation();
+  const [uploadVariantImage] = useUploadVariantImageMutation();
 
   useEffect(() => {
     if (products) {
@@ -122,7 +169,6 @@ function ProductList() {
     }
 
     let uploadedImages: { url: string; publicId: string }[] = [];
-    // let variantPayload: any[] = [];
 
     if (imageFiles.length > 0) {
       try {
@@ -145,6 +191,33 @@ function ProductList() {
       }
     }
 
+    /* ---- */
+    let variantPayload: any[] = [];
+
+    for (const v of variants) {
+      let uploadedVariantImages: { url: string; publicId: string }[] = [];
+
+      if (v.images.length > 0) {
+        const formData = new FormData();
+        v.images.forEach((file) => formData.append("images", file));
+        const res = await uploadVariantImage(formData).unwrap();
+        uploadedVariantImages = res.images.map((img: any) => ({
+          url: img.imageUrl,
+          publicId: img.publicId,
+        }));
+      }
+
+      // flatten sizes into variant schema
+      for (const s of v.sizes) {
+        variantPayload.push({
+          options: { color: v.color, size: s.size },
+          stock: s.stock,
+          price: s.price,
+          images: uploadedVariantImages,
+        });
+      }
+    }
+    /* --- */
     const newProduct = {
       name,
       price,
@@ -152,7 +225,7 @@ function ProductList() {
       category,
       countInStock,
       description,
-      // variants: variantPayload,
+      variants: variantPayload,
     };
 
     try {
@@ -381,117 +454,155 @@ function ProductList() {
 
       {/* Create product modal */}
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-        <DialogContent>
+        <DialogContent className="max-w-4xl">
           <DialogHeader>
             <DialogTitle>{texts[language].addProduct}</DialogTitle>
           </DialogHeader>
-          <input
-            type="file"
-            multiple
-            accept="image/*"
-            onChange={(e) => setImageFiles(Array.from(e.target.files || []))}
-            className="p-4 w-full border rounded-md"
-          />
-          <div className="flex gap-2 flex-wrap">
-            {imageFiles.map((file, i) => (
-              <img
-                key={i}
-                src={URL.createObjectURL(file)}
-                alt="preview"
-                className="w-20 h-20 object-cover rounded"
-              />
-            ))}
-          </div>
 
-          <input
-            type="text"
-            placeholder={texts[language].productName}
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            className="p-2 w-full border rounded-md"
-          />
-          <textarea
-            placeholder={texts[language].productDescription}
-            rows={3}
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            className="p-2 w-full border rounded-md"
-          />
-          <input
-            type="number"
-            value={price ?? ""}
-            onChange={(e) => setPrice(Number(e.target.value))}
-            className="p-2 w-full border rounded-md"
-            placeholder={texts[language].productPrice}
-          />
-          {/* <div>
-            <button onClick={addColorVariant}>Add Color Variant</button>
-            {variants.map((v, i) => (
-              <div key={i} className="border p-2 mb-2">
-                <input
-                  type="text"
-                  placeholder="Color Name"
-                  value={v.color}
-                  onChange={(e) => updateColorVariant(i, "color", e.target.value)}
-                />
-                <input
-                  type="file"
-                  multiple
-                  onChange={(e) => handleColorImages(i, Array.from(e.target.files || []))}
-                />
-                <button onClick={() => addSizeToVariant(i)}>Add Size</button>
-                {v.sizes?.map((s, idx) => (
-                  <div key={idx}>
-                    <input
-                      type="text"
-                      placeholder="Size"
-                      value={s.size}
-                      onChange={(e) => updateSizeInVariant(i, idx, "size", e.target.value)}
-                    />
-                    <input
-                      type="number"
-                      placeholder="Price"
-                      value={s.price}
-                      onChange={(e) => updateSizeInVariant(i, idx, "price", Number(e.target.value))}
-                    />
-                    <input
-                      type="number"
-                      placeholder="Stock"
-                      value={s.countInStock}
-                      onChange={(e) =>
-                        updateSizeInVariant(i, idx, "countInStock", Number(e.target.value))
-                      }
-                    />
-                  </div>
+          {/* Two Column Layout */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* LEFT SIDE – Product Info */}
+            <div className="space-y-4">
+              <input
+                type="file"
+                multiple
+                accept="image/*"
+                onChange={(e) => setImageFiles(Array.from(e.target.files || []))}
+                className="p-2 w-full border rounded-md"
+              />
+              <div className="flex gap-2 flex-wrap">
+                {imageFiles.map((file, i) => (
+                  <img
+                    key={i}
+                    src={URL.createObjectURL(file)}
+                    alt="preview"
+                    className="w-20 h-20 object-cover rounded"
+                  />
                 ))}
               </div>
-            ))}
-          </div> */}
-          <select
-            value={category}
-            onChange={(e) => setCategory(e.target.value)}
-            className="p-2 w-full border rounded-md">
-            <option value="" disabled>
-              {texts[language].selectCategory}
-            </option>
-            {tree?.length > 0 && renderCategoryOptions(tree)}
-          </select>
-          <input
-            type="number"
-            placeholder={texts[language].productStock}
-            value={countInStock ?? ""}
-            onChange={(e) => setCountInStock(Number(e.target.value))}
-            className="p-2 w-full border rounded-md"
-          />
 
-          <DialogFooter className="mt-4 flex justify-end gap-2">
-            <Button
-              variant="outline"
-              onClick={() => {
-                setIsModalOpen(false);
-                // setIsCancelled(true);
-                window.location.reload();
-              }}>
+              <input
+                type="text"
+                placeholder={texts[language].productName}
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                className="p-2 w-full border rounded-md"
+              />
+              <textarea
+                placeholder={texts[language].productDescription}
+                rows={3}
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                className="p-2 w-full border rounded-md"
+              />
+              <input
+                type="number"
+                value={price ?? ""}
+                onChange={(e) => setPrice(Number(e.target.value))}
+                className="p-2 w-full border rounded-md"
+                placeholder={texts[language].productPrice}
+              />
+
+              <select
+                value={category}
+                onChange={(e) => setCategory(e.target.value)}
+                className="p-2 w-full border rounded-md">
+                <option value="" disabled>
+                  {texts[language].selectCategory}
+                </option>
+                {tree?.length > 0 && renderCategoryOptions(tree)}
+              </select>
+
+              <input
+                type="number"
+                placeholder={texts[language].productStock}
+                value={countInStock ?? ""}
+                onChange={(e) => setCountInStock(Number(e.target.value))}
+                className="p-2 w-full border rounded-md"
+              />
+            </div>
+
+            {/* RIGHT SIDE – Variants */}
+            <div className="space-y-4">
+              <button
+                type="button"
+                className="bg-blue-500 text-white px-3 py-1 rounded"
+                onClick={addColorVariant}>
+                + Add Color Variant
+              </button>
+
+              {variants.map((v, i) => (
+                <div key={i} className="border p-3 rounded space-y-3">
+                  <input
+                    type="text"
+                    placeholder="Color Name"
+                    value={v.color}
+                    onChange={(e) => updateColorVariant(i, "color", e.target.value)}
+                    className="p-2 w-full border rounded"
+                  />
+
+                  <input
+                    type="file"
+                    multiple
+                    accept="image/*"
+                    onChange={(e) => handleColorImages(i, Array.from(e.target.files || []))}
+                    className="mb-2"
+                  />
+                  <div className="flex gap-2 flex-wrap">
+                    {v.images.map((file, idx) => (
+                      <img
+                        key={idx}
+                        src={URL.createObjectURL(file)}
+                        alt="preview"
+                        className="w-16 h-16 object-cover rounded"
+                      />
+                    ))}
+                  </div>
+
+                  <button
+                    type="button"
+                    className="bg-green-500 text-white px-3 py-1 rounded"
+                    onClick={() => addSizeToVariant(i)}>
+                    + Add Size
+                  </button>
+
+                  {v.sizes.map((s, idx) => (
+                    <div key={idx} className="flex gap-2">
+                      <input
+                        type="text"
+                        placeholder="Size"
+                        value={s.size}
+                        onChange={(e) => updateSizeInVariant(i, idx, "size", e.target.value)}
+                        className="p-2 border rounded w-20"
+                      />
+                      <input
+                        type="number"
+                        placeholder="Price"
+                        value={s.price}
+                        onChange={(e) =>
+                          updateSizeInVariant(i, idx, "price", Number(e.target.value))
+                        }
+                        className="p-2 border rounded w-24"
+                      />
+                      <input
+                        type="number"
+                        placeholder="Stock"
+                        value={s.stock}
+                        onChange={(e) =>
+                          updateSizeInVariant(i, idx, "stock", Number(e.target.value))
+                        }
+                        className="p-2 border rounded w-24"
+                      />
+                    </div>
+                  ))}
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Footer */}
+          <DialogFooter className="mt-6 flex justify-end gap-2">
+            <Button variant="outline" onClick={() => setIsModalOpen(false)}>
               {texts[language].cancel}
             </Button>
             <Button
