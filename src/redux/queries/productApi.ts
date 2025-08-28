@@ -76,6 +76,13 @@ export const productApi = api.injectEndpoints({
         body: data,
       }),
     }),
+    uploadCategoryImage: builder.mutation({
+      query: (data) => ({
+        url: "/api/upload/category",
+        method: "POST",
+        body: data,
+      }),
+    }),
     createProduct: builder.mutation({
       query: (data) => ({
         url: `/api/products`,
@@ -171,4 +178,5 @@ export const {
   useDeleteDiscountMutation,
   useDeleteImageMutation,
   useGetAllCategoriesQuery,
+  useUploadCategoryImageMutation,
 } = productApi;

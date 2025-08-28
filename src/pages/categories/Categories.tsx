@@ -21,7 +21,10 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { clsx } from "clsx";
 import CategoryTree from "./CategoryTree";
-import { useGetProductsQuery } from "../../redux/queries/productApi";
+import {
+  useGetProductsQuery,
+  useUploadCategoryImageMutation,
+} from "../../redux/queries/productApi";
 import {
   Pagination,
   PaginationContent,
@@ -33,8 +36,37 @@ import {
 import { useSelector } from "react-redux";
 
 function Categories() {
+  const [uploadCategoryImage] = useUploadCategoryImageMutation();
   const language = useSelector((state: any) => state.language.lang);
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [deletingCategoryId, setDeletingCategoryId] = useState(null);
+  const [page, setPage] = useState(1);
+  const [category, setCategory] = useState("");
+  const [parent, setParent] = useState("");
+  const [searchTerm, setSearchTerm] = useState("");
+  const [categoryError, setCategoryError] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [filterType, setFilterType] = useState("all");
 
+  const { refetch: refetchProducts } = useGetProductsQuery(undefined);
+
+  const [createCategory, { isLoading: isCreating }] = useCreateCategoryMutation();
+  const [deleteCategory, { isLoading: isDeleting }] = useDeleteCategoryMutation();
+
+  const {
+    data,
+    isLoading: isLoadingCategories,
+    refetch,
+  } = useGetCategoriesQuery({
+    pageNumber: page || 1,
+    keyword: searchTerm || "",
+  });
+
+  const { data: tree, refetch: refetchTree } = useGetCategoriesTreeQuery(undefined);
+
+  const categories = data?.categories || [];
+  const pages = data?.pages || 1;
+  console.log(categories);
   const labels: any = {
     en: {
       categories: "Categories",
@@ -83,34 +115,6 @@ function Categories() {
   };
   const t = labels[language];
 
-  const [deletingCategoryId, setDeletingCategoryId] = useState(null);
-  const [page, setPage] = useState(1);
-  const [category, setCategory] = useState("");
-  const [parent, setParent] = useState("");
-  const [searchTerm, setSearchTerm] = useState("");
-  const [categoryError, setCategoryError] = useState(false);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const { refetch: refetchProducts } = useGetProductsQuery(undefined);
-
-  const [createCategory, { isLoading: isCreating }] = useCreateCategoryMutation();
-  const [deleteCategory, { isLoading: isDeleting }] = useDeleteCategoryMutation();
-
-  const [filterType, setFilterType] = useState("all");
-
-  const {
-    data,
-    isLoading: isLoadingCategories,
-    refetch,
-  } = useGetCategoriesQuery({
-    pageNumber: page || 1,
-    keyword: searchTerm || "",
-  });
-
-  const categories = data?.categories || [];
-  const pages = data?.pages || 1;
-
-  const { data: tree, refetch: refetchTree } = useGetCategoriesTreeQuery(undefined);
-
   const filteredCategories = categories
     .filter((cat: any) => cat.name.toLowerCase().includes(searchTerm.toLowerCase()))
     .filter((cat: any) => {
@@ -125,21 +129,35 @@ function Categories() {
       return toast.error(t.pleaseEnterName);
     }
 
+    let uploadedImageUrl = null;
+    if (imageFile) {
+      try {
+        const formData = new FormData();
+        formData.append("image", imageFile);
+        const res = await uploadCategoryImage(formData).unwrap();
+        uploadedImageUrl = res.image.imageUrl; // only URL
+      } catch (error: any) {
+        toast.error(error?.data?.message || error?.error);
+        return;
+      }
+    }
+
     const isDuplicate = categories.some(
       (c: any) => c.name.toLowerCase() === category.trim().toLowerCase()
     );
-
     if (isDuplicate) return toast.error(t.categoryExists);
 
     try {
       await createCategory({
         name: category[0].toUpperCase() + category.slice(1).toLowerCase(),
         parent: parent || null,
+        image: uploadedImageUrl,
       }).unwrap();
 
-      toast.success(t.create + " " + t.categories + " " + "successfully.");
+      toast.success(t.create + " " + t.categories + " successfully.");
       setCategory("");
       setParent("");
+      setImageFile(null);
       setIsModalOpen(false);
       refetch();
       refetchTree();
@@ -191,9 +209,8 @@ function Categories() {
             </h1>
             <button
               onClick={() => setIsModalOpen(true)}
-              className="bg-black  drop-shadow-[0_0_10px_rgba(24,24,27,0.5)] hover:bg-black/70 transition-all duration-300 text-white font-bold flex items-center gap-1 text-sm lg:text-md shadow-md px-3 py-2 rounded-md">
-              <Plus />
-              {t.addCategory}
+              className="bg-black drop-shadow-[0_0_10px_rgba(24,24,27,0.5)] hover:bg-black/70 transition-all duration-300 text-white font-bold flex items-center gap-1 text-sm lg:text-md shadow-md px-3 py-2 rounded-md">
+              <Plus /> {t.addCategory}
             </button>
           </div>
 
@@ -237,11 +254,20 @@ function Categories() {
                   {filteredCategories.length > 0 ? (
                     filteredCategories.map((cat: any) => (
                       <tr key={cat._id} className="font-bold transition-all duration-300">
-                        <td className="">{cat?.name}</td>
+                        <td className="flex items-center gap-2">
+                          {cat.image && (
+                            <img
+                              src={cat.image}
+                              alt={cat.name}
+                              className="w-10 h-10 object-cover rounded-md"
+                            />
+                          )}
+                          <span>{cat.name}</span>
+                        </td>
                         <td className="">
                           {cat.parent?.name ? (
                             <span className="text-gray-500 text-sm">
-                              {t.subOf} {cat?.parent.name}
+                              {t.subOf} {cat.parent.name}
                             </span>
                           ) : (
                             <span className="text-sm text-gray-500">{t.main}</span>
@@ -306,6 +332,7 @@ function Categories() {
             <DialogTitle>{t.addCategory}</DialogTitle>
           </DialogHeader>
 
+          {/* Category Name */}
           <input
             type="text"
             value={category}
@@ -317,8 +344,9 @@ function Categories() {
             )}
           />
 
+          {/* Parent Category */}
           <select
-            className="w-full border bg-white border-gray-300 rounded-lg py-3 pl-4 pr-4 text-sm focus:outline-none focus:border-blue-500"
+            className="w-full border bg-white border-gray-300 rounded-lg py-3 pl-4 pr-4 text-sm focus:outline-none focus:border-blue-500 my-2"
             value={parent}
             onChange={(e) => setParent(e.target.value)}>
             <option value="">{t.noParent}</option>
@@ -329,6 +357,29 @@ function Categories() {
             ))}
           </select>
 
+          {/* Image Upload */}
+          <input
+            type="file"
+            accept="image/*"
+            onChange={(e) => {
+              if (e.target.files && e.target.files[0]) setImageFile(e.target.files[0]);
+            }}
+            className="p-4 w-full border rounded-md mb-2"
+          />
+
+          {/* Image Preview */}
+          {imageFile && (
+            <div className="mb-2 flex flex-col items-start gap-1">
+              <p className="text-sm">Preview:</p>
+              <img
+                src={URL.createObjectURL(imageFile)}
+                alt="Preview"
+                className="w-24 h-24 object-cover rounded-md border"
+              />
+            </div>
+          )}
+
+          {/* Footer Buttons */}
           <DialogFooter className="mt-4 flex justify-end gap-2">
             <Button variant="outline" onClick={() => setIsModalOpen(false)}>
               {t.cancel}
