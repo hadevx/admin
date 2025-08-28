@@ -10,7 +10,7 @@ import { toast } from "react-toastify";
 import Badge from "../../components/Badge";
 import Loader from "../../components/Loader";
 import { Button } from "@/components/ui/button";
-import { Plus, Trash2, Boxes, Search, Loader2Icon } from "lucide-react";
+import { Plus, Trash2, Boxes, Search, Loader2Icon, SquarePen } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -24,6 +24,7 @@ import CategoryTree from "./CategoryTree";
 import {
   useGetProductsQuery,
   useUploadCategoryImageMutation,
+  useUpdateCategoryMutation,
 } from "../../redux/queries/productApi";
 import {
   Pagination,
@@ -47,6 +48,10 @@ function Categories() {
   const [categoryError, setCategoryError] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [filterType, setFilterType] = useState("all");
+
+  const [updateCategory, { isLoading: isUpdating }] = useUpdateCategoryMutation();
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editingCategory, setEditingCategory] = useState<any>(null);
 
   const { refetch: refetchProducts } = useGetProductsQuery(undefined);
 
@@ -100,7 +105,7 @@ function Categories() {
       subCategories: "الفئات الفرعية",
       tableName: "الاسم",
       tableParent: "الرئيسية",
-      tableActions: "الإجراءات",
+      tableActions: "الاجراءات",
       noCategoriesFound: "لم يتم العثور على أي فئات.",
       noParent: "بدون رئيسية (فئة رئيسية)",
       enterCategoryName: "أدخل اسم الفئة",
@@ -273,7 +278,7 @@ function Categories() {
                             <span className="text-sm text-gray-500">{t.main}</span>
                           )}
                         </td>
-                        <td className="py-2">
+                        <td className="py-2 flex gap-2">
                           <button
                             disabled={isDeleting && deletingCategoryId === cat._id}
                             onClick={() => handleDeleteCategory(cat._id, cat.name)}
@@ -283,6 +288,18 @@ function Categories() {
                             ) : (
                               <Trash2 />
                             )}
+                          </button>
+                          <button
+                            disabled={isDeleting && deletingCategoryId === cat._id}
+                            onClick={() => {
+                              setEditingCategory(cat);
+                              setCategory(cat.name);
+                              setParent(cat.parent?._id || "");
+                              setImageFile(null);
+                              setIsEditModalOpen(true);
+                            }}
+                            className="text-black hover:bg-zinc-200 bg-zinc-100 p-2 rounded-lg transition-all duration-300 flex items-center justify-center min-w-[32px] min-h-[32px]">
+                            <SquarePen />
                           </button>
                         </td>
                       </tr>
@@ -386,6 +403,112 @@ function Categories() {
             </Button>
             <Button variant="default" disabled={isCreating} onClick={handleCreateCategory}>
               {isCreating ? t.creating : t.create}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit Category</DialogTitle>
+          </DialogHeader>
+
+          {/* Category Name */}
+          <input
+            type="text"
+            value={category}
+            onChange={(e) => setCategory(e.target.value)}
+            placeholder={t.enterCategoryName}
+            className={clsx(
+              "w-full border bg-white border-gray-300 rounded-lg py-3 pl-4 pr-4 text-sm focus:outline-none focus:border-blue-500 focus:border-2",
+              categoryError ? "border-rose-500 border-2" : "border-gray-300"
+            )}
+          />
+
+          {/* Parent Category */}
+          <select
+            className="w-full border bg-white border-gray-300 rounded-lg py-3 pl-4 pr-4 text-sm focus:outline-none focus:border-blue-500 my-2"
+            value={parent}
+            onChange={(e) => setParent(e.target.value)}>
+            <option value="">{t.noParent}</option>
+            {categories.map((cat: any) => (
+              <option key={cat._id} value={cat._id}>
+                {cat.name}
+              </option>
+            ))}
+          </select>
+
+          {/* Image Upload */}
+          <input
+            type="file"
+            accept="image/*"
+            onChange={(e) => {
+              if (e.target.files && e.target.files[0]) setImageFile(e.target.files[0]);
+            }}
+            className="p-4 w-full border rounded-md mb-2"
+          />
+
+          {/* Image Preview (existing + new if uploaded) */}
+          {(editingCategory?.image || imageFile) && (
+            <div className="mb-2 flex flex-col items-start gap-1">
+              <p className="text-sm">Preview:</p>
+              <img
+                src={imageFile ? URL.createObjectURL(imageFile) : editingCategory?.image}
+                alt="Preview"
+                className="w-24 h-24 object-cover rounded-md border"
+              />
+            </div>
+          )}
+
+          {/* Footer Buttons */}
+          <DialogFooter className="mt-4 flex justify-end gap-2">
+            <Button variant="outline" onClick={() => setIsEditModalOpen(false)}>
+              {t.cancel}
+            </Button>
+            <Button
+              variant="default"
+              disabled={isUpdating}
+              onClick={async () => {
+                if (!category.trim()) {
+                  setCategoryError(true);
+                  return toast.error(t.pleaseEnterName);
+                }
+
+                let uploadedImageUrl = editingCategory?.image || null;
+                if (imageFile) {
+                  try {
+                    const formData = new FormData();
+                    formData.append("image", imageFile);
+                    const res = await uploadCategoryImage(formData).unwrap();
+                    uploadedImageUrl = res.image.imageUrl;
+                  } catch (error: any) {
+                    toast.error(error?.data?.message || error?.error);
+                    return;
+                  }
+                }
+
+                try {
+                  await updateCategory({
+                    id: editingCategory._id,
+                    name: category[0].toUpperCase() + category.slice(1).toLowerCase(),
+                    parent: parent || null,
+                    image: uploadedImageUrl,
+                  }).unwrap();
+
+                  toast.success("Category updated successfully!");
+                  setCategory("");
+                  setParent("");
+                  setImageFile(null);
+                  setEditingCategory(null);
+                  setIsEditModalOpen(false);
+                  refetch();
+                  refetchTree();
+                  refetchProducts();
+                } catch (error) {
+                  toast.error("Failed to update category");
+                }
+              }}>
+              {isUpdating ? "Updating..." : "Update"}
             </Button>
           </DialogFooter>
         </DialogContent>

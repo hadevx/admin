@@ -154,6 +154,14 @@ export const productApi = api.injectEndpoints({
         body: category,
       }),
     }),
+    updateCategory: builder.mutation({
+      query: ({ id, ...data }) => ({
+        url: `/api/category/${id}`,
+        method: "PUT",
+        body: data,
+      }),
+      invalidatesTags: ["Category"],
+    }),
   }),
 });
 
@@ -179,4 +187,5 @@ export const {
   useDeleteImageMutation,
   useGetAllCategoriesQuery,
   useUploadCategoryImageMutation,
+  useUpdateCategoryMutation,
 } = productApi;
