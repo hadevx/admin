@@ -14,6 +14,7 @@ import {
   useGetProductsQuery,
   useUploadProductImageMutation,
   useGetCategoriesTreeQuery,
+  useUploadVariantImageMutation,
 } from "../../redux/queries/productApi";
 
 import { Separator } from "@/components/ui/separator";
@@ -60,6 +61,7 @@ function ProductDetails() {
   const [updateProduct, { isLoading: loadingUpdateProduct }] = useUpdateProductMutation();
   const { refetch: refetchProducts } = useGetProductsQuery(undefined);
   const [uploadProductImage, { isLoading: loadingUploadImage }] = useUploadProductImageMutation();
+  const [uploadVariantImage] = useUploadVariantImageMutation();
 
   // --- Variant functions ---
   const addVariant = () => {
@@ -139,6 +141,36 @@ function ProductDetails() {
         }
       }
     }
+    // --- Upload variant images ---
+    const uploadedVariants = [];
+    for (let idx = 0; idx < variants.length; idx++) {
+      const variant = variants[idx];
+      let variantImages = [...(variant.images || [])];
+
+      // if you store new files for each variant in variant.selectedFiles
+      if (variant.selectedFiles && variant.selectedFiles.length > 0) {
+        variantImages = [];
+        for (const file of variant.selectedFiles) {
+          const formData = new FormData();
+          formData.append("images", file);
+          try {
+            const res = await uploadVariantImage(formData).unwrap();
+            if (Array.isArray(res.images)) {
+              res.images.forEach((img: any) =>
+                variantImages.push({ url: img.imageUrl, publicId: img.publicId })
+              );
+            } else {
+              variantImages.push({ url: res.imageUrl, publicId: res.publicId });
+            }
+          } catch (error: any) {
+            toast.error(error?.data?.message || "Variant image upload failed");
+            return;
+          }
+        }
+      }
+
+      uploadedVariants.push({ ...variant, images: variantImages });
+    }
 
     const updatedProduct = {
       _id: productId,
@@ -160,6 +192,7 @@ function ProductDetails() {
       refetch();
       refetchProducts();
       setSelectedFiles([]);
+      setVariants((prev) => prev.map((v) => ({ ...v, selectedFiles: [] })));
     } catch (err: any) {
       toast.error(
         err?.data?.message || (language === "ar" ? "خطأ في تحديث المنتج" : "Error updating product")
