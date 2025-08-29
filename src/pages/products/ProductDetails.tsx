@@ -468,10 +468,14 @@ function ProductDetails() {
                       <input
                         type="file"
                         onChange={(e) => {
-                          const file = e.target.files?.[0];
-                          if (!file) return;
+                          const files = e.target.files ? Array.from(e.target.files) : [];
+                          if (files.length === 0) return;
+
                           const updated = [...variants];
-                          updated[idx].image = URL.createObjectURL(file);
+                          // store preview for UI
+                          updated[idx].image = files.map((f) => URL.createObjectURL(f));
+                          // store actual files for upload
+                          updated[idx].selectedFiles = files;
                           setVariants(updated);
                         }}
                         className="w-full h-full cursor-pointer"
