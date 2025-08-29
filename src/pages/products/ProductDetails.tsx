@@ -451,10 +451,6 @@ function ProductDetails() {
 
           {/* Variants Section */}
           <div className=" grid grid-cols-3 gap-2 mt-6">
-            {/*   <h3 className="font-semibold mb-3 text-lg">
-              {variants?.length}: {language === "ar" ? "الأنواع" : "Variants"}
-            </h3> */}
-
             {variants?.length === 0 ? (
               <p>{language === "ar" ? "لا توجد أنواع" : "No variants"}</p>
             ) : (
@@ -468,14 +464,10 @@ function ProductDetails() {
                       <input
                         type="file"
                         onChange={(e) => {
-                          const files = e.target.files ? Array.from(e.target.files) : [];
-                          if (files.length === 0) return;
-
+                          const file = e.target.files?.[0];
+                          if (!file) return;
                           const updated = [...variants];
-                          // store preview for UI
-                          updated[idx].image = files.map((f) => URL.createObjectURL(f));
-                          // store actual files for upload
-                          updated[idx].selectedFiles = files;
+                          updated[idx].image = URL.createObjectURL(file);
                           setVariants(updated);
                         }}
                         className="w-full h-full cursor-pointer"
