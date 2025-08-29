@@ -417,17 +417,17 @@ function ProductDetails() {
           </div>
 
           {/* Variants Section */}
-          <div className="col-span-3 mt-6">
-            <h3 className="font-semibold mb-3 text-lg">
+          <div className=" grid grid-cols-3 gap-2 mt-6">
+            {/*   <h3 className="font-semibold mb-3 text-lg">
               {variants?.length}: {language === "ar" ? "الأنواع" : "Variants"}
-            </h3>
+            </h3> */}
 
-            {variants.length === 0 ? (
+            {variants?.length === 0 ? (
               <p>{language === "ar" ? "لا توجد أنواع" : "No variants"}</p>
             ) : (
               variants.map((v, idx) => (
                 <div
-                  key={v._id || idx}
+                  key={v?._id || idx}
                   className="p-3 border rounded-lg mb-2 flex flex-col sm:flex-col gap-2 items-start bg-gray-50">
                   {/* Variant Image */}
                   <div className="w-24 h-24 flex-shrink-0">
@@ -445,7 +445,7 @@ function ProductDetails() {
                       />
                     ) : v.images ? (
                       <img
-                        src={v.images[0].url}
+                        src={v?.images[0]?.url}
                         alt={`Variant ${idx + 1}`}
                         className="w-full h-full object-cover rounded"
                       />
@@ -467,14 +467,20 @@ function ProductDetails() {
                           className="ml-2 w-full p-1 border rounded"
                         />
                       ) : (
-                        <span className="ml-1">{String(value)}</span>
+                        <span className="ml-1">
+                          {key.toLowerCase() === "size" && value === ""
+                            ? "No size"
+                            : key.toLowerCase() === "color" && value === ""
+                            ? "No color"
+                            : String(value)}
+                        </span>
                       )}
                     </div>
                   ))}
 
                   {/* Price */}
                   <div className="flex-1">
-                    <span className="font-semibold">{language === "ar" ? "السعر:" : "Price:"}</span>
+                    <span className="font-semibold">{language === "ar" ? "Price:" : "Price:"}</span>
                     {clickEditProduct ? (
                       <input
                         type="number"
@@ -483,15 +489,13 @@ function ProductDetails() {
                         className="ml-2 w-full p-1 border rounded"
                       />
                     ) : (
-                      <span className="ml-1">{v.price} KD</span>
+                      <span className="ml-1">{v.price.toFixed(3)} KD</span>
                     )}
                   </div>
 
                   {/* Stock */}
                   <div className="flex-1">
-                    <span className="font-semibold">
-                      {language === "ar" ? "المخزون:" : "Stock:"}
-                    </span>
+                    <span className="font-semibold">{language === "ar" ? "Stock:" : "Stock:"}</span>
                     {clickEditProduct ? (
                       <input
                         type="number"

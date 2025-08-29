@@ -45,12 +45,13 @@ function ProductList() {
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [filteredProducts, setFilteredProducts] = useState<any>([]);
   const [isVariantsModalOpen, setIsVariantsModalOpen] = useState<boolean>(false);
+
   // For product variants
   const [variants, setVariants] = useState<
     {
       color: string;
       images: File[];
-      sizes: { size: string; price: number; stock: number }[];
+      sizes: { size: string; price: string; stock: string }[];
     }[]
   >([]);
 
@@ -73,7 +74,7 @@ function ProductList() {
 
   const addSizeToVariant = (index: number) => {
     const updated = [...variants];
-    updated[index].sizes.push({ size: "", price: 0, stock: 0 });
+    updated[index].sizes.push({ size: "", price: "", stock: "" });
     setVariants(updated);
   };
 
@@ -85,6 +86,16 @@ function ProductList() {
   ) => {
     const updated = [...variants];
     (updated[colorIndex].sizes[sizeIndex] as any)[field] = value;
+    setVariants(updated);
+  };
+  const removeColorVariant = (index: number) => {
+    const updated = [...variants];
+    updated.splice(index, 1); // remove the variant at index
+    setVariants(updated);
+  };
+  const removeSizeFromVariant = (colorIndex: number, sizeIndex: number) => {
+    const updated = [...variants];
+    updated[colorIndex].sizes.splice(sizeIndex, 1);
     setVariants(updated);
   };
 
@@ -172,7 +183,7 @@ function ProductList() {
     let totalStock = countInStock ?? 0;
     if (variants.length > 0) {
       totalStock = variants.reduce((acc, v) => {
-        const variantStock = v.sizes.reduce((sum, s) => sum + s.stock, 0);
+        const variantStock = v.sizes.reduce((sum, s) => sum + Number(s.stock), 0);
         return acc + variantStock;
       }, 0);
     } else {
@@ -205,7 +216,7 @@ function ProductList() {
       }
     }
 
-    /* ---- */
+    /* Variants */
     let variantPayload: any[] = [];
 
     for (const v of variants) {
@@ -539,7 +550,6 @@ function ProductList() {
               </Button>
             </div>
 
-            {/* RIGHT SIDE – Variants */}
             {/* RIGHT SIDE – Variants preview */}
             <div className="space-y-4">
               {variants.map((v, i) => (
@@ -583,6 +593,7 @@ function ProductList() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
       {/* VARIANTS MODAL */}
       <Dialog open={isVariantsModalOpen} onOpenChange={setIsVariantsModalOpen}>
         <DialogContent className="max-w-2xl">
@@ -594,17 +605,28 @@ function ProductList() {
               type="button"
               onClick={addColorVariant}
               className="bg-blue-500 text-white px-3 py-1 rounded">
-              + Add Color Variant
+              + Add Variant
             </Button>
             {variants.map((v, i) => (
               <div key={i} className="border p-3 rounded space-y-3">
-                <input
-                  type="text"
-                  placeholder="Color Name"
-                  value={v.color}
-                  onChange={(e) => updateColorVariant(i, "color", e.target.value)}
-                  className="p-2 w-full border rounded"
-                />
+                {/* Remove entire variant */}
+                <div className="flex justify-between items-center">
+                  <input
+                    type="text"
+                    placeholder="Color Name"
+                    value={v.color}
+                    onChange={(e) => updateColorVariant(i, "color", e.target.value)}
+                    className="p-2 w-full border rounded"
+                  />
+                  <Button
+                    type="button"
+                    variant="destructive"
+                    className="ml-2"
+                    onClick={() => removeColorVariant(i)}>
+                    Remove Variant
+                  </Button>
+                </div>
+
                 <input
                   type="file"
                   multiple
@@ -625,7 +647,7 @@ function ProductList() {
                 <Button
                   type="button"
                   onClick={() => addSizeToVariant(i)}
-                  className="bg-green-500 text-white px-3 py-1 rounded">
+                  className="bg-blue-500 text-white px-3 py-1 rounded">
                   + Add Size
                 </Button>
                 {v.sizes.map((s, idx) => (
@@ -651,6 +673,13 @@ function ProductList() {
                       onChange={(e) => updateSizeInVariant(i, idx, "stock", Number(e.target.value))}
                       className="p-2 border rounded w-24"
                     />
+                    {/* Remove size */}
+                    <Button
+                      type="button"
+                      variant="destructive"
+                      onClick={() => removeSizeFromVariant(i, idx)}>
+                      ✕
+                    </Button>
                   </div>
                 ))}
               </div>
