@@ -147,11 +147,6 @@ function Categories() {
       }
     }
 
-    const isDuplicate = categories.some(
-      (c: any) => c.name.toLowerCase() === category.trim().toLowerCase()
-    );
-    if (isDuplicate) return toast.error(t.categoryExists);
-
     try {
       await createCategory({
         name: category[0].toUpperCase() + category.slice(1).toLowerCase(),

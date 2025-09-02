@@ -6,7 +6,6 @@ import {
   useUploadProductImageMutation,
   useCreateProductMutation,
   useGetAllCategoriesQuery,
-  useGetDiscountStatusQuery,
   useGetCategoriesTreeQuery,
   useUploadVariantImageMutation,
 } from "../../redux/queries/productApi";
@@ -23,17 +22,11 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { toast } from "react-toastify";
-import {
-  Pagination,
-  PaginationContent,
-  PaginationItem,
-  PaginationLink,
-  PaginationNext,
-  PaginationPrevious,
-} from "@/components/ui/pagination";
+
 import { useSelector } from "react-redux";
 import { texts } from "./translation";
 import Error from "@/components/Error";
+import Paginate from "@/components/Paginate";
 
 function ProductList() {
   const [page, setPage] = useState(1);
@@ -101,10 +94,8 @@ function ProductList() {
 
   /* -- */
 
-  // const [imageFile, setImageFile] = useState<File | null>(null);
   const [imageFiles, setImageFiles] = useState<File[]>([]);
   console.log(imageFiles);
-  // const [isCancelled, setIsCancelled] = useState(false);
 
   const language = useSelector((state: any) => state.language.lang);
   const navigate = useNavigate();
@@ -122,13 +113,11 @@ function ProductList() {
   const pages = productsData?.pages || 1;
 
   const { data: tree } = useGetCategoriesTreeQuery(undefined);
-  const { data: discounts } = useGetDiscountStatusQuery(undefined);
   const { data: categories } = useGetAllCategoriesQuery(undefined);
 
   /* Create product fields */
   const [name, setName] = useState<string>("");
   const [price, setPrice] = useState<number | undefined>(undefined);
-  // const [brand, setBrand] = useState<string>("");
   const [category, setCategory] = useState<string>("");
   const [countInStock, setCountInStock] = useState<number | undefined>(undefined);
   const [description, setDescription] = useState<string>("");
@@ -136,7 +125,7 @@ function ProductList() {
   const [uploadProductImage, { isLoading: loadingUploadImage }] = useUploadProductImageMutation();
   const [createProduct, { isLoading: loadingCreateOrder }] = useCreateProductMutation();
   const [uploadVariantImage] = useUploadVariantImageMutation();
-
+  console.log(products);
   useEffect(() => {
     if (products) {
       let filtered: any = [...products];
@@ -232,15 +221,16 @@ function ProductList() {
         }));
       }
 
-      // flatten sizes into variant schema
-      for (const s of v.sizes) {
-        variantPayload.push({
-          options: { color: v.color, size: s.size },
-          stock: s.stock,
-          price: s.price,
-          images: uploadedVariantImages,
-        });
-      }
+      // ✅ push the whole color with all its sizes
+      variantPayload.push({
+        color: v.color,
+        images: uploadedVariantImages,
+        sizes: v.sizes.map((s) => ({
+          size: s.size,
+          stock: Number(s.stock),
+          price: Number(s.price),
+        })),
+      });
     }
     /* --- */
     const newProduct = {
@@ -273,7 +263,6 @@ function ProductList() {
     setName("");
     setPrice(undefined);
     setImageFiles([]);
-    // setBrand("");
     setCategory("");
     setCountInStock(undefined);
     setDescription("");
@@ -397,9 +386,7 @@ function ProductList() {
                             />
                             <p className="truncate">{product?.name}</p>
                           </td>
-                          <td className="px-4 py-3">
-                            {tree?.length ? findCategoryNameById(product?.category, tree) : "---"}
-                          </td>
+                          <td className="px-4 py-3">{product?.category?.name}</td>
                           <td className="px-4 py-3">{product?.countInStock}</td>
                           <td className="px-4 py-3 ">
                             {product?.countInStock === 0 ? (
@@ -417,24 +404,18 @@ function ProductList() {
                             )}
                           </td>
                           <td className="px-4 py-3">
-                            {(() => {
-                              const categoryName = findCategoryNameById(product.category, tree);
-                              const discount = getDiscountForCategory(categoryName, discounts);
-                              if (discount > 0) {
-                                const discountedPrice = product.price - product.price * discount;
-                                return (
-                                  <div>
-                                    <span className="line-through text-zinc-500 mr-2">
-                                      {product?.price.toFixed(3)} KD
-                                    </span>
-                                    <span className="text-green-600 font-bold">
-                                      {discountedPrice?.toFixed(3)} KD
-                                    </span>
-                                  </div>
-                                );
-                              }
-                              return `${product?.price.toFixed(3)} KD`;
-                            })()}
+                            {product?.hasDiscount ? (
+                              <div>
+                                <span className="line-through text-zinc-500 mr-2">
+                                  {product.price.toFixed(3)} KD
+                                </span>
+                                <span className="text-green-600 font-bold">
+                                  {product.discountedPrice.toFixed(3)} KD
+                                </span>
+                              </div>
+                            ) : (
+                              `${product.price.toFixed(3)} KD`
+                            )}
                           </td>
                         </tr>
                       ))
@@ -449,28 +430,7 @@ function ProductList() {
                 </table>
 
                 {/* Pagination */}
-                <Pagination className="py-2">
-                  <PaginationContent>
-                    <PaginationItem>
-                      <PaginationPrevious onClick={() => page > 1 && setPage(page - 1)} href="#" />
-                    </PaginationItem>
-
-                    {[...Array(pages).keys()].map((x) => (
-                      <PaginationItem key={x + 1}>
-                        <PaginationLink
-                          href="#"
-                          isActive={page === x + 1}
-                          onClick={() => setPage(x + 1)}>
-                          {x + 1}
-                        </PaginationLink>
-                      </PaginationItem>
-                    ))}
-
-                    <PaginationItem>
-                      <PaginationNext onClick={() => page < pages && setPage(page + 1)} href="#" />
-                    </PaginationItem>
-                  </PaginationContent>
-                </Pagination>
+                <Paginate page={page} pages={pages} setPage={setPage} />
               </div>
             </div>
           </div>
@@ -479,14 +439,12 @@ function ProductList() {
 
       {/* Create product modal */}
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-        <DialogContent className="max-w-4xl">
+        <DialogContent className="">
           <DialogHeader>
             <DialogTitle>{texts[language].addProduct}</DialogTitle>
           </DialogHeader>
 
-          {/* Two Column Layout */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* LEFT SIDE – Product Info */}
+          <div className="grid grid-cols-1 md:grid-cols-1 gap-6">
             <div className="space-y-4">
               <input
                 type="file"
@@ -545,40 +503,67 @@ function ProductList() {
                 onChange={(e) => setCountInStock(Number(e.target.value))}
                 className="p-2 w-full border rounded-md"
               />
-              <Button variant="outline" onClick={() => setIsVariantsModalOpen(true)}>
-                Manage Variants
-              </Button>
-            </div>
-
-            {/* RIGHT SIDE – Variants preview */}
-            <div className="space-y-4">
-              {variants.map((v, i) => (
-                <div key={i} className="border p-3 rounded space-y-3">
-                  <p className="font-bold">{v.color || "No Color"}</p>
-                  <div className="flex gap-2 flex-wrap">
-                    {v.images.map((file, idx) => (
-                      <img
-                        key={idx}
-                        src={URL.createObjectURL(file)}
-                        alt="preview"
-                        className="w-16 h-16 object-cover rounded"
-                      />
-                    ))}
-                  </div>
-                  {v.sizes.map((s, idx) => (
-                    <p key={idx}>
-                      {s.size || "No Size"} - {s.stock} in stock - {s.price} KD
-                    </p>
-                  ))}
-                </div>
-              ))}
             </div>
           </div>
+          {/* Variants Preview */}
+          {variants.length > 0 && (
+            <div className="mt-6">
+              <h3 className="text-lg font-semibold mb-3">Variants Preview</h3>
+              <div className="space-y-4">
+                {variants.map((variant, i) => (
+                  <div key={i} className="p-4 border rounded-lg shadow-sm bg-gray-50">
+                    {/* Variant Color */}
+                    <p className="font-medium">
+                      Color:{" "}
+                      <span className="px-2 py-1 bg-white border rounded">
+                        {variant.color || `Variant ${i + 1}`}
+                      </span>
+                    </p>
+
+                    {/* Variant Images */}
+                    <div className="flex gap-2 flex-wrap mt-2">
+                      {variant.images.map((file, idx) => (
+                        <img
+                          key={idx}
+                          src={URL.createObjectURL(file)}
+                          alt="variant preview"
+                          className="w-16 h-16 object-cover rounded border"
+                        />
+                      ))}
+                    </div>
+
+                    {/* Variant Sizes */}
+                    <div className="mt-3">
+                      <h4 className="font-medium mb-2">Sizes</h4>
+                      <table className="w-full text-sm border">
+                        <thead>
+                          <tr className="bg-gray-200">
+                            <th className="p-2 border">Size</th>
+                            <th className="p-2 border">Stock</th>
+                            <th className="p-2 border">Price</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {variant.sizes.map((s, idx) => (
+                            <tr key={idx} className="text-center">
+                              <td className="p-2 border">{s.size}</td>
+                              <td className="p-2 border">{s.stock}</td>
+                              <td className="p-2 border">{s.price}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* Footer */}
           <DialogFooter className="mt-6 flex justify-end gap-2">
-            <Button variant="outline" onClick={() => setIsModalOpen(false)}>
-              {texts[language].cancel}
+            <Button variant="secondary" onClick={() => setIsVariantsModalOpen(true)}>
+              Manage Variants
             </Button>
             <Button
               variant="default"
@@ -593,49 +578,40 @@ function ProductList() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-
-      {/* VARIANTS MODAL */}
+      {/* Variants Modal */}
+      {/* Variants Modal */}
       <Dialog open={isVariantsModalOpen} onOpenChange={setIsVariantsModalOpen}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-3xl">
           <DialogHeader>
             <DialogTitle>Manage Variants</DialogTitle>
           </DialogHeader>
+
           <div className="space-y-4">
-            <Button
-              type="button"
-              onClick={addColorVariant}
-              className="bg-blue-500 text-white px-3 py-1 rounded">
-              + Add Variant
-            </Button>
-            {variants.map((v, i) => (
-              <div key={i} className="border p-3 rounded space-y-3">
-                {/* Remove entire variant */}
+            {variants.map((variant, i) => (
+              <div key={i} className="border rounded-lg p-4 space-y-3">
                 <div className="flex justify-between items-center">
                   <input
                     type="text"
-                    placeholder="Color Name"
-                    value={v.color}
+                    placeholder="Color"
+                    value={variant.color}
                     onChange={(e) => updateColorVariant(i, "color", e.target.value)}
-                    className="p-2 w-full border rounded"
+                    className="p-2 border rounded w-1/2"
                   />
-                  <Button
-                    type="button"
-                    variant="destructive"
-                    className="ml-2"
-                    onClick={() => removeColorVariant(i)}>
-                    Remove Variant
+                  <Button variant="destructive" onClick={() => removeColorVariant(i)}>
+                    Remove
                   </Button>
                 </div>
 
+                {/* Upload images for this color */}
                 <input
                   type="file"
                   multiple
                   accept="image/*"
                   onChange={(e) => handleColorImages(i, Array.from(e.target.files || []))}
-                  className="mb-2"
+                  className="p-2 w-full border rounded-md"
                 />
                 <div className="flex gap-2 flex-wrap">
-                  {v.images.map((file, idx) => (
+                  {variant.images.map((file, idx) => (
                     <img
                       key={idx}
                       src={URL.createObjectURL(file)}
@@ -644,51 +620,47 @@ function ProductList() {
                     />
                   ))}
                 </div>
-                <Button
-                  type="button"
-                  onClick={() => addSizeToVariant(i)}
-                  className="bg-blue-500 text-white px-3 py-1 rounded">
-                  + Add Size
-                </Button>
-                {v.sizes.map((s, idx) => (
-                  <div key={idx} className="flex gap-2">
-                    <input
-                      type="text"
-                      placeholder="Size"
-                      value={s.size}
-                      onChange={(e) => updateSizeInVariant(i, idx, "size", e.target.value)}
-                      className="p-2 border rounded w-20"
-                    />
-                    <input
-                      type="number"
-                      placeholder="Price"
-                      value={s.price}
-                      onChange={(e) => updateSizeInVariant(i, idx, "price", Number(e.target.value))}
-                      className="p-2 border rounded w-24"
-                    />
-                    <input
-                      type="number"
-                      placeholder="Stock"
-                      value={s.stock}
-                      onChange={(e) => updateSizeInVariant(i, idx, "stock", Number(e.target.value))}
-                      className="p-2 border rounded w-24"
-                    />
-                    {/* Remove size */}
-                    <Button
-                      type="button"
-                      variant="destructive"
-                      onClick={() => removeSizeFromVariant(i, idx)}>
-                      ✕
-                    </Button>
-                  </div>
-                ))}
+
+                {/* Sizes */}
+                <div className="space-y-2">
+                  {variant.sizes.map((s, j) => (
+                    <div key={j} className="grid grid-cols-3 gap-2 items-center">
+                      <input
+                        type="text"
+                        placeholder="Size"
+                        value={s.size}
+                        onChange={(e) => updateSizeInVariant(i, j, "size", e.target.value)}
+                        className="p-2 border rounded"
+                      />
+                      <input
+                        type="number"
+                        placeholder="Price"
+                        value={s.price}
+                        onChange={(e) => updateSizeInVariant(i, j, "price", e.target.value)}
+                        className="p-2 border rounded"
+                      />
+                      <input
+                        type="number"
+                        placeholder="Stock"
+                        value={s.stock}
+                        onChange={(e) => updateSizeInVariant(i, j, "stock", e.target.value)}
+                        className="p-2 border rounded"
+                      />
+                      <Button variant="destructive" onClick={() => removeSizeFromVariant(i, j)}>
+                        Remove
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+                <Button onClick={() => addSizeToVariant(i)}>Add Size</Button>
               </div>
             ))}
+
+            <Button onClick={addColorVariant}>Add Color Variant</Button>
           </div>
-          <DialogFooter className="mt-4 flex justify-end gap-2">
-            <Button variant="default" onClick={() => setIsVariantsModalOpen(false)}>
-              Done
-            </Button>
+
+          <DialogFooter>
+            <Button onClick={() => setIsVariantsModalOpen(false)}>Done</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -705,7 +677,7 @@ const renderCategoryOptions = (nodes: any, level = 0): JSX.Element[] => {
     ...(node.children ? renderCategoryOptions(node.children, level + 1) : []),
   ]);
 };
-// Find category name by id in category tree
+/* // Find category name by id in category tree
 const findCategoryNameById = (id: string, nodes?: any): string => {
   if (!nodes || !id) return "---";
   for (const node of nodes) {
@@ -717,11 +689,5 @@ const findCategoryNameById = (id: string, nodes?: any): string => {
   }
   return "---";
 };
-// Get discount percentage for a given category
-const getDiscountForCategory = (categoryName: string, discounts?: any): number => {
-  if (!discounts || !Array.isArray(discounts)) return 0;
-  const discountEntry = discounts.find((d) => d.category.includes(categoryName));
-  return discountEntry ? discountEntry.discountBy : 0;
-};
-
+ */
 export default ProductList;

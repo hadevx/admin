@@ -2,11 +2,6 @@ import { api } from "./api";
 
 export const productApi = api.injectEndpoints({
   endpoints: (builder) => ({
-    /*     getProducts: builder.query({
-      query: () => ({
-        url: "/api/products",
-      }),
-    }), */
     getProducts: builder.query({
       query: ({ pageNumber = 1, keyword = "" }) => ({
         url: `/api/products?pageNumber=${pageNumber}&keyword=${keyword}`,
@@ -114,6 +109,20 @@ export const productApi = api.injectEndpoints({
       }),
       invalidatesTags: ["Product"],
     }),
+    updateProductVariant: builder.mutation({
+      query: (data) => ({
+        url: `/api/products/variant/${data.productId}`,
+        method: "PUT",
+        body: {
+          variantId: data._id,
+          color: data.color,
+          sizes: data.sizes,
+          images: data.images,
+        },
+      }),
+      invalidatesTags: ["Product"],
+    }),
+
     deleteImage: builder.mutation({
       query: (data) => ({
         url: `/api/products/delete-image`,
@@ -133,11 +142,6 @@ export const productApi = api.injectEndpoints({
         body: category,
       }),
     }),
-    /*    getCategories: builder.query({
-      query: () => ({
-        url: "/api/category",
-      }),
-    }), */
 
     getCategories: builder.query({
       query: ({ pageNumber = 1, keyword = "" }) => ({
@@ -196,4 +200,5 @@ export const {
   useUploadCategoryImageMutation,
   useUpdateCategoryMutation,
   useUploadVariantImageMutation,
+  useUpdateProductVariantMutation,
 } = productApi;

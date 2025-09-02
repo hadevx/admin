@@ -14,7 +14,6 @@ import {
   useGetProductsQuery,
   useUploadProductImageMutation,
   useGetCategoriesTreeQuery,
-  useUploadVariantImageMutation,
 } from "../../redux/queries/productApi";
 
 import { Separator } from "@/components/ui/separator";
@@ -35,6 +34,7 @@ import {
   CarouselNext,
   CarouselPrevious,
 } from "@/components/ui/carousel";
+import VariantItem from "./VariantItem";
 
 function ProductDetails() {
   const language = useSelector((state: any) => state.language.lang); // 'ar' or 'en'
@@ -50,7 +50,6 @@ function ProductDetails() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [featured, setFeatured] = useState(false);
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
-  const [variants, setVariants] = useState<any[]>([]);
 
   const { id: productId } = useParams();
   const navigate = useNavigate();
@@ -61,35 +60,6 @@ function ProductDetails() {
   const [updateProduct, { isLoading: loadingUpdateProduct }] = useUpdateProductMutation();
   const { refetch: refetchProducts } = useGetProductsQuery(undefined);
   const [uploadProductImage, { isLoading: loadingUploadImage }] = useUploadProductImageMutation();
-  const [uploadVariantImage] = useUploadVariantImageMutation();
-
-  // --- Variant functions ---
-  const addVariant = () => {
-    setVariants([
-      ...variants,
-      { options: { color: "", size: "" }, price: 0, stock: 0, _id: Date.now().toString() },
-    ]);
-  };
-
-  const updateVariant = (index: number, field: string, value: string | number) => {
-    const updated = [...variants];
-    if (field.startsWith("options.")) {
-      const optionKey = field.split(".")[1];
-      updated[index] = {
-        ...updated[index],
-        options: { ...updated[index].options, [optionKey]: value },
-      };
-    } else {
-      updated[index] = { ...updated[index], [field]: value };
-    }
-    setVariants(updated);
-  };
-
-  const removeVariant = (index: number) => {
-    const updated = [...variants];
-    updated.splice(index, 1);
-    setVariants(updated);
-  };
 
   // --- Initialize state from product ---
   useEffect(() => {
@@ -101,7 +71,6 @@ function ProductDetails() {
       setNewCountInStock(product.countInStock);
       setNewDescription(product.description);
       setFeatured(product.featured ?? false);
-      setVariants(product.variants || []);
     }
   }, [product]);
 
@@ -141,36 +110,6 @@ function ProductDetails() {
         }
       }
     }
-    // --- Upload variant images ---
-    const uploadedVariants = [];
-    for (let idx = 0; idx < variants.length; idx++) {
-      const variant = variants[idx];
-      let variantImages = [...(variant.images || [])];
-
-      // if you store new files for each variant in variant.selectedFiles
-      if (variant.selectedFiles && variant.selectedFiles.length > 0) {
-        variantImages = [];
-        for (const file of variant.selectedFiles) {
-          const formData = new FormData();
-          formData.append("images", file);
-          try {
-            const res = await uploadVariantImage(formData).unwrap();
-            if (Array.isArray(res.images)) {
-              res.images.forEach((img: any) =>
-                variantImages.push({ url: img.imageUrl, publicId: img.publicId })
-              );
-            } else {
-              variantImages.push({ url: res.imageUrl, publicId: res.publicId });
-            }
-          } catch (error: any) {
-            toast.error(error?.data?.message || "Variant image upload failed");
-            return;
-          }
-        }
-      }
-
-      uploadedVariants.push({ ...variant, images: variantImages });
-    }
 
     const updatedProduct = {
       _id: productId,
@@ -182,7 +121,6 @@ function ProductDetails() {
       countInStock: typeof newCountInStock === "number" ? newCountInStock : product.countInStock,
       description: newDescription.trim() || product.description,
       featured,
-      variants, // ✅ send variants to backend
     };
 
     try {
@@ -192,7 +130,6 @@ function ProductDetails() {
       refetch();
       refetchProducts();
       setSelectedFiles([]);
-      setVariants((prev) => prev.map((v) => ({ ...v, selectedFiles: [] })));
     } catch (err: any) {
       toast.error(
         err?.data?.message || (language === "ar" ? "خطأ في تحديث المنتج" : "Error updating product")
@@ -200,7 +137,7 @@ function ProductDetails() {
     }
   };
 
-  console.log(product);
+  console.log("product details: ", product);
   return (
     <Layout>
       {loadingProduct ? (
@@ -356,11 +293,7 @@ function ProductDetails() {
                     {language === "ar" ? ":الفئة" : "Category:"}
                   </label>
                   {!clickEditProduct ? (
-                    <p className="font-bold">
-                      {categoryTree?.length > 0
-                        ? findCategoryNameById(product?.category, categoryTree)
-                        : "---"}
-                    </p>
+                    <p className="font-bold">{product?.category?.name}</p>
                   ) : (
                     <select
                       value={newCategory}
@@ -449,110 +382,10 @@ function ProductDetails() {
             </div>
           </div>
 
-          {/* Variants Section */}
-          <div className=" grid grid-cols-3 gap-2 mt-6">
-            {variants?.length === 0 ? (
-              <p>{language === "ar" ? "لا توجد أنواع" : "No variants"}</p>
-            ) : (
-              variants.map((v, idx) => (
-                <div
-                  key={v?._id || idx}
-                  className="p-3 border rounded-lg mb-2 flex flex-col sm:flex-col gap-2 items-start bg-gray-50">
-                  {/* Variant Image */}
-                  <div className="w-24 h-24 flex-shrink-0">
-                    {clickEditProduct ? (
-                      <input
-                        type="file"
-                        onChange={(e) => {
-                          const file = e.target.files?.[0];
-                          if (!file) return;
-                          const updated = [...variants];
-                          updated[idx].image = URL.createObjectURL(file);
-                          setVariants(updated);
-                        }}
-                        className="w-full h-full cursor-pointer"
-                      />
-                    ) : v.images ? (
-                      <img
-                        src={v?.images[0]?.url}
-                        alt={`Variant ${idx + 1}`}
-                        className="w-full h-full object-cover rounded"
-                      />
-                    ) : (
-                      <div className="w-full h-full bg-gray-200 rounded flex items-center justify-center text-gray-400">
-                        {language === "ar" ? "لا توجد صورة" : "No Image"}
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Variant Options */}
-                  {Object.entries(v.options).map(([key, value]) => (
-                    <div key={key} className="flex-1">
-                      <span className="font-semibold">{key}:</span>
-                      {clickEditProduct ? (
-                        <input
-                          value={String(value)}
-                          onChange={(e) => updateVariant(idx, `options.${key}`, e.target.value)}
-                          className="ml-2 w-full p-1 border rounded"
-                        />
-                      ) : (
-                        <span className="ml-1">
-                          {key.toLowerCase() === "size" && value === ""
-                            ? "No size"
-                            : key.toLowerCase() === "color" && value === ""
-                            ? "No color"
-                            : String(value)}
-                        </span>
-                      )}
-                    </div>
-                  ))}
-
-                  {/* Price */}
-                  <div className="flex-1">
-                    <span className="font-semibold">{language === "ar" ? "Price:" : "Price:"}</span>
-                    {clickEditProduct ? (
-                      <input
-                        type="number"
-                        value={v.price}
-                        onChange={(e) => updateVariant(idx, "price", Number(e.target.value))}
-                        className="ml-2 w-full p-1 border rounded"
-                      />
-                    ) : (
-                      <span className="ml-1">{v.price.toFixed(3)} KD</span>
-                    )}
-                  </div>
-
-                  {/* Stock */}
-                  <div className="flex-1">
-                    <span className="font-semibold">{language === "ar" ? "Stock:" : "Stock:"}</span>
-                    {clickEditProduct ? (
-                      <input
-                        type="number"
-                        value={v.stock}
-                        onChange={(e) => updateVariant(idx, "stock", Number(e.target.value))}
-                        className="ml-2 w-full p-1 border rounded"
-                      />
-                    ) : (
-                      <span className="ml-1">{v.stock}</span>
-                    )}
-                  </div>
-
-                  {/* Remove Button */}
-                  {clickEditProduct && (
-                    <button className="text-red-500 font-bold" onClick={() => removeVariant(idx)}>
-                      {language === "ar" ? "حذف" : "Remove"}
-                    </button>
-                  )}
-                </div>
-              ))
-            )}
-
-            {clickEditProduct && (
-              <Button onClick={addVariant} className="mt-2">
-                {language === "ar" ? "إضافة نوع" : "Add Variant"}
-              </Button>
-            )}
-          </div>
+          {/* Variants section */}
+          {product.variants.map((v: any) => (
+            <VariantItem key={v._id} variant={v} productId={product._id} language={language} />
+          ))}
 
           {/* Delete Modal */}
           <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
@@ -589,7 +422,7 @@ function ProductDetails() {
   );
 }
 
-// --- Helpers ---
+/* // --- Helpers ---
 const findCategoryNameById = (id: any, nodes: any) => {
   if (!id || !Array.isArray(nodes)) return null;
   for (const node of nodes) {
@@ -600,7 +433,7 @@ const findCategoryNameById = (id: any, nodes: any) => {
     }
   }
   return null;
-};
+}; */
 
 const renderCategoryOptions = (nodes: any, level = 0) =>
   nodes.map((node: any) => (

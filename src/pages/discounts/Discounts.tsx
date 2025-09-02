@@ -1,6 +1,5 @@
 import Layout from "../../Layout";
-import { useState } from "react";
-import type { ChangeEvent } from "react";
+import { useState, type ChangeEvent } from "react";
 import {
   useCreateDiscountMutation,
   useDeleteDiscountMutation,
@@ -14,17 +13,6 @@ import { Link } from "react-router-dom";
 import Loader from "../../components/Loader";
 import Coupon from "../../components/Coupon";
 import { useSelector } from "react-redux";
-
-interface Category {
-  _id: string;
-  name: string;
-}
-
-interface Discount {
-  _id: string;
-  category: string[];
-  discountBy: number;
-}
 
 function Discounts() {
   const language = useSelector((state: any) => state.language.lang);
@@ -77,6 +65,18 @@ function Discounts() {
   const [createDiscount, { isLoading: loadingCreate }] = useCreateDiscountMutation();
   const [deleteDiscount, { isLoading: loadingDelete }] = useDeleteDiscountMutation();
 
+  // --- Helper: Get full category path including all parents ---
+  const getFullCategoryPath = (catId: string, categories: any[]): string => {
+    const categoryMap = new Map(categories.map((c) => [c._id, c]));
+    const path: string[] = [];
+    let current = categoryMap.get(catId);
+    while (current) {
+      path.unshift(current.name);
+      current = current.parent ? categoryMap.get(current.parent._id || current.parent) : null;
+    }
+    return path.join(" < ");
+  };
+
   const handleCreateDiscount = async () => {
     if (selectedCategories.length === 0) {
       toast.error(t.chooseCategory);
@@ -87,16 +87,15 @@ function Discounts() {
       return;
     }
 
-    const existingCategories = discountStatus?.flatMap((d: Discount) => d.category) || [];
+    const existingCategories = discountStatus?.flatMap((d: any) => d.category) || [];
     const overlap = selectedCategories.some((cat) => existingCategories.includes(cat));
-
     if (overlap) {
       toast.error(t.discountExists);
       return;
     }
 
     await createDiscount({ category: selectedCategories, discountBy: discount });
-    toast.success(t.createDiscount); // Optional: localize "successfully"
+    toast.success(t.createDiscount);
     refetch();
   };
 
@@ -104,18 +103,18 @@ function Discounts() {
     setDeletingDiscountId(id);
     try {
       await deleteDiscount(id);
-      toast.success(t.createDiscount + " deleted"); // Optional: localize
+      toast.success("Discount deleted");
       refetch();
     } catch (error) {
-      toast.error("Error deleting discount."); // Optional: localize
+      toast.error("Error deleting discount.");
     } finally {
       setDeletingDiscountId(null);
     }
   };
 
-  const handleCategoryChange = (catName: string) => {
+  const handleCategoryChange = (catId: string) => {
     setSelectedCategories((prev) =>
-      prev.includes(catName) ? prev.filter((c) => c !== catName) : [...prev, catName]
+      prev.includes(catId) ? prev.filter((id) => id !== catId) : [...prev, catId]
     );
   };
 
@@ -137,7 +136,7 @@ function Discounts() {
       {loadingCategories ? (
         <Loader />
       ) : (
-        <div className="px-4 w-full lg:w-4xl min-h-screen lg:min-h-auto lg:px-4 lg:py-6 mt-[70px] lg:mt-[50px]">
+        <div className="px-4 w-full lg:w-4xl min-h-screen mt-[70px] lg:mt-[50px] lg:px-4 lg:py-6">
           {/* Discounts Section */}
           <section className="mx-auto w-full">
             <div
@@ -148,20 +147,19 @@ function Discounts() {
               <button
                 onClick={handleCreateDiscount}
                 disabled={loadingCreate}
-                className="bg-black  drop-shadow-[0_0_10px_rgba(24,24,27,0.5)] gap-1 transition-all text-white text-sm lg:text-md px-3 py-2 rounded-lg font-semibold shadow-lg flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed">
+                className="bg-black drop-shadow-[0_0_10px_rgba(24,24,27,0.5)] gap-1 transition-all text-white text-sm lg:text-md px-3 py-2 rounded-lg font-semibold shadow-lg flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed">
                 <Plus /> {t.createDiscount}
               </button>
             </div>
             <Separator className="my-4 bg-black/20" />
 
             <div className="bg-white lg:mt-10 p-8 rounded-2xl border space-y-5">
-              {/* Controls */}
-              <div className="flex flex-col gap-5 lg:gap-8">
-                {/* Discount Selector */}
+              {/* Discount Selector */}
+              <div className="flex flex-col w-full gap-5 lg:gap-8">
                 <div className="flex flex-col w-full">
                   <label
                     dir={language === "ar" ? "rtl" : ""}
-                    className={`mb-2 text-base lg:text-sm font-semibold text-gray-700 tracking-wide`}>
+                    className="mb-2 text-base lg:text-sm font-semibold text-gray-700 tracking-wide">
                     {t.discountBy}
                   </label>
                   <select
@@ -179,9 +177,7 @@ function Discounts() {
 
                 {/* Categories */}
                 <div className="flex flex-col w-full" dir={language === "ar" ? "rtl" : ""}>
-                  <p
-                    dir={language === "ar" ? "rtl" : ""}
-                    className="mb-2 text-base lg:text-sm font-semibold text-gray-700 tracking-wide">
+                  <p className="mb-2 text-base lg:text-sm font-semibold text-gray-700 tracking-wide">
                     {t.categories}
                   </p>
                   {categories?.length === 0 ? (
@@ -193,22 +189,24 @@ function Discounts() {
                     </p>
                   ) : (
                     <div className="flex flex-wrap gap-3 overflow-y-auto px-2 py-2 border border-gray-300 rounded-lg scrollbar-thin scrollbar-thumb-zinc-400 scrollbar-track-gray-100">
-                      {categories?.map((cat: Category) => (
+                      {categories?.map((cat: any) => (
                         <label
                           key={cat._id}
                           className={`flex items-center gap-2 px-4 py-2 rounded-lg cursor-pointer transition-all duration-300 border ${
-                            selectedCategories.includes(cat.name)
+                            selectedCategories.includes(cat._id)
                               ? "bg-zinc-900 text-white border-zinc-900"
                               : "bg-white text-gray-800 border-gray-300"
                           } select-none`}>
                           <input
                             type="checkbox"
-                            value={cat.name}
-                            checked={selectedCategories.includes(cat.name)}
-                            onChange={() => handleCategoryChange(cat.name)}
+                            value={cat._id}
+                            checked={selectedCategories.includes(cat._id)}
+                            onChange={() => handleCategoryChange(cat._id)}
                             className="hidden"
                           />
-                          <span className="capitalize">{cat.name}</span>
+                          <span className="capitalize">
+                            {getFullCategoryPath(cat._id, categories)}
+                          </span>
                         </label>
                       ))}
                     </div>
@@ -218,16 +216,13 @@ function Discounts() {
 
               {/* Calculate Discount */}
               <div className="lg:mt-6 p-4 border rounded-lg bg-gray-50 w-full">
-                <p
-                  dir={language === "ar" ? "rtl" : ""}
-                  className="block mb-2 text-sm font-semibold text-gray-700">
+                <p className="block mb-2 text-sm font-semibold text-gray-700">
                   {t.calculateDiscount}
                 </p>
                 <input
                   type="number"
                   min="0"
                   step="0.01"
-                  dir={language === "ar" ? "rtl" : ""}
                   placeholder={t.enterOriginalPrice}
                   value={originalPrice}
                   onChange={handleOriginalPriceChange}
@@ -237,9 +232,7 @@ function Discounts() {
                   className="w-full text-base px-4 py-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
                 />
                 {originalPrice && (
-                  <p
-                    className="mt-3 text-lg font-semibold text-black"
-                    dir={language === "ar" ? "rtl" : ""}>
+                  <p className="mt-3 text-lg font-semibold text-black">
                     {calculateDiscountedPrice()} {language === "ar" ? "دك" : "KD"}
                   </p>
                 )}
@@ -258,12 +251,13 @@ function Discounts() {
             <Separator className="my-3 bg-black/20" />
             {discountStatus && discountStatus.length > 0 ? (
               <div className="grid sm:grid-cols-2 md:grid-cols-2 gap-5">
-                {discountStatus.map((d: Discount) => (
+                {discountStatus.map((d: any) => (
                   <Coupon
                     discountBy={d.discountBy}
-                    categories={d.category}
+                    categories={d.category.map((catId: string) =>
+                      getFullCategoryPath(catId, categories)
+                    )}
                     validUntil="Dec, 2025"
-                    id={d._id}
                     key={d._id}>
                     <button
                       onClick={() => handleDeleteDiscount(d._id)}

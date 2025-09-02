@@ -1,12 +1,10 @@
-// Coupon.tsx
 import { useMemo } from "react";
 
 interface CouponProps {
   discountBy: number; // e.g., 0.5 for 50%
   categories?: string[];
-  validUntil?: string; // optional date
+  validUntil?: string;
   children?: React.ReactNode;
-  id?: any;
 }
 
 const colors = [
@@ -24,7 +22,6 @@ const colors = [
 ];
 
 export default function Coupon({ discountBy, categories = [], children }: CouponProps) {
-  // Pick a random color for each coupon instance
   const color = useMemo(() => colors[Math.floor(Math.random() * colors.length)], []);
 
   return (
