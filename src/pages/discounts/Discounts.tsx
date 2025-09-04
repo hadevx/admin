@@ -101,12 +101,13 @@ function Discounts() {
 
   const handleDeleteDiscount = async (id: string) => {
     setDeletingDiscountId(id);
+    console.log(id);
     try {
-      await deleteDiscount(id);
-      toast.success("Discount deleted");
-      refetch();
+      await deleteDiscount(id).unwrap(); // ensure error handling + cache update
+      toast.success(language === "ar" ? "تم حذف الخصم" : "Discount deleted");
+      await refetch(); // wait for fresh data
     } catch (error) {
-      toast.error("Error deleting discount.");
+      toast.error(language === "ar" ? "حدث خطأ أثناء الحذف" : "Error deleting discount");
     } finally {
       setDeletingDiscountId(null);
     }

@@ -268,6 +268,7 @@ function ProductList() {
     setDescription("");
   };
 
+  const SIZES = ["XS", "S", "M", "L", "XL", "XXL"];
   return (
     <Layout>
       {errorGettingProducts ? (
@@ -439,12 +440,13 @@ function ProductList() {
 
       {/* Create product modal */}
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-        <DialogContent className="">
+        <DialogContent className="lg:min-w-4xl h-[80vh] flex flex-col">
           <DialogHeader>
             <DialogTitle>{texts[language].addProduct}</DialogTitle>
           </DialogHeader>
 
-          <div className="grid grid-cols-1 md:grid-cols-1 gap-6">
+          <div className="flex-1 overflow-y-auto mt-4 grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Left Column: Product Form */}
             <div className="space-y-4">
               <input
                 type="file"
@@ -478,13 +480,18 @@ function ProductList() {
                 onChange={(e) => setDescription(e.target.value)}
                 className="p-2 w-full border rounded-md"
               />
-              <input
-                type="number"
-                value={price ?? ""}
-                onChange={(e) => setPrice(Number(e.target.value))}
-                className="p-2 w-full border rounded-md"
-                placeholder={texts[language].productPrice}
-              />
+              <div className="relative w-full">
+                <input
+                  type="number"
+                  value={price ?? ""}
+                  onChange={(e) => setPrice(Number(e.target.value))}
+                  className="p-2 pr-12 w-full border rounded-md"
+                  placeholder={texts[language].productPrice}
+                />
+                <span className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 font-medium">
+                  KD
+                </span>
+              </div>
 
               <select
                 value={category}
@@ -495,7 +502,6 @@ function ProductList() {
                 </option>
                 {tree?.length > 0 && renderCategoryOptions(tree)}
               </select>
-
               <input
                 type="number"
                 placeholder={texts[language].productStock}
@@ -504,66 +510,80 @@ function ProductList() {
                 className="p-2 w-full border rounded-md"
               />
             </div>
-          </div>
-          {/* Variants Preview */}
-          {variants.length > 0 && (
-            <div className="mt-6">
-              <h3 className="text-lg font-semibold mb-3">Variants Preview</h3>
-              <div className="space-y-4">
-                {variants.map((variant, i) => (
-                  <div key={i} className="p-4 border rounded-lg shadow-sm bg-gray-50">
-                    {/* Variant Color */}
-                    <p className="font-medium">
-                      Color:{" "}
-                      <span className="px-2 py-1 bg-white border rounded">
-                        {variant.color || `Variant ${i + 1}`}
-                      </span>
-                    </p>
 
-                    {/* Variant Images */}
-                    <div className="flex gap-2 flex-wrap mt-2">
-                      {variant.images.map((file, idx) => (
-                        <img
-                          key={idx}
-                          src={URL.createObjectURL(file)}
-                          alt="variant preview"
-                          className="w-16 h-16 object-cover rounded border"
-                        />
-                      ))}
-                    </div>
+            {/* Right Column: Variants Preview */}
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold mb-3" dir={language === "ar" ? "rtl" : "ltr"}>
+                {language === "ar" ? "معاينة المتغيرات" : "  Variants Preview"}
+              </h3>
+              {variants.length > 0 ? (
+                <div className="space-y-4">
+                  {variants.map((variant, i) => (
+                    <div
+                      key={i}
+                      className="p-4 border rounded-lg  bg-gray-50"
+                      dir={language === "ar" ? "rtl" : ""}>
+                      {/* Variant Color */}
+                      <p className="font-medium">
+                        {language === "ar" ? "اللون:" : "Color:"}{" "}
+                        <span className="px-2 py-1 bg-white border rounded">
+                          {variant.color || `Variant ${i + 1}`}
+                        </span>
+                      </p>
 
-                    {/* Variant Sizes */}
-                    <div className="mt-3">
-                      <h4 className="font-medium mb-2">Sizes</h4>
-                      <table className="w-full text-sm border">
-                        <thead>
-                          <tr className="bg-gray-200">
-                            <th className="p-2 border">Size</th>
-                            <th className="p-2 border">Stock</th>
-                            <th className="p-2 border">Price</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {variant.sizes.map((s, idx) => (
-                            <tr key={idx} className="text-center">
-                              <td className="p-2 border">{s.size}</td>
-                              <td className="p-2 border">{s.stock}</td>
-                              <td className="p-2 border">{s.price}</td>
+                      {/* Variant Images */}
+                      <div className="flex gap-2 flex-wrap mt-2">
+                        {variant.images.map((file, idx) => (
+                          <img
+                            key={idx}
+                            src={URL.createObjectURL(file)}
+                            alt="variant preview"
+                            className="w-16 h-16 object-cover rounded border"
+                          />
+                        ))}
+                      </div>
+
+                      {/* Variant Sizes */}
+                      <div className="mt-3">
+                        <h4 className="font-medium mb-2">
+                          {language === "ar" ? "القياسات" : "Sizes"}
+                        </h4>
+                        <table className="w-full text-sm border">
+                          <thead>
+                            <tr className="bg-gray-200">
+                              <th className="p-2 border">{language === "ar" ? "قياس" : "Size"}</th>
+                              <th className="p-2 border">
+                                {language === "ar" ? "المخزون" : "Stock"}
+                              </th>
+                              {/* <th className="p-2 border">Price</th> */}
                             </tr>
-                          ))}
-                        </tbody>
-                      </table>
+                          </thead>
+                          <tbody>
+                            {variant.sizes.map((s, idx) => (
+                              <tr key={idx} className="text-center">
+                                <td className="p-2 border">{s.size}</td>
+                                <td className="p-2 border">{s.stock}</td>
+                                {/* <td className="p-2 border">{s.price}</td> */}
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
                     </div>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-gray-500" dir={language === "ar" ? "rtl" : "ltr"}>
+                  {language === "ar" ? "لا توجد متغيرات" : "No variants yet"}
+                </p>
+              )}
             </div>
-          )}
+          </div>
 
           {/* Footer */}
           <DialogFooter className="mt-6 flex justify-end gap-2">
             <Button variant="secondary" onClick={() => setIsVariantsModalOpen(true)}>
-              Manage Variants
+              {language === "ar" ? "ادارة المتغيرات" : "Manage Variants"}
             </Button>
             <Button
               variant="default"
@@ -578,18 +598,19 @@ function ProductList() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-      {/* Variants Modal */}
+
       {/* Variants Modal */}
       <Dialog open={isVariantsModalOpen} onOpenChange={setIsVariantsModalOpen}>
-        <DialogContent className="max-w-3xl">
+        <DialogContent className="max-w-3xl w-full h-[80vh] flex flex-col">
           <DialogHeader>
-            <DialogTitle>Manage Variants</DialogTitle>
+            <DialogTitle>{language === "ar" ? "معاينه المتغيرات" : "Manage Variants"}</DialogTitle>
           </DialogHeader>
 
-          <div className="space-y-4">
+          {/* Scrollable body */}
+          <div className="flex-1 overflow-y-auto space-y-4 mt-4">
             {variants.map((variant, i) => (
               <div key={i} className="border rounded-lg p-4 space-y-3">
-                <div className="flex justify-between items-center">
+                <div className="flex justify-between items-center gap-2">
                   <input
                     type="text"
                     placeholder="Color"
@@ -598,7 +619,7 @@ function ProductList() {
                     className="p-2 border rounded w-1/2"
                   />
                   <Button variant="destructive" onClick={() => removeColorVariant(i)}>
-                    Remove
+                    {language === "ar" ? "ازالة اللون" : "Remove Color"}
                   </Button>
                 </div>
 
@@ -624,21 +645,35 @@ function ProductList() {
                 {/* Sizes */}
                 <div className="space-y-2">
                   {variant.sizes.map((s, j) => (
-                    <div key={j} className="grid grid-cols-3 gap-2 items-center">
-                      <input
+                    <div key={j} className="grid grid-cols-4 gap-2 items-center">
+                      {/*   <input
                         type="text"
                         placeholder="Size"
                         value={s.size}
                         onChange={(e) => updateSizeInVariant(i, j, "size", e.target.value)}
                         className="p-2 border rounded"
-                      />
-                      <input
+                      /> */}
+                      <select
+                        name=""
+                        id=""
+                        className="border px-2 py-2 rounded w-full"
+                        onChange={(e) => updateSizeInVariant(i, j, "size", e.target.value)}>
+                        <option value="">
+                          {language === "ar" ? "اختر القياس" : "Select Size"}
+                        </option>
+                        {SIZES.map((c) => (
+                          <option key={c} value={c}>
+                            {c}
+                          </option>
+                        ))}
+                      </select>
+                      {/*    <input
                         type="number"
                         placeholder="Price"
                         value={s.price}
                         onChange={(e) => updateSizeInVariant(i, j, "price", e.target.value)}
                         className="p-2 border rounded"
-                      />
+                      /> */}
                       <input
                         type="number"
                         placeholder="Stock"
@@ -647,20 +682,27 @@ function ProductList() {
                         className="p-2 border rounded"
                       />
                       <Button variant="destructive" onClick={() => removeSizeFromVariant(i, j)}>
-                        Remove
+                        {language === "ar" ? "ازالة" : "Remove"}
                       </Button>
                     </div>
                   ))}
                 </div>
-                <Button onClick={() => addSizeToVariant(i)}>Add Size</Button>
+                <Button onClick={() => addSizeToVariant(i)}>
+                  {language === "ar" ? "اضافه قياس" : "Add Size"}
+                </Button>
               </div>
             ))}
 
-            <Button onClick={addColorVariant}>Add Color Variant</Button>
+            <Button onClick={addColorVariant}>
+              {language === "ar" ? "اضافة لون" : "Add Color"}
+            </Button>
           </div>
 
-          <DialogFooter>
-            <Button onClick={() => setIsVariantsModalOpen(false)}>Done</Button>
+          {/* Fixed footer */}
+          <DialogFooter className="mt-4 flex justify-end">
+            <Button onClick={() => setIsVariantsModalOpen(false)}>
+              {language === "ar" ? "اتمام" : "Done"}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

@@ -1,8 +1,8 @@
-// VariantItem.tsx
 import { useState } from "react";
 import {
   useUploadVariantImageMutation,
   useUpdateProductVariantMutation,
+  useDeleteProductVariantMutation,
 } from "../../redux/queries/productApi";
 import { toast } from "react-toastify";
 import {
@@ -12,49 +12,57 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
-
-const COLORS = ["Red", "Blue", "Green", "Black", "White"];
-const SIZES = ["XS", "S", "M", "L", "XL", "XXL"];
+import { PencilLine, Trash2, Image as ImageIcon, Plus, X } from "lucide-react";
+import { COLORS, SIZES } from "./constants";
 
 const VariantItem = ({ variant, productId, language }: any) => {
   const [localVariant, setLocalVariant] = useState(variant);
   const [isOpen, setIsOpen] = useState(false);
 
-  console.log(localVariant._id);
   const [updateProductVariant, { isLoading }] = useUpdateProductVariantMutation();
   const [uploadVariantImage] = useUploadVariantImageMutation();
+  const [deleteProductVariant] = useDeleteProductVariantMutation();
 
-  const handleUploadImages = async () => {
-    if (!localVariant.selectedFiles || localVariant.selectedFiles.length === 0)
-      return localVariant.images;
-
-    const uploadedImages = [...localVariant.images];
-    for (const file of localVariant.selectedFiles) {
-      const formData = new FormData();
-      formData.append("images", file);
-      try {
-        const res: any = await uploadVariantImage(formData).unwrap();
-        if (Array.isArray(res.images)) {
-          res.images.forEach((img: any) =>
-            uploadedImages.push({ url: img.imageUrl, publicId: img.publicId })
-          );
-        } else {
-          uploadedImages.push({ url: res.imageUrl, publicId: res.publicId });
-        }
-      } catch (error: any) {
-        toast.error(error?.data?.message || "Variant image upload failed");
-        return localVariant.images;
-      }
+  const handleDeleteVariant = async () => {
+    if (!confirm("Are you sure you want to delete this variant?")) return;
+    try {
+      await deleteProductVariant({ productId, variantId: localVariant._id }).unwrap();
+      toast.success(language === "ar" ? "تم حذف المتغير" : "Variant deleted successfully");
+      setLocalVariant(null);
+    } catch (error: any) {
+      toast.error(error?.data?.message || "Failed to delete variant");
     }
-    return uploadedImages;
   };
 
-  const handleSave = async () => {
-    if (!localVariant._id) return toast.error("Variant ID missing");
+  const handleUploadImages = async () => {
+    let updatedImages = [...(localVariant.images || [])];
 
+    if (localVariant.selectedFiles && localVariant.selectedFiles.length > 0) {
+      for (const file of localVariant.selectedFiles) {
+        const formData = new FormData();
+        formData.append("images", file);
+        try {
+          const res = await uploadVariantImage(formData).unwrap();
+          if (Array.isArray(res.images)) {
+            res.images.forEach((img: any) =>
+              updatedImages.push({ url: img.imageUrl, publicId: img.publicId })
+            );
+          } else {
+            updatedImages.push({ url: res.imageUrl, publicId: res.publicId });
+          }
+        } catch (error: any) {
+          toast.error(error?.data?.message || "Variant image upload failed");
+        }
+      }
+    }
+
+    return updatedImages;
+  };
+
+  const handleUpdateProductVariant = async () => {
     const images = await handleUploadImages();
     try {
-      await updateProductVariant({
+      const updatedVariant = await updateProductVariant({
         productId,
         variantId: localVariant._id,
         color: localVariant.color,
@@ -62,7 +70,7 @@ const VariantItem = ({ variant, productId, language }: any) => {
         images,
       }).unwrap();
 
-      setLocalVariant((prev: any) => ({ ...prev, images }));
+      setLocalVariant(updatedVariant);
       toast.success(language === "ar" ? "تم تحديث المتغير" : "Variant updated successfully");
       setIsOpen(false);
     } catch (error: any) {
@@ -70,52 +78,63 @@ const VariantItem = ({ variant, productId, language }: any) => {
     }
   };
 
+  if (!localVariant) return null;
+
   return (
-    <div className="border rounded-lg bg-white mb-4">
+    <div className="border mt-2 rounded-2xl bg-white overflow-hidden p-3">
       {/* Variant Table */}
-      <table className="w-full border-collapse border border-gray-300 text-sm">
-        <thead className="bg-gray-100">
+      <table className="w-full border-collapse text-sm">
+        <thead>
           <tr>
-            <th className="border px-3 py-2">{language === "ar" ? "اللون" : "Color"}</th>
-            <th className="border px-3 py-2">{language === "ar" ? "المقاس" : "Size"}</th>
-            <th className="border px-3 py-2">{language === "ar" ? "المخزون" : "Stock"}</th>
-            <th className="border px-3 py-2">{language === "ar" ? "السعر" : "Price"}</th>
-            <th className="border px-3 py-2">{language === "ar" ? "الصور" : "Images"}</th>
-            <th className="border px-3 py-2">{language === "ar" ? "إجراءات" : "Actions"}</th>
+            <th className="px-3 py-2 text-left">
+              {language === "ar" ? "اللون / الصور" : "Color / Images"}
+            </th>
+            <th className="px-3 py-2 text-left">{language === "ar" ? "المقاس" : "Size"}</th>
+            <th className="px-3 py-2 text-left">{language === "ar" ? "المخزون" : "Stock"}</th>
+            <th className="px-3 py-2 text-center">{language === "ar" ? "إجراءات" : "Actions"}</th>
           </tr>
         </thead>
         <tbody>
           {localVariant.sizes.map((s: any, idx: any) => (
             <tr key={idx}>
               {idx === 0 && (
-                <td rowSpan={localVariant.sizes.length} className="border px-3 py-2">
-                  {localVariant.color}
-                </td>
-              )}
-              <td className="border px-3 py-2">{s.size}</td>
-              <td className="border px-3 py-2">{s.stock}</td>
-              <td className="border px-3 py-2">{s.price} KD</td>
-              {idx === 0 && (
-                <td rowSpan={localVariant.sizes.length} className="border px-3 py-2">
-                  <div className="flex gap-2 flex-wrap">
-                    {localVariant.images?.map((img: any, i: any) => (
-                      <img
-                        key={i}
-                        src={img.url}
-                        alt={`variant-${localVariant.color}-${i}`}
-                        className="w-12 h-12 object-cover rounded border"
-                      />
-                    ))}
+                <td rowSpan={localVariant.sizes.length} className="px-3 py-3 align-top">
+                  <div className="flex items-center flex-wrap gap-2">
+                    {localVariant.images.length > 0 ? (
+                      localVariant.images.map((img: any, i: any) => (
+                        <div key={i} className="relative w-12 h-12">
+                          <img
+                            src={img.url}
+                            alt={`variant-${i}`}
+                            className="w-full h-full object-cover rounded border"
+                          />
+                        </div>
+                      ))
+                    ) : (
+                      <div className="w-12 h-12 flex items-center justify-center bg-gray-100 rounded border">
+                        <ImageIcon className="w-5 h-5 text-gray-400" />
+                      </div>
+                    )}
+                    <span>{localVariant.color}</span>
                   </div>
                 </td>
               )}
+              <td className="px-3 py-2">{s.size}</td>
+              <td className="px-3 py-2">{s.stock}</td>
               {idx === 0 && (
-                <td rowSpan={localVariant.sizes.length} className="border px-3 py-2">
-                  <button
-                    onClick={() => setIsOpen(true)}
-                    className="px-2 py-1 bg-blue-500 text-white rounded">
-                    {language === "ar" ? "تعديل" : "Edit"}
-                  </button>
+                <td rowSpan={localVariant.sizes.length} className="px-3 py-2 text-center">
+                  <div className="flex justify-center gap-3">
+                    <button
+                      onClick={() => setIsOpen(true)}
+                      className="p-2 border bg-zinc-50 rounded hover:bg-gray-100">
+                      <PencilLine size={18} />
+                    </button>
+                    <button
+                      onClick={handleDeleteVariant}
+                      className="p-2 border border-red-200 rounded bg-red-50 text-red-600 hover:bg-red-200">
+                      <Trash2 size={18} />
+                    </button>
+                  </div>
                 </td>
               )}
             </tr>
@@ -125,87 +144,150 @@ const VariantItem = ({ variant, productId, language }: any) => {
 
       {/* Edit Modal */}
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
-        <DialogContent className="max-w-lg">
+        <DialogContent className="max-w-lg rounded-2xl p-6">
           <DialogHeader>
-            <DialogTitle>{language === "ar" ? "تعديل المتغير" : "Edit Variant"}</DialogTitle>
+            <DialogTitle className="text-xl font-semibold">
+              {language === "ar" ? "تعديل المتغير" : "Edit Variant"}
+            </DialogTitle>
           </DialogHeader>
 
-          <div className="space-y-4 mt-2">
-            <select
-              value={localVariant.color}
-              onChange={(e) => setLocalVariant({ ...localVariant, color: e.target.value })}
-              className="border px-2 py-1 rounded w-full">
-              <option value="">{language === "ar" ? "اختر اللون" : "Select Color"}</option>
-              {COLORS.map((c) => (
-                <option key={c} value={c}>
-                  {c}
-                </option>
+          <div className="space-y-4 mt-4">
+            {/* Color */}
+            <div>
+              <label className="block font-medium mb-1">
+                {language === "ar" ? "اللون" : "Color"}
+              </label>
+              <select
+                value={localVariant.color}
+                onChange={(e) => setLocalVariant({ ...localVariant, color: e.target.value })}
+                className="border px-3 py-2 rounded w-full">
+                <option value="">{language === "ar" ? "اختر اللون" : "Select Color"}</option>
+                {COLORS.map((c) => (
+                  <option key={c} value={c}>
+                    {c}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Sizes */}
+            <div>
+              <label className="block font-medium mb-2">
+                {language === "ar" ? "المقاسات" : "Sizes"}
+              </label>
+              {localVariant.sizes.map((s: any, idx: any) => (
+                <div key={idx} className="flex gap-2 items-center mb-2">
+                  <select
+                    value={s.size}
+                    onChange={(e) => {
+                      const sizes = localVariant.sizes.map((item: any, i: any) =>
+                        i === idx ? { ...item, size: e.target.value } : item
+                      );
+                      setLocalVariant({ ...localVariant, sizes });
+                    }}
+                    className="border px-2 py-2 rounded flex-1">
+                    <option value="">{language === "ar" ? "اختر المقاس" : "Select Size"}</option>
+                    {SIZES.map((sz) => (
+                      <option key={sz} value={sz}>
+                        {sz}
+                      </option>
+                    ))}
+                  </select>
+                  <input
+                    type="number"
+                    value={s.stock}
+                    onChange={(e) => {
+                      const sizes = localVariant.sizes.map((item: any, i: any) =>
+                        i === idx ? { ...item, stock: Number(e.target.value) } : item
+                      );
+                      setLocalVariant({ ...localVariant, sizes });
+                    }}
+                    className="border px-2 py-2 rounded w-20 text-center"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const sizes = localVariant.sizes.filter((_: any, i: any) => i !== idx);
+                      setLocalVariant({ ...localVariant, sizes });
+                    }}
+                    className="p-2 bg-red-100 text-red-600 rounded hover:bg-red-200">
+                    <Trash2 size={16} />
+                  </button>
+                </div>
               ))}
-            </select>
+              <button
+                type="button"
+                onClick={() =>
+                  setLocalVariant({
+                    ...localVariant,
+                    sizes: [...localVariant.sizes, { size: "", stock: 0 }],
+                  })
+                }
+                className="mt-2 px-4 py-2 bg-black text-white rounded flex items-center gap-2">
+                <Plus size={16} /> {language === "ar" ? "إضافة مقاس" : "Add Size"}
+              </button>
+            </div>
 
-            {localVariant.sizes.map((s: any, idx: any) => (
-              <div key={idx} className="flex gap-2">
-                <select
-                  value={s.size}
-                  onChange={(e) => {
-                    const sizes = [...localVariant.sizes];
-                    sizes[idx].size = e.target.value;
-                    setLocalVariant({ ...localVariant, sizes });
-                  }}
-                  className="border px-2 py-1 rounded">
-                  <option value="">{language === "ar" ? "اختر المقاس" : "Select Size"}</option>
-                  {SIZES.map((sz) => (
-                    <option key={sz} value={sz}>
-                      {sz}
-                    </option>
-                  ))}
-                </select>
-                <input
-                  type="number"
-                  value={s.stock}
-                  onChange={(e) => {
-                    const sizes = [...localVariant.sizes];
-                    sizes[idx].stock = Number(e.target.value);
-                    setLocalVariant({ ...localVariant, sizes });
-                  }}
-                  placeholder="Stock"
-                  className="border px-2 py-1 rounded w-20"
-                />
-                <input
-                  type="number"
-                  value={s.price}
-                  onChange={(e) => {
-                    const sizes = [...localVariant.sizes];
-                    sizes[idx].price = Number(e.target.value);
-                    setLocalVariant({ ...localVariant, sizes });
-                  }}
-                  placeholder="Price"
-                  className="border px-2 py-1 rounded w-20"
-                />
+            {/* Images */}
+            <div>
+              <label className="block font-medium mb-1">
+                {language === "ar" ? "الصور" : "Images"}
+              </label>
+
+              {/* Preview existing images with remove option */}
+              <div className="flex flex-wrap gap-2 mb-2">
+                {localVariant.images?.map((img: any, idx: any) => (
+                  <div key={idx} className="relative w-16 h-16">
+                    <img
+                      src={img.url}
+                      alt={`variant-img-${idx}`}
+                      className="w-full h-full object-cover rounded border"
+                    />
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setLocalVariant({
+                          ...localVariant,
+                          images: localVariant.images.filter((_: any, i: any) => i !== idx),
+                        })
+                      }
+                      className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 shadow">
+                      <X size={12} />
+                    </button>
+                  </div>
+                ))}
               </div>
-            ))}
 
-            <input
-              type="file"
-              multiple
-              onChange={(e) =>
-                setLocalVariant({
-                  ...localVariant,
-                  selectedFiles: e.target.files ? Array.from(e.target.files) : [],
-                })
-              }
-              className="mt-2"
-            />
+              {/* Upload new images */}
+              <input
+                type="file"
+                multiple
+                onChange={(e) =>
+                  setLocalVariant({
+                    ...localVariant,
+                    selectedFiles: e.target.files ? Array.from(e.target.files) : [],
+                  })
+                }
+                className="border px-2 py-2 rounded w-full cursor-pointer"
+              />
+              <p className="text-xs text-gray-500 mt-1">
+                {language === "ar"
+                  ? "يمكنك إضافة صور جديدة أو حذف الصور الحالية"
+                  : "You can add new images or remove existing ones"}
+              </p>
+            </div>
           </div>
 
-          <DialogFooter className="flex justify-end gap-2 mt-4">
-            <button onClick={() => setIsOpen(false)} className="px-4 py-1 bg-gray-300 rounded">
+          <DialogFooter className="flex justify-end gap-3 mt-6">
+            <button
+              onClick={() => setIsOpen(false)}
+              className="px-4 py-2 bg-white border rounded-lg hover:bg-gray-100">
               {language === "ar" ? "إلغاء" : "Cancel"}
             </button>
             <button
-              onClick={handleSave}
+              onClick={handleUpdateProductVariant}
               disabled={isLoading}
-              className="px-4 py-1 bg-blue-500 text-white rounded">
+              className="px-4 py-2 bg-black text-white rounded-lg hover:bg-black/80 disabled:opacity-50">
               {language === "ar" ? "حفظ" : "Save"}
             </button>
           </DialogFooter>

@@ -35,6 +35,7 @@ import {
   CarouselPrevious,
 } from "@/components/ui/carousel";
 import VariantItem from "./VariantItem";
+import { Switch } from "@/components/ui/switch";
 
 function ProductDetails() {
   const language = useSelector((state: any) => state.language.lang); // 'ar' or 'en'
@@ -60,7 +61,11 @@ function ProductDetails() {
   const [updateProduct, { isLoading: loadingUpdateProduct }] = useUpdateProductMutation();
   const { refetch: refetchProducts } = useGetProductsQuery(undefined);
   const [uploadProductImage, { isLoading: loadingUploadImage }] = useUploadProductImageMutation();
-
+  // --- Discount modal state ---
+  const [isDiscountModalOpen, setIsDiscountModalOpen] = useState(false);
+  const [hasDiscount, setHasDiscount] = useState(false);
+  const [discountBy, setDiscountBy] = useState<number>(0);
+  const [discountedPrice, setDiscountedPrice] = useState<number>(0);
   // --- Initialize state from product ---
   useEffect(() => {
     if (product) {
@@ -71,9 +76,23 @@ function ProductDetails() {
       setNewCountInStock(product.countInStock);
       setNewDescription(product.description);
       setFeatured(product.featured ?? false);
+      // discount values
+      setHasDiscount(product.hasDiscount ?? false);
+      setDiscountBy(product.discountBy ?? 0);
+      setDiscountedPrice(product.discountedPrice ?? 0);
     }
   }, [product]);
+  // auto calculate discounted price
+  useEffect(() => {
+    if (!newPrice) return;
+    if (hasDiscount) {
+      let final = newPrice - discountBy;
 
+      setDiscountedPrice(final > 0 ? final : 0);
+    } else {
+      setDiscountedPrice(newPrice);
+    }
+  }, [discountBy, hasDiscount, newPrice]);
   const handleDeleteProduct = async () => {
     if (product) {
       await deleteProduct(productId);
@@ -121,12 +140,17 @@ function ProductDetails() {
       countInStock: typeof newCountInStock === "number" ? newCountInStock : product.countInStock,
       description: newDescription.trim() || product.description,
       featured,
+      // discount fields
+      hasDiscount,
+      discountBy,
+      discountedPrice,
     };
 
     try {
       await updateProduct(updatedProduct).unwrap();
       toast.success(language === "ar" ? "تم تحديث المنتج بنجاح" : "Product updated successfully");
       setClickEditProduct(false);
+      setIsDiscountModalOpen(false);
       refetch();
       refetchProducts();
       setSelectedFiles([]);
@@ -152,11 +176,18 @@ function ProductDetails() {
             <h1 className="text-2xl font-bold">
               {language === "ar" ? "تفاصيل المنتج" : "Product Details"}
             </h1>
-            <button
-              onClick={() => setIsModalOpen(true)}
-              className="select-none bg-gradient-to-t from-rose-500 hover:opacity-90 to-rose-400 text-white px-3 py-2 rounded-lg font-bold shadow-md">
-              {language === "ar" ? "حذف المنتج" : "Delete Product"}
-            </button>
+            <div className="flex items-center gap-4">
+              <button
+                onClick={() => setIsModalOpen(true)}
+                className="select-none bg-gradient-to-t from-rose-500 hover:opacity-90 to-rose-400 text-white px-3 py-2 rounded-lg font-bold shadow-md">
+                {language === "ar" ? "حذف المنتج" : "Delete Product"}
+              </button>
+              <button
+                onClick={() => setIsDiscountModalOpen(true)}
+                className="select-none bg-black  text-white px-3 py-2 rounded-lg font-bold shadow-md">
+                {language === "ar" ? "انشاء خصم" : "Discount"}
+              </button>
+            </div>
           </div>
 
           <Separator className="my-4 bg-black/20" />
@@ -191,7 +222,7 @@ function ProductDetails() {
                 )}
                 <button
                   onClick={() => setClickEditProduct(!clickEditProduct)}
-                  className="bg-zinc-100 border px-4 py-2 rounded-lg text-black font-semibold shadow hover:opacity-70 transition flex items-center gap-2">
+                  className="bg-zinc-50 border  p-2 rounded-lg text-black font-semibold  hover:opacity-70 transition flex items-center gap-2">
                   {clickEditProduct ? (
                     language === "ar" ? (
                       "إلغاء"
@@ -272,7 +303,7 @@ function ProductDetails() {
               </div>
 
               {/* Product Fields */}
-              <div className="flex-1 grid grid-cols-3 sm:grid-cols-3 lg:grid-cols-3 gap-6">
+              <div className="flex-1 grid grid-cols-3 gap-6">
                 {/* Name */}
                 <div>
                   <label className="text-gray-600">{language === "ar" ? ":الاسم" : "Name:"}</label>
@@ -311,7 +342,20 @@ function ProductDetails() {
                 <div>
                   <label className="text-gray-600">{language === "ar" ? ":السعر" : "Price:"}</label>
                   {!clickEditProduct ? (
-                    <p className="font-bold">{product?.price.toFixed(3)} KD</p>
+                    <div className="font-bold">
+                      {product?.hasDiscount ? (
+                        <div className="flex flex-col">
+                          <span className="line-through text-gray-500 text-sm">
+                            {product?.price.toFixed(3)} KD
+                          </span>
+                          <span className="text-green-600 text-lg">
+                            {product?.discountedPrice.toFixed(3)} KD
+                          </span>
+                        </div>
+                      ) : (
+                        <span>{product?.price.toFixed(3)} KD</span>
+                      )}
+                    </div>
                   ) : (
                     <input
                       value={newPrice}
@@ -326,37 +370,22 @@ function ProductDetails() {
                   <label className="text-gray-600">
                     {language === "ar" ? ":المخزون" : "Stock:"}
                   </label>
+
                   {!clickEditProduct ? (
                     <p className="font-bold">{product?.countInStock}</p>
                   ) : (
                     <input
                       value={newCountInStock}
                       onChange={(e) => setNewCountInStock(Number(e.target.value))}
-                      className="w-full p-2 bg-gray-50 border rounded-lg shadow"
+                      disabled={product?.variants && product.variants.length > 0} // 🔒 Disable if variants exist
+                      className={`w-full p-2 bg-gray-50 border rounded-lg shadow ${
+                        product?.variants?.length > 0 ? "opacity-50 cursor-not-allowed" : ""
+                      }`}
                     />
                   )}
                 </div>
-
-                {/* Description */}
-                <div className="col-span-3 lg:col-span-2">
-                  <label className="text-gray-600">
-                    {language === "ar" ? ":الوصف" : "Description:"}
-                  </label>
-                  {!clickEditProduct ? (
-                    <p className="font-bold break-words whitespace-pre-line">
-                      {product?.description}
-                    </p>
-                  ) : (
-                    <textarea
-                      value={newDescription}
-                      onChange={(e) => setNewDescription(e.target.value)}
-                      className="w-full h-24 p-2 bg-gray-50 border rounded-lg shadow"
-                    />
-                  )}
-                </div>
-
                 {/* Featured */}
-                <div className="flex flex-col items-center gap-2">
+                <div className="">
                   <label className="text-gray-600">
                     {language === "ar" ? ":منتج مميز" : "Featured Product:"}
                   </label>
@@ -371,10 +400,30 @@ function ProductDetails() {
                         : "No"}
                     </p>
                   ) : (
-                    <input
-                      type="checkbox"
-                      checked={featured}
-                      onChange={(e) => setFeatured(e.target.checked)}
+                    <div className="w-full ">
+                      <Switch
+                        id="featured"
+                        className="scale-150 mt-2"
+                        checked={featured}
+                        onCheckedChange={setFeatured}
+                      />
+                    </div>
+                  )}
+                </div>
+                {/* Description */}
+                <div className="col-span-3 lg:col-span-3">
+                  <label className="text-gray-600">
+                    {language === "ar" ? ":الوصف" : "Description:"}
+                  </label>
+                  {!clickEditProduct ? (
+                    <p className="font-bold break-words whitespace-pre-line">
+                      {product?.description}
+                    </p>
+                  ) : (
+                    <textarea
+                      value={newDescription}
+                      onChange={(e) => setNewDescription(e.target.value)}
+                      className="w-full h-24 p-2 bg-gray-50 border rounded-lg shadow"
                     />
                   )}
                 </div>
@@ -416,6 +465,69 @@ function ProductDetails() {
               </DialogFooter>
             </DialogContent>
           </Dialog>
+          {/* Discount Modal */}
+          <div>
+            <Dialog open={isDiscountModalOpen} onOpenChange={setIsDiscountModalOpen}>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>{language === "ar" ? "خصم المنتج" : "Product Discount"}</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-4">
+                  {/* Enable discount */}
+                  <div className="flex items-center gap-3">
+                    <Switch
+                      checked={hasDiscount}
+                      onCheckedChange={setHasDiscount}
+                      className="scale-125"
+                    />
+                    <span>{language === "ar" ? "تفعيل الخصم" : "Enable Discount"}</span>
+                  </div>
+
+                  {hasDiscount && (
+                    <>
+                      {/* Discount value */}
+                      <div>
+                        <label className="text-gray-600">
+                          {language === "ar" ? "قيمة الخصم" : "Discount Value"}
+                        </label>
+                        <input
+                          type="number"
+                          value={discountBy}
+                          onChange={(e) => setDiscountBy(Number(e.target.value))}
+                          className="w-full p-2 border rounded-lg mt-1"
+                        />
+                      </div>
+
+                      {/* Final price */}
+                      <div>
+                        <p className="font-semibold" dir="rtl">
+                          {language === "ar" ? "السعر بعد الخصم:" : "Discounted Price:"}{" "}
+                          <span className="text-green-600"> {discountedPrice.toFixed(3)} KD</span>
+                        </p>
+                      </div>
+                    </>
+                  )}
+                </div>
+                <DialogFooter>
+                  <Button variant="outline" onClick={() => setIsDiscountModalOpen(false)}>
+                    {language === "ar" ? "إلغاء" : "Cancel"}
+                  </Button>
+                  <Button
+                    disabled={loadingUpdateProduct}
+                    onClick={handleUpdateProduct}
+                    className="bg-black text-white">
+                    {loadingUpdateProduct
+                      ? language === "ar"
+                        ? "جاري الحفظ..."
+                        : "Saving..."
+                      : language === "ar"
+                      ? "حفظ"
+                      : "Save"}
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+          </div>
         </div>
       )}
     </Layout>
