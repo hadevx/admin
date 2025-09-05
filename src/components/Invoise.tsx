@@ -219,6 +219,7 @@ const Invoise = ({ order }: { order: any }) => {
         {/* Table Header */}
         <View style={styles.tableHeader}>
           <Text style={[styles.colItem, styles.tableHeaderText]}>Item</Text>
+          <Text style={[styles.colItem, styles.tableHeaderText]}>Variants</Text>
           <Text style={[styles.colQty, styles.tableHeaderText]}>Quantity</Text>
           <Text style={[styles.colPrice, styles.tableHeaderText]}>Price (KD)</Text>
           <Text style={[styles.colTotal, styles.tableHeaderText]}>Total (KD)</Text>
@@ -228,6 +229,13 @@ const Invoise = ({ order }: { order: any }) => {
         {order.orderItems.map((item: any) => (
           <View key={item._id} style={styles.tableRow}>
             <Text style={styles.colItem}>{item.name}</Text>
+            {item.variantColor && item.variantSize ? (
+              <Text style={styles.colItem}>
+                {item.variantColor} / {item.variantSize}
+              </Text>
+            ) : (
+              <Text style={styles.colItem}>-/-</Text>
+            )}
             <Text style={styles.colQty}>{item.qty}</Text>
             <Text style={styles.colPrice}>{item.price.toFixed(3)}</Text>
             <Text style={styles.colTotal}>{(item.qty * item.price).toFixed(3)}</Text>

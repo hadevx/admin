@@ -64,7 +64,7 @@ function ProductDetails() {
   // --- Discount modal state ---
   const [isDiscountModalOpen, setIsDiscountModalOpen] = useState(false);
   const [hasDiscount, setHasDiscount] = useState(false);
-  const [discountBy, setDiscountBy] = useState<number>(0);
+  const [discountBy, setDiscountBy] = useState<any>("");
   const [discountedPrice, setDiscountedPrice] = useState<number>(0);
   // --- Initialize state from product ---
   useEffect(() => {
@@ -78,7 +78,7 @@ function ProductDetails() {
       setFeatured(product.featured ?? false);
       // discount values
       setHasDiscount(product.hasDiscount ?? false);
-      setDiscountBy(product.discountBy ?? 0);
+      setDiscountBy(product.discountBy ?? " ");
       setDiscountedPrice(product.discountedPrice ?? 0);
     }
   }, [product]);
@@ -142,7 +142,7 @@ function ProductDetails() {
       featured,
       // discount fields
       hasDiscount,
-      discountBy,
+      discountBy: Number(discountBy) || 0,
       discountedPrice,
     };
 
@@ -492,6 +492,7 @@ function ProductDetails() {
                         </label>
                         <input
                           type="number"
+                          placeholder="enter"
                           value={discountBy}
                           onChange={(e) => setDiscountBy(Number(e.target.value))}
                           className="w-full p-2 border rounded-lg mt-1"

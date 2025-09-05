@@ -216,7 +216,9 @@ function Discounts() {
               </div>
 
               {/* Calculate Discount */}
-              <div className="lg:mt-6 p-4 border rounded-lg bg-gray-50 w-full">
+              <div
+                className="lg:mt-6 p-4 border rounded-lg bg-gray-50 w-full"
+                dir={language === "ar" ? "rtl" : ""}>
                 <p className="block mb-2 text-sm font-semibold text-gray-700">
                   {t.calculateDiscount}
                 </p>

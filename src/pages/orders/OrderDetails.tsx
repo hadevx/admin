@@ -24,6 +24,7 @@ function OrderDetails() {
 
   const language = useSelector((state: any) => state.language.lang); // 'ar' or 'en'
 
+  console.log(order);
   const dir = language === "ar" ? "rtl" : "ltr"; // set text direction
 
   const handleUpdateOrderToDelivered = async () => {
@@ -59,7 +60,9 @@ function OrderDetails() {
           } font-custom`}>
           <div className="px-4 py-6">
             {/* Header */}
-            <div className="flex gap-2 flex-col lg:flex-row justify-between lg:items-center">
+            <div
+              className="flex gap-2 flex-col lg:flex-row justify-between lg:items-center"
+              dir={language === "ar" ? "rtl" : "ltr"}>
               <h1 className="text-lg lg:text-2xl font-bold">
                 {language === "ar" ? "تفاصيل الطلب:" : "Order details:"}
               </h1>
@@ -93,7 +96,7 @@ function OrderDetails() {
                       "select-none hover:opacity-70 transition-all duration-300 lg:text-sm px-3 py-2 rounded-lg font-bold shadow lg:float-right bg-gradient-to-t",
                       order?.isCanceled || order?.isDelivered
                         ? "from-gray-200 to-gray-200 text-gray-600"
-                        : "from-red-500 to-red-400 text-white"
+                        : "bg-gradient-to-t from-rose-500 to-rose-400 text-white"
                     )}>
                     {isCanceled
                       ? language === "ar"
@@ -128,28 +131,28 @@ function OrderDetails() {
 
                   <div className="flex flex-col text-gray-700">
                     <span className="font-semibold">
-                      {language === "ar" ? "تاريخ الإنشاء:" : "Created on:"}
+                      {language === "ar" ? ":تاريخ الإنشاء" : "Created on:"}
                     </span>
                     <span>{order.createdAt.substring(0, 10)}</span>
                   </div>
 
                   <div className="flex flex-col text-gray-700">
                     <span className="font-semibold">
-                      {language === "ar" ? "اسم المستخدم:" : "User name:"}
+                      {language === "ar" ? ":اسم المستخدم" : "User name:"}
                     </span>
                     <span>{order.user.name}</span>
                   </div>
 
                   <div className="flex flex-col text-gray-700">
                     <span className="font-semibold">
-                      {language === "ar" ? "البريد الإلكتروني:" : "User email:"}
+                      {language === "ar" ? ":البريد الإلكتروني" : "User email:"}
                     </span>
                     <span>{order.user.email}</span>
                   </div>
 
                   <div className="flex flex-col text-gray-700">
                     <span className="font-semibold">
-                      {language === "ar" ? "الهاتف:" : "User phone:"}
+                      {language === "ar" ? ":الهاتف" : "User phone:"}
                     </span>
                     <span>{order.user.phone}</span>
                   </div>
@@ -161,6 +164,9 @@ function OrderDetails() {
                     <tr className="bg-gray-100 border-b">
                       <th className="py-2 px-2 lg:px-4 text-left">
                         {language === "ar" ? "المنتج" : "Item"}
+                      </th>
+                      <th className="py-2 px-2 lg:px-4 text-left">
+                        {language === "ar" ? "النوع" : "Variants"}
                       </th>
                       <th className="py-2 px-2 lg:px-4 text-left">
                         {language === "ar" ? "الكمية" : "Quantity"}
@@ -176,7 +182,21 @@ function OrderDetails() {
                   <tbody>
                     {order.orderItems.map((item: any) => (
                       <tr key={item._id} className="border-b">
-                        <td className="py-2 px-2 lg:px-4">{item.name}</td>
+                        <td className="py-2 px-2 lg:px-4 flex items-center max-w-[150px] sm:max-w-[300px]">
+                          <img
+                            src={item?.variantImage?.[0]?.url || item?.image?.[0]?.url}
+                            className="w-10 h-10 md:w-16 md:h-16 object-cover rounded-lg mr-2 inline-block"
+                          />
+                          <p className="truncate"> {item.name}</p>
+                        </td>
+                        {item.variantColor && item.variantSize ? (
+                          <td className="py-2 px-2 lg:px-4">
+                            {item.variantColor} / {item.variantSize}
+                          </td>
+                        ) : (
+                          <td className="py-2 px-2 lg:px-4">-/-</td>
+                        )}
+
                         <td className="py-2 px-2 lg:px-4">{item.qty}</td>
                         <td className="py-2 px-2 lg:px-4">{item.price.toFixed(3)} KD</td>
                         <td className="py-2 px-2 lg:px-4">
@@ -188,7 +208,7 @@ function OrderDetails() {
                 </table>
 
                 {/* Delivery & Total */}
-                <div className="flex gap-5 mb-5">
+                <div className="flex gap-5 mb-5" dir={language === "ar" ? "rtl" : "ltr"}>
                   <p>
                     {language === "ar" ? "التوصيل:" : "Delivery:"}{" "}
                     <strong>
