@@ -16,7 +16,7 @@ import {
 } from "@/components/ui/pagination";
 import { useSelector } from "react-redux";
 import { texts } from "./translations";
-import DynamicIsland from "@/components/DynamicIsland";
+import MobiusBand from "./../../components/MobiusBand";
 
 function Order() {
   const navigate = useNavigate();
@@ -50,7 +50,7 @@ function Order() {
 
   return (
     <Layout>
-      <DynamicIsland />
+      <MobiusBand />
       {isLoading ? (
         <Loader />
       ) : (
