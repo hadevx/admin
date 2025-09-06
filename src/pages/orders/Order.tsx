@@ -6,7 +6,6 @@ import { useGetOrdersQuery } from "../../redux/queries/orderApi";
 import { Layers, Search } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import Loader from "../../components/Loader";
-// import Error from "../../components/Error";
 import {
   Pagination,
   PaginationContent,
@@ -16,47 +15,13 @@ import {
   PaginationPrevious,
 } from "@/components/ui/pagination";
 import { useSelector } from "react-redux";
-
-const texts: any = {
-  en: {
-    orders: "Orders",
-    searchPlaceholder: "Search by ID, Name, or Payment",
-    revenue: "Revenue",
-    itemsSold: "Items Sold",
-    orderId: "Id",
-    customer: "Customer",
-    payment: "Payment",
-    items: "Items",
-    createdAt: "Created At",
-    status: "Status",
-    total: "Total",
-    delivered: "Delivered",
-    canceled: "Canceled",
-    processing: "Processing",
-    noOrders: "No matching orders found.",
-  },
-  ar: {
-    orders: "الطلبات",
-    searchPlaceholder: "ابحث بالرقم، الاسم، أو طريقة الدفع",
-    revenue: "الإيرادات",
-    itemsSold: " العناصر المباعة",
-    orderId: "رقم الطلب",
-    customer: "العميل",
-    payment: "طريقة الدفع",
-    items: "العناصر",
-    createdAt: "تاريخ الإنشاء",
-    status: "الحالة",
-    total: "الإجمالي",
-    delivered: "تم التوصيل",
-    canceled: "ملغى",
-    processing: "قيد المعالجة",
-    noOrders: "لا توجد طلبات مطابقة.",
-  },
-};
+import { texts } from "./translations";
+import DynamicIsland from "@/components/DynamicIsland";
 
 function Order() {
   const navigate = useNavigate();
   const language = useSelector((state: any) => state.language.lang);
+
   const [page, setPage] = useState(1);
   const [searchQuery, setSearchQuery] = useState<string>("");
 
@@ -79,28 +44,17 @@ function Order() {
       })
     : [];
 
-  const validOrders = filteredOrders.filter((order: any) => !order.isCanceled);
-
-  const totalRevenue = validOrders.length
-    ? validOrders.reduce((acc: any, order: any) => acc + order.totalPrice, 0).toFixed(3)
-    : "0.000";
-
-  const totalItems = validOrders.length
-    ? validOrders.reduce((acc: any, order: any) => acc + order.orderItems.length, 0)
-    : 0;
-
   const handleSearchChange = (e: ChangeEvent<HTMLInputElement>) => {
     setSearchQuery(e.target.value);
   };
 
-  // if (isError) return <Error />;
-
   return (
     <Layout>
+      <DynamicIsland />
       {isLoading ? (
         <Loader />
       ) : (
-        <div className="px-4 flex lg:w-4xl flex-col w-full min-h-screen lg:min-h-auto py-3 mt-[50px]">
+        <div className="px-4 flex lg:w-4xl flex-col w-full min-h-screen lg:min-h-auto py-3 mt-[70px]">
           {/* Header */}
           <div className="w-full">
             <div
@@ -114,7 +68,7 @@ function Order() {
                 <Badge icon={false}>
                   <Layers />
                   <p className="text-lg lg:text-sm">
-                    {orders?.length > 0 ? orders?.length : "0"}{" "}
+                    {data?.total > 0 ? data?.total : "0"}{" "}
                     <span className="hidden lg:inline">{texts[language].orders}</span>
                   </p>
                 </Badge>
@@ -140,10 +94,11 @@ function Order() {
 
                 <div className="flex gap-2 items-center w-full">
                   <div className="bg-blue-50 border flex-1 border-blue-200 text-blue-700 text-sm sm:text-sm font-semibold rounded-lg p-3 lg:px-4 lg:py-3 text-center">
-                    {texts[language].revenue}: {totalRevenue} {language === "ar" ? "دك" : "KD"}
+                    {texts[language].revenue}: {data?.totalRevenue}{" "}
+                    {language === "ar" ? "دك" : "KD"}
                   </div>
                   <div className="bg-blue-50 border flex-1 border-blue-200 text-blue-700 text-sm sm:text-sm font-semibold rounded-lg p-3 lg:px-4 lg:py-3 text-center">
-                    {texts[language].itemsSold}: {totalItems}{" "}
+                    {texts[language].itemsSold}: {data?.totalItems}{" "}
                   </div>
                 </div>
               </div>

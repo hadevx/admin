@@ -2,17 +2,12 @@ import { api } from "./api";
 
 export const orderApi = api.injectEndpoints({
   endpoints: (builder) => ({
-    /*  getOrders: builder.query({
-      query: () => ({
-        url: "/api/orders",
-      }),
-      // keepUnusedDataFor: 5,
-    }), */
     getOrders: builder.query({
       query: ({ pageNumber = 1, keyword = "" }) => ({
         url: `/api/orders?pageNumber=${pageNumber}&keyword=${keyword}`,
       }),
       keepUnusedDataFor: 5,
+      providesTags: ["Order"], // this query "provides" the Order cache
     }),
     getOrder: builder.query({
       query: (orderId) => ({
@@ -37,12 +32,14 @@ export const orderApi = api.injectEndpoints({
         url: `/api/orders/${orderId}/deliver`,
         method: "PUT",
       }),
+      invalidatesTags: ["Order"],
     }),
     updateOrderToCanceled: builder.mutation({
       query: (orderId) => ({
         url: `/api/orders/${orderId}/cancel`,
         method: "PUT",
       }),
+      invalidatesTags: ["Order"],
     }),
     getOrderStats: builder.query({
       query: () => ({

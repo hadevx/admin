@@ -25,6 +25,7 @@ export const productApi = api.injectEndpoints({
         method: "POST",
         body: orderItems,
       }),
+      invalidatesTags: ["Product"],
     }),
     getDeliveryStatus: builder.query({
       query: () => ({
@@ -43,6 +44,7 @@ export const productApi = api.injectEndpoints({
         url: `/api/products/discount/${id}`,
         method: "DELETE",
       }),
+      invalidatesTags: ["Product"],
     }),
     updateDiscount: builder.mutation({
       query: (data) => ({
@@ -50,19 +52,14 @@ export const productApi = api.injectEndpoints({
         method: "PUT",
         body: data,
       }),
+      invalidatesTags: ["Product"],
     }),
     getDiscountStatus: builder.query({
       query: () => ({
         url: `/api/products/discount`,
       }),
     }),
-    /*    createProduct: builder.mutation({
-      query: (data) => ({
-        url: "/api/products",
-        method: "POST",
-        body: data,
-      }),
-    }), */
+
     uploadProductImage: builder.mutation({
       query: (data) => ({
         url: "/api/upload",

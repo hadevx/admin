@@ -72,10 +72,10 @@ function OrderDetails() {
                   disabled={order?.isDelivered || order?.isCanceled || loadingDelivered}
                   onClick={handleUpdateOrderToDelivered}
                   className={clsx(
-                    "select-none hover:opacity-70 lg:text-sm transition-all duration-300 lg:float-right px-3 py-2 rounded-lg font-bold shadow bg-gradient-to-t",
+                    "select-none hover:opacity-80 lg:text-sm transition-all duration-300 lg:float-right px-3 py-2 rounded-lg font-bold bg-gradient-to-t",
                     order?.isDelivered || order?.isCanceled
-                      ? "from-gray-200 to-gray-200 text-gray-600"
-                      : "from-teal-500 to-teal-400 text-white"
+                      ? "from-gray-200 to-gray-200 text-gray-600 drop-shadow-[0_4px_6px_rgba(156,163,175,0.5)]"
+                      : "from-teal-500 to-teal-400 text-white drop-shadow-[0_4px_8px_rgba(20,184,166,0.5)] hover:drop-shadow-[0_6px_12px_rgba(45,212,191,0.5)]"
                   )}>
                   {loadingDelivered
                     ? language === "ar"
@@ -93,7 +93,7 @@ function OrderDetails() {
                     disabled={order?.isDelivered || order?.isCanceled}
                     onClick={handleUpdateOrderToCanceled}
                     className={clsx(
-                      "select-none hover:opacity-70 transition-all duration-300 lg:text-sm px-3 py-2 rounded-lg font-bold shadow lg:float-right bg-gradient-to-t",
+                      "select-none drop-shadow-[0_4px_8px_rgba(244,63,94,0.5)]  hover:opacity-70 transition-all duration-300 lg:text-sm px-3 py-2 rounded-lg font-bold shadow lg:float-right bg-gradient-to-t",
                       order?.isCanceled || order?.isDelivered
                         ? "from-gray-200 to-gray-200 text-gray-600"
                         : "bg-gradient-to-t from-rose-500 to-rose-400 text-white"
@@ -112,7 +112,7 @@ function OrderDetails() {
                 <PDFDownloadLink
                   document={<Invoise order={order} />}
                   fileName={`invoice-${order?._id}-${order?.createdAt?.substring(0, 10)}.pdf`}>
-                  <button className="select-none hover:opacity-70 lg:text-sm transition-all duration-300 float-right bg-gradient-to-t from-rose-500 to-rose-400 text-white px-3 py-2 rounded-lg font-bold shadow">
+                  <button className="select-none drop-shadow-[0_4px_8px_rgba(244,63,94,0.5)]  hover:opacity-70 lg:text-sm transition-all duration-300 float-right bg-gradient-to-t from-rose-500 to-rose-400 text-white px-3 py-2 rounded-lg font-bold shadow">
                     {language === "ar" ? "تحميل الفاتورة" : "Download Invoice"}
                   </button>
                 </PDFDownloadLink>
@@ -251,7 +251,7 @@ function OrderDetails() {
                 </table>
 
                 {/* Payment & Status */}
-                <div className="flex flex-col sm:flex-row sm:justify-between items-center gap-4 p-4 rounded-lg shadow-sm">
+                <div className="flex flex-col sm:flex-row sm:justify-between items-center gap-4 p-4 rounded-lg ">
                   <p
                     className={`flex items-center gap-3 text-gray-700 font-medium ${
                       language === "ar" ? "flex-row-reverse" : ""

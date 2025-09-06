@@ -113,7 +113,7 @@ function SideMenu() {
       <Separator className="my-4 bg-black/20" />
 
       <div className="flex flex-col lg:justify-start h-full">
-        <div className="flex flex-col gap-3 overflow-auto max-h-[calc(100vh-320px)]">
+        <div className="flex flex-col gap-3  max-h-[calc(100vh-300px)]">
           <Link
             to="/admin/summary"
             onClick={() => setIsMenuOpen(false)}

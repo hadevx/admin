@@ -176,16 +176,20 @@ function ProductDetails() {
             <h1 className="text-2xl font-bold">
               {language === "ar" ? "تفاصيل المنتج" : "Product Details"}
             </h1>
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2">
               <button
                 onClick={() => setIsModalOpen(true)}
-                className="select-none bg-gradient-to-t from-rose-500 hover:opacity-90 to-rose-400 text-white px-3 py-2 rounded-lg font-bold shadow-md">
+                className="select-none bg-gradient-to-t from-rose-500 to-rose-400 hover:opacity-90 
+             text-white px-3 py-2 rounded-lg font-bold 
+             drop-shadow-[0_4px_8px_rgba(244,63,94,0.5)] hover:drop-shadow-[0_6px_12px_rgba(251,113,133,0.5)] 
+             transition-all">
                 {language === "ar" ? "حذف المنتج" : "Delete Product"}
               </button>
+
               <button
                 onClick={() => setIsDiscountModalOpen(true)}
-                className="select-none bg-black  text-white px-3 py-2 rounded-lg font-bold shadow-md">
-                {language === "ar" ? "انشاء خصم" : "Discount"}
+                className="select-none bg-black drop-shadow-[0_0_10px_rgba(24,24,27,0.5)]  text-white px-3 py-2 rounded-lg font-bold shadow-md">
+                {language === "ar" ? "انشاء خصم" : "Create Discount"}
               </button>
             </div>
           </div>

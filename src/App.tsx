@@ -16,6 +16,7 @@ import ProductDetails from "./pages/products/ProductDetails";
 import ForgotPassword from "./pages/auth/ForgetPassword";
 import ResetPassword from "./pages/auth/ResetPassword";
 import Summary from "./pages/summary/Summary";
+import Unauthorized from "./components/Unauthorized";
 
 function App() {
   const { adminUserInfo } = useSelector((state: any) => state.auth);
@@ -40,6 +41,7 @@ function App() {
         element={adminUserInfo ? <Navigate to="/admin" replace /> : <Login />}
       />
 
+      <Route path="/admin/unauthorized" element={<Unauthorized />} />
       <Route path="/admin/forget-password" element={<ForgotPassword />} />
       <Route path="/admin/reset-password/:token" element={<ResetPassword />} />
 

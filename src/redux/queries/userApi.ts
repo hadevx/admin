@@ -9,24 +9,11 @@ const userApi = api.injectEndpoints({
         body: data,
       }),
     }),
-    /*  getUsers: builder.query({
-      query: () => ({
-        url: "/api/users",
-      }),
-    }), */
     getUsers: builder.query({
       query: ({ pageNumber = 1, keyword = "" }) => ({
         url: `/api/users?pageNumber=${pageNumber}&keyword=${keyword}`,
       }),
-      providesTags: (result: any) =>
-        result
-          ? [
-              // individual user tags
-              ...result.users.map(({ _id }: any) => ({ type: "User" as const, id: _id })),
-              // list tag
-              { type: "User", id: "LIST" },
-            ]
-          : [{ type: "User", id: "LIST" }],
+      providesTags: ["User"],
     }),
 
     getAddress: builder.query({
@@ -50,7 +37,7 @@ const userApi = api.injectEndpoints({
         url: `/api/users/${userId}`,
         method: "DELETE",
       }),
-      invalidatesTags: [{ type: "User", id: "LIST" }],
+      invalidatesTags: ["User"],
     }),
     updateUser: builder.mutation({
       query: (data: any) => ({
