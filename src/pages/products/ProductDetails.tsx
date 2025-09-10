@@ -43,7 +43,6 @@ function ProductDetails() {
 
   const [newName, setNewName] = useState("");
   const [newPrice, setNewPrice] = useState<number>();
-  const [newBrand, setNewBrand] = useState("");
   const [newCategory, setNewCategory] = useState("");
   const [newCountInStock, setNewCountInStock] = useState<number>();
   const [newDescription, setNewDescription] = useState("");
@@ -71,7 +70,6 @@ function ProductDetails() {
     if (product) {
       setNewName(product.name);
       setNewPrice(product.price);
-      setNewBrand(product.brand);
       setNewCategory(product.category);
       setNewCountInStock(product.countInStock);
       setNewDescription(product.description);
@@ -135,7 +133,6 @@ function ProductDetails() {
       name: newName.trim() || product.name,
       price: typeof newPrice === "number" ? newPrice : product.price,
       image: uploadedImages,
-      brand: newBrand.trim() || product.brand,
       category: newCategory || product.category,
       countInStock: typeof newCountInStock === "number" ? newCountInStock : product.countInStock,
       description: newDescription.trim() || product.description,

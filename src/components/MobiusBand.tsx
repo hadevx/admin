@@ -153,6 +153,7 @@ export default function MobiusBand() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
+            dir="rtl"
             className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
             onClick={() => setIsModalOpen(false)}>
             <motion.div

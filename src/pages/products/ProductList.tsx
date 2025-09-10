@@ -360,11 +360,12 @@ function ProductList() {
                 </div>
               </div>
               {/* Table */}
-              <div className="rounded-lg mb-10 border lg:p-10 bg-white overflow-x-auto">
+              <div className="rounded-lg mb-10 border lg:p-5 bg-white overflow-x-auto">
                 <table className="w-full min-w-[700px] border-gray-200 text-sm text-left text-gray-700">
                   <thead className="bg-white text-gray-900/50 font-semibold">
                     <tr>
                       <th className="px-4 py-3 border-b">{texts[language].name}</th>
+                      <th className="px-4 py-3 border-b">{texts[language].variants}</th>
                       <th className="px-4 py-3 border-b">{texts[language].category}</th>
                       <th className="px-4 py-3 border-b">{texts[language].stock}</th>
                       <th className="px-4 py-3 border-b">{texts[language].status}</th>
@@ -387,8 +388,10 @@ function ProductList() {
                             />
                             <p className="truncate">{product?.name}</p>
                           </td>
+                          <td className="px-4 py-3">{product?.variants?.length}</td>
                           <td className="px-4 py-3">{product?.category?.name}</td>
                           <td className="px-4 py-3">{product?.countInStock}</td>
+
                           <td className="px-4 py-3 ">
                             {product?.countInStock === 0 ? (
                               <p className="bg-red-50 rounded-xl  py-1 text-red-600 text-center border-red-100 border">
@@ -399,7 +402,7 @@ function ProductList() {
                                 {texts[language].lowStock}
                               </p>
                             ) : (
-                              <p className="bg-teal-50 py-1  rounded-xl text-teal-600 text-center border-teal-100 border">
+                              <p className="bg-teal-50 py-1   rounded-xl text-teal-600 text-center border-teal-100 border">
                                 {texts[language].inStock}
                               </p>
                             )}
