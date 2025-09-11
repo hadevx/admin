@@ -218,7 +218,7 @@ function OrderDetails() {
                       <img
                         src={item?.variantImage?.[0]?.url || item.image?.[0]?.url}
                         alt={item.name}
-                        className="w-28 h-28 object-cover rounded-lg border bg-zinc-100"
+                        className="w-32 h-32 object-cover rounded-lg border bg-zinc-100"
                       />
                       <div className="flex-1 space-y-1 text-sm">
                         <p className="font-semibold truncate">{item.name}</p>
@@ -286,7 +286,7 @@ function OrderDetails() {
 
                 {/* Payment & Status */}
                 <div
-                  className="flex flex-col sm:flex-row sm:justify-between items-center gap-4 p-4 rounded-lg "
+                  className="flex flex-col  border sm:flex-row sm:justify-between items-end gap-4 p-4 rounded-lg "
                   dir="ltr">
                   <p
                     className={`flex items-center gap-3 text-gray-700 font-medium ${

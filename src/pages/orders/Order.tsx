@@ -149,19 +149,22 @@ function Order() {
                           <td className="px-4 py-5 whitespace-nowrap">
                             {order?.createdAt.substring(0, 10)}
                           </td>
-                          <td className="px-4 py-5 whitespace-nowrap">
+                          <td className=" whitespace-nowrap">
                             {order?.isDelivered ? (
-                              <p className="bg-teal-50 py-1 rounded-xl text-teal-600 text-center border-teal-100 border">
+                              <Badge variant="success" icon={false} className="p-1">
+                                {" "}
                                 {texts[language].delivered}
-                              </p>
+                              </Badge>
                             ) : order?.isCanceled ? (
-                              <p className="bg-rose-50 py-1 rounded-xl text-rose-600 text-center border-orange-100 border">
+                              <Badge variant="danger" icon={false} className="p-1">
+                                {" "}
                                 {texts[language].canceled}
-                              </p>
+                              </Badge>
                             ) : (
-                              <p className="bg-orange-50 py-1 rounded-xl text-orange-600 text-center border-orange-100 border">
+                              <Badge variant="pending" icon={false} className="p-1">
+                                {" "}
                                 {texts[language].processing}
-                              </p>
+                              </Badge>
                             )}
                           </td>
                           <td className="px-4 py-5 whitespace-nowrap">

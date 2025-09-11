@@ -29,7 +29,7 @@ export const texts: any = {
     status: "الحالة",
     total: "الإجمالي",
     delivered: "تم التوصيل",
-    canceled: "ملغى",
+    canceled: "تم الالغاء",
     processing: "قيد المعالجة",
     noOrders: "لا توجد طلبات مطابقة.",
   },
