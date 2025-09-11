@@ -36,6 +36,7 @@ import {
 } from "@/components/ui/carousel";
 import VariantItem from "./VariantItem";
 import { Switch } from "@/components/ui/switch";
+import { PERCENTAGE } from "./constants";
 
 function ProductDetails() {
   const language = useSelector((state: any) => state.language.lang); // 'ar' or 'en'
@@ -63,8 +64,10 @@ function ProductDetails() {
   // --- Discount modal state ---
   const [isDiscountModalOpen, setIsDiscountModalOpen] = useState(false);
   const [hasDiscount, setHasDiscount] = useState(false);
-  const [discountBy, setDiscountBy] = useState<any>("");
+  const [discountBy, setDiscountBy] = useState<number>(0);
   const [discountedPrice, setDiscountedPrice] = useState<number>(0);
+
+  console.log(typeof discountBy);
   // --- Initialize state from product ---
   useEffect(() => {
     if (product) {
@@ -76,21 +79,22 @@ function ProductDetails() {
       setFeatured(product.featured ?? false);
       // discount values
       setHasDiscount(product.hasDiscount ?? false);
-      setDiscountBy(product.discountBy ?? " ");
-      setDiscountedPrice(product.discountedPrice ?? 0);
+      setDiscountBy(product.discountBy ?? 0);
+      // setDiscountedPrice(product.discountedPrice ?? 0);
     }
   }, [product]);
+
   // auto calculate discounted price
   useEffect(() => {
     if (!newPrice) return;
-    if (hasDiscount) {
-      let final = newPrice - discountBy;
-
+    if (hasDiscount && discountBy > 0) {
+      const final = newPrice - newPrice * discountBy;
       setDiscountedPrice(final > 0 ? final : 0);
     } else {
       setDiscountedPrice(newPrice);
     }
   }, [discountBy, hasDiscount, newPrice]);
+
   const handleDeleteProduct = async () => {
     if (product) {
       await deleteProduct(productId);
@@ -139,7 +143,7 @@ function ProductDetails() {
       featured,
       // discount fields
       hasDiscount,
-      discountBy: Number(discountBy) || 0,
+      discountBy,
       discountedPrice,
     };
 
@@ -433,7 +437,7 @@ function ProductDetails() {
           </div>
 
           {/* Variants section */}
-          {product.variants.map((v: any) => (
+          {product?.variants.map((v: any) => (
             <VariantItem key={v._id} variant={v} productId={product._id} language={language} />
           ))}
 
@@ -486,25 +490,31 @@ function ProductDetails() {
 
                   {hasDiscount && (
                     <>
-                      {/* Discount value */}
+                      {/* Discount percentage */}
                       <div>
                         <label className="text-gray-600">
-                          {language === "ar" ? "قيمة الخصم" : "Discount Value"}
+                          {language === "ar" ? "نسبة الخصم" : "Discount Percentage"}
                         </label>
-                        <input
-                          type="number"
-                          placeholder="enter"
+                        <select
                           value={discountBy}
                           onChange={(e) => setDiscountBy(Number(e.target.value))}
-                          className="w-full p-2 border rounded-lg mt-1"
-                        />
+                          className="w-full px-4 py-2 bg-white border border-gray-300 rounded-lg shadow-sm mt-1">
+                          <option value={0} disabled>
+                            -- {language === "ar" ? "اختر نسبة" : "Choose percentage"} --
+                          </option>
+                          {PERCENTAGE.map((p) => (
+                            <option key={p} value={p}>
+                              {p * 100}%
+                            </option>
+                          ))}
+                        </select>
                       </div>
 
                       {/* Final price */}
                       <div>
                         <p className="font-semibold" dir="rtl">
                           {language === "ar" ? "السعر بعد الخصم:" : "Discounted Price:"}{" "}
-                          <span className="text-green-600"> {discountedPrice.toFixed(3)} KD</span>
+                          <span className="text-green-600">{discountedPrice.toFixed(3)} KD</span>
                         </p>
                       </div>
                     </>

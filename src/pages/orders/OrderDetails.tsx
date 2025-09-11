@@ -74,7 +74,7 @@ function OrderDetails() {
                   className={clsx(
                     "select-none hover:opacity-80 lg:text-sm transition-all duration-300 lg:float-right px-3 py-2 rounded-lg font-bold bg-gradient-to-t",
                     order?.isDelivered || order?.isCanceled
-                      ? "from-gray-200 to-gray-200 text-gray-600 drop-shadow-[0_4px_6px_rgba(156,163,175,0.5)]"
+                      ? "from-gray-200 to-gray-200 text-gray-600 drop-shadow-[0_4px_6px_rgba(156,163,175,0)] pointer-events-none"
                       : "from-teal-500 to-teal-400 text-white drop-shadow-[0_4px_8px_rgba(20,184,166,0.5)] hover:drop-shadow-[0_6px_12px_rgba(45,212,191,0.5)]"
                   )}>
                   {loadingDelivered
@@ -93,10 +93,10 @@ function OrderDetails() {
                     disabled={order?.isDelivered || order?.isCanceled}
                     onClick={handleUpdateOrderToCanceled}
                     className={clsx(
-                      "select-none drop-shadow-[0_4px_8px_rgba(244,63,94,0.5)]  hover:opacity-70 transition-all duration-300 lg:text-sm px-3 py-2 rounded-lg font-bold shadow lg:float-right bg-gradient-to-t",
+                      "select-none   hover:opacity-70 transition-all duration-300 lg:text-sm px-3 py-2 rounded-lg font-bold shadow lg:float-right bg-gradient-to-t",
                       order?.isCanceled || order?.isDelivered
-                        ? "from-gray-200 to-gray-200 text-gray-600"
-                        : "bg-gradient-to-t from-rose-500 to-rose-400 text-white"
+                        ? "from-gray-200 to-gray-200 text-gray-600 drop-shadow-[0_0_0_rgba(244,63,94,0)] pointer-events-none"
+                        : "bg-gradient-to-t from-rose-500 to-rose-400 text-white drop-shadow-[0_4px_8px_rgba(244,63,94,0.5)]"
                     )}>
                     {isCanceled
                       ? language === "ar"
@@ -122,11 +122,13 @@ function OrderDetails() {
             <Separator className="my-4 bg-black/20" />
 
             {order && (
-              <div className="text-sm lg:text-sm bg-white shadow rounded-lg p-6">
+              <div
+                className="text-sm lg:text-sm bg-white border rounded-lg p-6"
+                dir={language === "ar" ? "rtl" : ""}>
                 {/* User Info */}
                 <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-7">
                   <h2 className="text-lg font-semibold col-span-full mb-4">
-                    Order ID: {order._id}
+                    رقم الطلب: {order._id}
                   </h2>
 
                   <div className="flex flex-col text-gray-700">
@@ -159,53 +161,87 @@ function OrderDetails() {
                 </div>
 
                 {/* Order Items */}
-                <table className="w-full table-auto border-collapse mb-5">
-                  <thead>
-                    <tr className="bg-gray-100 border-b">
-                      <th className="py-2 px-2 lg:px-4 text-left">
-                        {language === "ar" ? "المنتج" : "Item"}
-                      </th>
-                      <th className="py-2 px-2 lg:px-4 text-left">
-                        {language === "ar" ? "النوع" : "Variants"}
-                      </th>
-                      <th className="py-2 px-2 lg:px-4 text-left">
-                        {language === "ar" ? "الكمية" : "Quantity"}
-                      </th>
-                      <th className="py-2 px-2 lg:px-4 text-left">
-                        {language === "ar" ? "السعر" : "Price"}
-                      </th>
-                      <th className="py-2 px-2 lg:px-4 text-left">
-                        {language === "ar" ? "الإجمالي" : "Total"}
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {order.orderItems.map((item: any) => (
-                      <tr key={item._id} className="border-b">
-                        <td className="py-2 px-2 lg:px-4 flex items-center max-w-[150px] sm:max-w-[300px]">
-                          <img
-                            src={item?.variantImage?.[0]?.url || item?.image?.[0]?.url}
-                            className="w-10 h-10 md:w-16 md:h-16 object-cover rounded-lg mr-2 inline-block"
-                          />
-                          <p className="truncate"> {item.name}</p>
-                        </td>
-                        {item.variantColor && item.variantSize ? (
-                          <td className="py-2 px-2 lg:px-4">
-                            {item.variantColor} / {item.variantSize}
-                          </td>
-                        ) : (
-                          <td className="py-2 px-2 lg:px-4">-/-</td>
-                        )}
-
-                        <td className="py-2 px-2 lg:px-4">{item.qty}</td>
-                        <td className="py-2 px-2 lg:px-4">{item.price.toFixed(3)} KD</td>
-                        <td className="py-2 px-2 lg:px-4">
-                          {(item.qty * item.price).toFixed(3)} KD
-                        </td>
+                {/* Desktop Table */}
+                <div className="hidden md:block" dir="ltr">
+                  <table className="w-full table-auto border-collapse mb-5">
+                    <thead>
+                      <tr className="bg-gray-100 border-b">
+                        <th className="py-2 px-2 lg:px-4 text-left">
+                          {language === "ar" ? "المنتج" : "Item"}
+                        </th>
+                        <th className="py-2 px-2 lg:px-4 text-left">
+                          {language === "ar" ? "النوع" : "Variants"}
+                        </th>
+                        <th className="py-2 px-2 lg:px-4 text-left">
+                          {language === "ar" ? "الكمية" : "Quantity"}
+                        </th>
+                        <th className="py-2 px-2 lg:px-4 text-left">
+                          {language === "ar" ? "السعر" : "Price"}
+                        </th>
+                        <th className="py-2 px-2 lg:px-4 text-left">
+                          {language === "ar" ? "الإجمالي" : "Total"}
+                        </th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody>
+                      {order?.orderItems.map((item: any) => (
+                        <tr key={item._id} className="border-b">
+                          <td className="py-2 px-2 lg:px-4 flex items-center gap-2 max-w-[150px] sm:max-w-[300px]">
+                            <img
+                              src={item?.variantImage?.[0]?.url || item?.image?.[0]?.url}
+                              className="w-10 h-10 md:w-16 md:h-16 object-cover rounded-lg"
+                            />
+                            <p className="truncate">{item.name}</p>
+                          </td>
+                          <td className="py-2 px-2 lg:px-4">
+                            {item.variantColor && item.variantSize
+                              ? `${item.variantColor} / ${item.variantSize}`
+                              : "-/-"}
+                          </td>
+                          <td className="py-2 px-2 lg:px-4">{item.qty}</td>
+                          <td className="py-2 px-2 lg:px-4">{item.price.toFixed(3)} KD</td>
+                          <td className="py-2 px-2 lg:px-4">
+                            {(item.qty * item.price).toFixed(3)} KD
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+
+                {/* Mobile Cards */}
+                <div className="md:hidden mb-5 space-y-2">
+                  {order.orderItems.map((item: any, idx: any) => (
+                    <div
+                      key={`${item._id}-${idx}`}
+                      className="border p-3 rounded-xl bg-white  flex gap-3">
+                      <img
+                        src={item?.variantImage?.[0]?.url || item.image?.[0]?.url}
+                        alt={item.name}
+                        className="w-28 h-28 object-cover rounded-lg border bg-zinc-100"
+                      />
+                      <div className="flex-1 space-y-1 text-sm">
+                        <p className="font-semibold truncate">{item.name}</p>
+                        <p className="text-gray-600">
+                          {language === "ar" ? "اللون/الحجم" : "Color/Size"}:{" "}
+                          {item.variantColor ?? "-"} / {item.variantSize ?? "-"}
+                        </p>
+                        <p className="text-gray-600">
+                          {language === "ar" ? "السعر" : "Price"}: {item.price.toFixed(3)} KD
+                        </p>
+                        <p className="text-gray-600">
+                          {language === "ar" ? "الكميه" : "Qty"}: {item.qty}
+                        </p>
+                        <div className="flex items-center justify-between mt-2">
+                          <p className="font-bold">
+                            {language === "ar" ? "الإجمالي" : "Total"}:{" "}
+                            {(item.qty * item.price).toFixed(3)} KD
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
 
                 {/* Delivery & Total */}
                 <div className="flex gap-5 mb-5" dir={language === "ar" ? "rtl" : "ltr"}>
@@ -225,11 +261,11 @@ function OrderDetails() {
                 </div>
 
                 {/* Shipping Address */}
-                <table className="w-full text-left border-collapse border border-gray-300 text-gray-700 mb-5">
+                <table className="w-full  border-collapse border   mb-5">
                   <tbody>
                     {["governorate", "city", "block", "street", "house"].map((field) => (
                       <tr key={field}>
-                        <th className="border border-gray-300 px-3 py-2 font-semibold">
+                        <th className="border  px-3 py-2 font-semibold">
                           {language === "ar"
                             ? field === "governorate"
                               ? "المحافظة"
@@ -242,16 +278,16 @@ function OrderDetails() {
                               : "المنزل"
                             : field.charAt(0).toUpperCase() + field.slice(1)}
                         </th>
-                        <td className="border border-gray-300 px-3 py-2">
-                          {order.shippingAddress[field]}
-                        </td>
+                        <td className="border  px-3 py-2">{order.shippingAddress[field]}</td>
                       </tr>
                     ))}
                   </tbody>
                 </table>
 
                 {/* Payment & Status */}
-                <div className="flex flex-col sm:flex-row sm:justify-between items-center gap-4 p-4 rounded-lg ">
+                <div
+                  className="flex flex-col sm:flex-row sm:justify-between items-center gap-4 p-4 rounded-lg "
+                  dir="ltr">
                   <p
                     className={`flex items-center gap-3 text-gray-700 font-medium ${
                       language === "ar" ? "flex-row-reverse" : ""

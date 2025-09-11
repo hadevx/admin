@@ -12,7 +12,6 @@ import {
   useGetUsersQuery,
 } from "../../redux/queries/userApi";
 import { useGetUserOrdersQuery } from "../../redux/queries/orderApi";
-import Message from "../../components/Message";
 import Badge from "../../components/Badge";
 import {
   Dialog,
@@ -94,44 +93,66 @@ function UserDetails() {
           <Separator className="my-4 bg-black/20" />
 
           {/* Personal Info */}
-          <div className="relative mb-3 w-full p-7 bg-white shadow rounded-md">
+          <div className="relative mb-6 w-full p-6 bg-white  rounded-xl border ">
             <section>
-              <h2 className="text-lg font-bold border-b border-gray-300  mb-5">
+              <h2 className="text-xl font-bold text-gray-800 border-b border-gray-300 pb-2 mb-6">
                 {language === "ar" ? "المعلومات الشخصية" : "Personal Information"}
               </h2>
-              <div className="grid grid-cols-2 gap-y-4 gap-x-10">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                {/* Name */}
                 <div className="flex flex-col">
-                  <p className="text-gray-400">{language === "ar" ? "الاسم:" : "Name:"}</p>
-                  <p className="font-semibold">{user?.name}</p>
+                  <span className="text-gray-400 text-sm">
+                    {language === "ar" ? "الاسم:" : "Name:"}
+                  </span>
+                  <span className="mt-1 font-semibold text-gray-700">{user?.name}</span>
                 </div>
+
+                {/* Email */}
                 <div className="flex flex-col">
-                  <p className="text-gray-400">
+                  <span className="text-gray-400 text-sm">
                     {language === "ar" ? "البريد الإلكتروني:" : "Email:"}
-                  </p>
-                  <p className="font-semibold text-blue-400 underline break-words whitespace-pre-line">
-                    <Link to={`mailto:${user?.email}`}>{user?.email}</Link>
-                  </p>
+                  </span>
+                  <a
+                    href={`mailto:${user?.email}`}
+                    className="mt-1 font-semibold text-blue-500 hover:text-blue-600 underline break-words whitespace-pre-line">
+                    {user?.email}
+                  </a>
                 </div>
-                <div>
-                  <p className="text-gray-400">{language === "ar" ? "الهاتف:" : "Phone:"}</p>
-                  <p className="font-semibold">{user?.phone}</p>
+
+                {/* Phone */}
+                <div className="flex flex-col">
+                  <span className="text-gray-400 text-sm">
+                    {language === "ar" ? "الهاتف:" : "Phone:"}
+                  </span>
+                  <span className="mt-1 font-semibold text-gray-700">{user?.phone || "-"}</span>
                 </div>
-                <div>
-                  <p className="text-gray-400">{language === "ar" ? "مسؤول:" : "Admin:"}</p>
-                  <div>
-                    {user?.isAdmin ? (
-                      <p>{language === "ar" ? "مسؤول" : "Admin"}</p>
-                    ) : (
-                      <p>{language === "ar" ? "غير مسؤول" : "Not admin"}</p>
-                    )}
-                  </div>
+
+                {/* Admin Status */}
+                <div className="flex flex-col items-start">
+                  <span className="text-gray-400 text-sm">
+                    {language === "ar" ? "مسؤول:" : "Admin:"}
+                  </span>
+                  <span
+                    className={`mt-1 font-semibold inline-block px-2 py-1 rounded-full text-sm ${
+                      user?.isAdmin
+                        ? "bg-green-100 text-green-800"
+                        : "bg-red-50 text-red-500 border-red-100"
+                    }`}>
+                    {user?.isAdmin
+                      ? language === "ar"
+                        ? "نعم"
+                        : "Yes"
+                      : language === "ar"
+                      ? "لا"
+                      : "No"}
+                  </span>
                 </div>
               </div>
             </section>
           </div>
 
           {/* Address */}
-          <div className="bg-white rounded-md p-7 shadow">
+          <div className="bg-white rounded-md p-7 border">
             <section>
               <h2 className="text-lg font-bold border-b border-gray-300  mb-5">
                 {language === "ar" ? "العنوان" : "Address"}
@@ -163,18 +184,18 @@ function UserDetails() {
                 </div>
               ) : (
                 <div className="md:text-lg">
-                  <Message dismiss={false}>
+                  <div>
                     {language === "ar"
                       ? "المستخدم لم يقدم عنواناً بعد"
                       : "User does not provide address yet"}
-                  </Message>
+                  </div>
                 </div>
               )}
             </section>
           </div>
 
           {/* Orders */}
-          <div className="bg-white mt-3 rounded-md p-7 shadow">
+          <div className="bg-white mt-3 rounded-md p-7 border">
             <section>
               <h2 className="text-lg font-bold border-b border-gray-300 pb-2 mb-5">
                 {language === "ar" ? "الطلبات" : "Orders"} :{userOrders?.length}
@@ -248,9 +269,9 @@ function UserDetails() {
                 ))
               ) : (
                 <div className="md:text:lg">
-                  <Message dismiss={false}>
+                  <div>
                     {language === "ar" ? "المستخدم ليس لديه طلبات" : "User does not have orders"}
-                  </Message>
+                  </div>
                 </div>
               )}
             </section>
