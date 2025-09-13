@@ -16,23 +16,46 @@ const Paginate = ({
   pages: number;
   setPage: (p: number) => void;
 }) => {
+  if (pages <= 1) return null; // nothing to paginate
+
   return (
     <Pagination className="py-2">
       <PaginationContent>
+        {/* Previous */}
         <PaginationItem>
-          <PaginationPrevious onClick={() => page > 1 && setPage(page - 1)} href="#" />
+          <PaginationPrevious
+            href="#"
+            onClick={(e) => {
+              e.preventDefault();
+              if (page > 1) setPage(page - 1);
+            }}
+          />
         </PaginationItem>
 
+        {/* Numbers */}
         {[...Array(pages).keys()].map((x) => (
           <PaginationItem key={x + 1}>
-            <PaginationLink href="#" isActive={page === x + 1} onClick={() => setPage(x + 1)}>
+            <PaginationLink
+              href="#"
+              isActive={page === x + 1}
+              onClick={(e) => {
+                e.preventDefault();
+                setPage(x + 1);
+              }}>
               {x + 1}
             </PaginationLink>
           </PaginationItem>
         ))}
 
+        {/* Next */}
         <PaginationItem>
-          <PaginationNext onClick={() => page < pages && setPage(page + 1)} href="#" />
+          <PaginationNext
+            href="#"
+            onClick={(e) => {
+              e.preventDefault();
+              if (page < pages) setPage(page + 1);
+            }}
+          />
         </PaginationItem>
       </PaginationContent>
     </Pagination>

@@ -29,7 +29,6 @@ function UserDetails() {
   const navigate = useNavigate();
 
   const language = useSelector((state: any) => state.language.lang); // 'ar' | 'en'
-  const dir = language === "ar" ? "rtl" : "ltr";
 
   const { data: userOrders } = useGetUserOrdersQuery(userID);
   const { data: user, isLoading: loadingUser } = useGetUserDetailsQuery<any>(userID);
@@ -70,15 +69,12 @@ function UserDetails() {
       ) : (
         <div
           className={clsx(
-            "px-4 min-h-screen lg:w-4xl py-3 w-full mb-10  flex flex-col mt-[70px] lg:mt-[50px]",
-            dir === "rtl" ? "rtl" : "ltr"
-          )}>
+            "px-4 min-h-screen lg:w-4xl py-3 w-full mb-10  flex flex-col mt-[70px] lg:mt-[50px]"
+          )}
+          dir={language === "ar" ? "rtl" : "ltr"}>
           {/* Header */}
-          <div
-            className={`flex justify-between items-center ${
-              language === "ar" ? "flex-row-reverse" : ""
-            }`}>
-            <h1 className="text-lg font-bold" dir={language === "ar" ? "rtl" : "ltr"}>
+          <div className={`flex justify-between items-center `}>
+            <h1 className="text-lg font-bold">
               {language === "ar" ? "معلومات العميل:" : "Customer's Information:"}
             </h1>
             {!user?.isAdmin && (
@@ -93,9 +89,9 @@ function UserDetails() {
           <Separator className="my-4 bg-black/20" />
 
           {/* Personal Info */}
-          <div className="relative mb-6 w-full p-6 bg-white  rounded-xl border ">
+          <div className="relative mb-2 w-full p-6 bg-white  rounded-xl border ">
             <section>
-              <h2 className="text-xl font-bold text-gray-800 border-b border-gray-300 pb-2 mb-6">
+              <h2 className="text-xl font-bold text-gray-800 border-b  border-gray-200 pb-2 mb-6">
                 {language === "ar" ? "المعلومات الشخصية" : "Personal Information"}
               </h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
@@ -132,29 +128,24 @@ function UserDetails() {
                   <span className="text-gray-400 text-sm">
                     {language === "ar" ? "مسؤول:" : "Admin:"}
                   </span>
-                  <span
-                    className={`mt-1 font-semibold inline-block px-2 py-1 rounded-full text-sm ${
-                      user?.isAdmin
-                        ? "bg-green-100 text-green-800"
-                        : "bg-red-50 text-red-500 border-red-100"
-                    }`}>
-                    {user?.isAdmin
-                      ? language === "ar"
-                        ? "نعم"
-                        : "Yes"
-                      : language === "ar"
-                      ? "لا"
-                      : "No"}
-                  </span>
+                  {user.isAdmin ? (
+                    <Badge icon={false} variant="success" className="px-2 py-1 rounded-full">
+                      {language === "ar" ? "مسؤول" : "Admin"}
+                    </Badge>
+                  ) : (
+                    <Badge icon={false} variant="primary" className="px-2 py-1 rounded-full">
+                      {language === "ar" ? "غير مسؤول" : "Not admin"}
+                    </Badge>
+                  )}
                 </div>
               </div>
             </section>
           </div>
 
           {/* Address */}
-          <div className="bg-white rounded-md p-7 border">
+          <div className="bg-white rounded-md p-6 border">
             <section>
-              <h2 className="text-lg font-bold border-b border-gray-300  mb-5">
+              <h2 className="text-lg font-bold border-b border-gray-200  mb-5">
                 {language === "ar" ? "العنوان" : "Address"}
               </h2>
               {userAddress ? (
@@ -183,7 +174,7 @@ function UserDetails() {
                   </div>
                 </div>
               ) : (
-                <div className="md:text-lg">
+                <div className="">
                   <div>
                     {language === "ar"
                       ? "المستخدم لم يقدم عنواناً بعد"
@@ -195,17 +186,18 @@ function UserDetails() {
           </div>
 
           {/* Orders */}
-          <div className="bg-white mt-3 rounded-md p-7 border">
+          <div className="bg-white mt-2 rounded-md p-7 border">
             <section>
-              <h2 className="text-lg font-bold border-b border-gray-300 pb-2 mb-5">
-                {language === "ar" ? "الطلبات" : "Orders"} :{userOrders?.length}
+              <h2 className="text-lg flex gap-2 font-bold border-b border-gray-200 pb-2 mb-5">
+                {language === "ar" ? "الطلبات" : "Orders"}
+                <p> {userOrders?.length > 0 && userOrders?.length}</p>
               </h2>
               {userOrders?.length > 0 ? (
                 userOrders.map((order: any) => (
                   <div
                     dir={language === "ar" ? "rtl" : ""}
                     key={order._id}
-                    className="flex mb-2 flex-col hover:bg-gray-100 transition-all duration-300 gap-4 border bg-zinc-50 p-4  rounded-lg w-full">
+                    className="flex mb-2 flex-col hover:bg-gray-100 transition-all duration-300 gap-4 border  p-4  rounded-lg w-full">
                     <Link
                       to={`/admin/orders/${order._id}`}
                       className="grid grid-cols-3  md:grid-cols-2 lg:grid-cols-5 gap-3">
@@ -269,7 +261,7 @@ function UserDetails() {
                 ))
               ) : (
                 <div className="md:text:lg">
-                  <div>
+                  <div className="">
                     {language === "ar" ? "المستخدم ليس لديه طلبات" : "User does not have orders"}
                   </div>
                 </div>

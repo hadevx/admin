@@ -13,7 +13,7 @@ export default function ForgotPassword() {
     setMessage("");
     try {
       const { data } = await axios.post(
-        "https://backend-production-9357.up.railway.app/api/users/forget-password",
+        "https://backend.webschema.online/api/users/forget-password",
         { email }
       );
       setMessage(data.message);
@@ -24,7 +24,7 @@ export default function ForgotPassword() {
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gray-50">
+    <div className="flex px-5 items-center justify-center min-h-screen bg-gray-50">
       <div className="w-full max-w-md bg-white p-8 rounded-2xl shadow-lg border border-gray-100">
         <h2 className="text-2xl font-bold text-gray-800 mb-2">Forgot your password?</h2>
         <p className="text-sm text-gray-500 mb-6">

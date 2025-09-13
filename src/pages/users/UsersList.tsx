@@ -6,15 +6,8 @@ import { Search, Crown, Users } from "lucide-react";
 import Badge from "../../components/Badge";
 import { Separator } from "../../components/ui/separator";
 import Loader from "../../components/Loader";
-import {
-  Pagination,
-  PaginationContent,
-  PaginationItem,
-  PaginationLink,
-  PaginationNext,
-  PaginationPrevious,
-} from "@/components/ui/pagination";
 import { useSelector } from "react-redux";
+import Paginate from "@/components/Paginate";
 
 function Customers() {
   const language = useSelector((state: any) => state.language.lang);
@@ -107,7 +100,7 @@ function Customers() {
                 />
               </div>
 
-              <div className="rounded-lg border lg:p-10 overflow-x-scroll md:overflow-auto bg-white">
+              <div className="rounded-lg border lg:p-5 overflow-x-scroll md:overflow-auto bg-white">
                 <table className="w-full rounded-lg text-xs lg:text-sm border-gray-200 text-left text-gray-700">
                   <thead className="bg-white text-gray-900/50 font-semibold">
                     <tr>
@@ -150,28 +143,7 @@ function Customers() {
                   </tbody>
                 </table>
 
-                <Pagination>
-                  <PaginationContent>
-                    <PaginationItem>
-                      <PaginationPrevious onClick={() => page > 1 && setPage(page - 1)} href="#" />
-                    </PaginationItem>
-
-                    {[...Array(pages).keys()].map((x) => (
-                      <PaginationItem key={x + 1}>
-                        <PaginationLink
-                          href="#"
-                          isActive={page === x + 1}
-                          onClick={() => setPage(x + 1)}>
-                          {x + 1}
-                        </PaginationLink>
-                      </PaginationItem>
-                    ))}
-
-                    <PaginationItem>
-                      <PaginationNext onClick={() => page < pages && setPage(page + 1)} href="#" />
-                    </PaginationItem>
-                  </PaginationContent>
-                </Pagination>
+                <Paginate page={page} pages={pages} setPage={setPage} />
               </div>
             </div>
           </div>

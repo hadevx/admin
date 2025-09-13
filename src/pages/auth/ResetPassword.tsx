@@ -16,7 +16,7 @@ export default function ResetPassword() {
 
     try {
       const { data } = await axios.post(
-        `https://backend-production-9357.up.railway.app/api/users/reset-password/${token}`,
+        `https://backend.webschema.online/api/users/reset-password/${token}`,
         { password }
       );
       setMessage(data.message);

@@ -241,7 +241,7 @@ function Categories() {
               </select>
             </div>
 
-            <div className="rounded-lg border p-5 lg:p-10 bg-white">
+            <div className="rounded-lg border p-5 lg:p-5 bg-white">
               <table className="w-full text-sm text-left text-gray-700">
                 <thead className="bg-white text-gray-900/50 font-semibold ">
                   <tr>

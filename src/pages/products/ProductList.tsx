@@ -394,17 +394,17 @@ function ProductList() {
 
                           <td className="px-4 py-3 ">
                             {product?.countInStock === 0 ? (
-                              <p className="bg-red-50 rounded-xl  py-1 text-red-600 text-center border-red-100 border">
+                              <Badge variant="danger" icon={false} className="py-1 rounded-full">
                                 {texts[language].outOfStock}
-                              </p>
+                              </Badge>
                             ) : product.countInStock < 5 ? (
-                              <p className="bg-orange-50 py-1 rounded-xl text-orange-600 text-center border-orange-100 border">
+                              <Badge variant="pending" icon={false} className="py-1 rounded-full">
                                 {texts[language].lowStock}
-                              </p>
+                              </Badge>
                             ) : (
-                              <p className="bg-teal-50 py-1   rounded-xl text-teal-600 text-center border-teal-100 border">
+                              <Badge variant="success" icon={false} className="py-1 rounded-full">
                                 {texts[language].inStock}
-                              </p>
+                              </Badge>
                             )}
                           </td>
                           <td className="px-4 py-3">

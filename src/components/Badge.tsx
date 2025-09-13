@@ -33,8 +33,9 @@ const variantConfig: Record<
     icon: <Clock strokeWidth={2} size={18} />,
   },
   primary: {
-    textColor: "text-blue-700",
-    bgColor: "bg-gradient-to-t from-blue-200 to-blue-100",
+    textColor: "text-blue-500",
+    bgColor: "bg-blue-50",
+    borderColor: "border-blue-500",
     icon: <Lightbulb strokeWidth={2} size={18} />,
   },
   admin: {

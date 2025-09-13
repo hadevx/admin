@@ -104,7 +104,7 @@ function Order() {
               </div>
 
               {/* Table */}
-              <div className="rounded-lg border lg:p-10 bg-white overflow-x-auto">
+              <div className="rounded-lg border lg:p-5 bg-white overflow-x-auto">
                 <table className="w-full min-w-[700px] rounded-lg border-gray-200 text-sm text-left text-gray-700">
                   <thead className="bg-white text-gray-900/50 font-semibold">
                     <tr>
@@ -151,17 +151,17 @@ function Order() {
                           </td>
                           <td className=" whitespace-nowrap">
                             {order?.isDelivered ? (
-                              <Badge variant="success" icon={false} className="p-1">
+                              <Badge variant="success" icon={false} className="p-1 rounded-full">
                                 {" "}
                                 {texts[language].delivered}
                               </Badge>
                             ) : order?.isCanceled ? (
-                              <Badge variant="danger" icon={false} className="p-1">
+                              <Badge variant="danger" icon={false} className="p-1 rounded-full">
                                 {" "}
                                 {texts[language].canceled}
                               </Badge>
                             ) : (
-                              <Badge variant="pending" icon={false} className="p-1">
+                              <Badge variant="pending" icon={false} className="p-1 rounded-full">
                                 {" "}
                                 {texts[language].processing}
                               </Badge>

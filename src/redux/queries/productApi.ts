@@ -38,6 +38,7 @@ export const productApi = api.injectEndpoints({
         method: "POST",
         body: data,
       }),
+      invalidatesTags: ["Product"],
     }),
     deleteDiscount: builder.mutation({
       query: (id: string) => ({
