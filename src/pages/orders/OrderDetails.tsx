@@ -191,7 +191,7 @@ function OrderDetails() {
                               src={item?.variantImage?.[0]?.url || item?.image?.[0]?.url}
                               className="w-10 h-10 md:w-16 md:h-16 object-cover rounded-lg"
                             />
-                            <p className="truncate">{item.name}</p>
+                            <p className="break-words">{item.name}</p>
                           </td>
                           <td className="py-2 px-2 lg:px-4">
                             {item.variantColor && item.variantSize

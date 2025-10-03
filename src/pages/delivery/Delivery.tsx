@@ -49,6 +49,8 @@ function Delivery() {
   const { data: deliveryStatus, refetch, isLoading } = useGetDeliveryStatusQuery(undefined);
   const [updateDelivery, { isLoading: loadingUpdateDelivery }] = useUpdateDeliverMutation();
 
+  console.log(deliveryStatus);
+
   const handleUpdateDelivery = async () => {
     await updateDelivery({ timeToDeliver, shippingFee, minDeliveryCost });
     toast.success(t.updateSettings); // Optional: adjust toast for Arabic
