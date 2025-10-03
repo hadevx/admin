@@ -11,6 +11,7 @@ import { Loader2Icon } from "lucide-react";
 import { toggleLang } from "../../redux/slices/languageSlice";
 import { useSelector, useDispatch } from "react-redux";
 import { Globe } from "lucide-react";
+
 function Settings() {
   const [updateStoreStatus, { isLoading: loadingUpdateStatus }] = useUpdateStoreStatusMutation();
   const { data: storeStatus, refetch, isLoading } = useGetStoreStatusQuery(undefined);
@@ -46,8 +47,8 @@ function Settings() {
 
   useEffect(() => {
     if (storeStatus?.[0]) {
-      setStatus(storeStatus[0].status || "");
-      setBanner(storeStatus[0].banner || "");
+      setStatus(storeStatus[0]?.status || "");
+      setBanner(storeStatus[0]?.banner || "");
     }
   }, [storeStatus]);
 
@@ -179,7 +180,7 @@ function Settings() {
               ) : (
                 <p className="whitespace-pre-wrap max-w-md break-words">
                   {storeStatus?.[0].banner?.trim()
-                    ? storeStatus[0].banner
+                    ? storeStatus[0]?.banner
                     : language === "en"
                     ? "No banner"
                     : "لا يوجد"}

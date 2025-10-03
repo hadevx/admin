@@ -177,7 +177,7 @@ function Delivery() {
                 <p>{t.free}</p>
               ) : (
                 <p>
-                  {deliveryStatus?.[0]?.shippingFee.toFixed(3)}
+                  {deliveryStatus?.[0]?.shippingFee?.toFixed(3)}
                   {language === "ar" ? " دك" : "KD"}
                 </p>
               )}
@@ -191,7 +191,7 @@ function Delivery() {
                 <p>{t.noMinimum}</p>
               ) : (
                 <p>
-                  {deliveryStatus?.[0]?.minDeliveryCost.toFixed(3)}{" "}
+                  {deliveryStatus?.[0]?.minDeliveryCost?.toFixed(3)}{" "}
                   {language === "ar" ? " دك" : "KD"}
                 </p>
               )}
