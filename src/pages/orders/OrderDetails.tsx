@@ -221,7 +221,7 @@ function OrderDetails() {
                         className="w-32 h-32 object-cover rounded-lg border bg-zinc-100"
                       />
                       <div className="flex-1 space-y-1 text-sm">
-                        <p className="font-semibold truncate">{item.name}</p>
+                        <p className="font-semibold break-words">{item.name}</p>
                         <p className="text-gray-600">
                           {language === "ar" ? "اللون/الحجم" : "Color/Size"}:{" "}
                           {item.variantColor ?? "-"} / {item.variantSize ?? "-"}
