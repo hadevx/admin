@@ -249,9 +249,9 @@ function Discounts(): JSX.Element {
           <Separator className="my-5 bg-black/10" />
 
           {/* Bento grid */}
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
+          <div className="grid grid-cols-1  gap-4">
             {/* Create discount (wide) */}
-            <section className={`${bentoCard} lg:col-span-8 p-5`}>
+            <section className={`${bentoCard} lg:col-span-12 p-5`}>
               <div className="flex items-center gap-2">
                 <Sparkles className="h-4 w-4 text-zinc-900" />
                 <h2 className="text-base font-bold text-zinc-900">
@@ -393,56 +393,17 @@ function Discounts(): JSX.Element {
               </div>
             </section>
 
-            {/* Current Discounts (right rail) */}
-            <section className={`${bentoCard} lg:col-span-4 p-5`}>
-              <div className="flex items-center gap-2">
-                <Ticket className="h-4 w-4 text-zinc-900" />
-                <h2 className="text-base font-bold text-zinc-900">{t.currentDiscounts}</h2>
-              </div>
-
-              <Separator className="my-4 bg-black/10" />
-
-              {discountStatus && discountStatus.length > 0 ? (
-                <div className="grid grid-cols-1 gap-3">
-                  {discountStatus.map((d) => (
-                    <div key={d._id} className="rounded-2xl border border-black/10 bg-white p-3">
-                      <Coupon
-                        discountBy={d.discountBy}
-                        categories={d.category.map((catId) =>
-                          getFullCategoryPath(catId, categories || []),
-                        )}
-                        validUntil="Dec, 2025">
-                        <button
-                          onClick={() => handleDeleteDiscount(d._id)}
-                          disabled={loadingDelete && deletingDiscountId === d._id}
-                          className="bg-zinc-900 text-white rounded-full p-2 hover:bg-zinc-800 transition disabled:opacity-60"
-                          title={language === "ar" ? "حذف" : "Delete"}>
-                          {loadingDelete && deletingDiscountId === d._id ? (
-                            <Loader2Icon className="h-4 w-4 animate-spin" />
-                          ) : (
-                            <Trash2 className="h-4 w-4" />
-                          )}
-                        </button>
-                      </Coupon>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <p className="text-zinc-600 text-sm">{t.noDiscounts}</p>
-              )}
-            </section>
-
             {/* Full-width list (optional, keeps your existing grid for coupons if you want) */}
             {discountStatus && discountStatus.length > 0 ? (
               <section className="lg:col-span-12">
                 <div className="mt-2 flex items-center justify-between">
                   <h3 className="text-sm font-semibold text-zinc-900">
-                    {language === "ar" ? "عرض شبكي" : "Grid view"}
+                    {language === "ar" ? "الخصومات الحاليه" : "Current Discounts"}
                   </h3>
                 </div>
                 <Separator className="my-3 bg-black/10" />
 
-                <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-4">
+                <div className="grid sm:grid-cols-2 md:grid-cols-2 gap-2">
                   {discountStatus.map((d) => (
                     <Coupon
                       discountBy={d.discountBy}

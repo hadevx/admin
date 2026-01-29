@@ -125,7 +125,7 @@ function Settings(): JSX.Element {
               <button
                 onClick={handleUpdateStoreStatus}
                 disabled={loadingUpdateStatus}
-                className="hidden md:flex bg-zinc-900 hover:bg-zinc-800 text-white font-semibold px-5 py-2.5 rounded-2xl shadow-lg drop-shadow-[0_0_10px_rgba(24,24,27,0.35)] transition-all duration-200 items-center gap-2 disabled:opacity-60">
+                className="flex bg-zinc-900 hover:bg-zinc-800 text-white font-semibold px-5 py-2.5 rounded-2xl shadow-lg drop-shadow-[0_0_10px_rgba(24,24,27,0.35)] transition-all duration-200 items-center gap-2 disabled:opacity-60">
                 {loadingUpdateStatus ? <Loader2Icon className="animate-spin h-4 w-4" /> : null}
                 {language === "en" ? "Update" : "تحديث"}
               </button>
@@ -134,7 +134,7 @@ function Settings(): JSX.Element {
             <Separator className="my-4 bg-black/10" />
 
             {/* Bento inner grid */}
-            <div className="grid grid-cols-1  gap-3">
+            <div className="grid grid-cols-1 md:grid-cols-12 gap-3">
               {/* Store condition */}
               <div className="md:col-span-12 rounded-2xl border border-black/10 bg-white p-4">
                 <div className="flex items-center gap-2 mb-2">
@@ -154,6 +154,8 @@ function Settings(): JSX.Element {
                   <option value="maintenance">{language === "en" ? "Maintenance" : "صيانة"}</option>
                 </select>
               </div>
+
+              {/* Update button tile (mobile/tablet visible as tile) */}
 
               {/* Banner */}
               <div className="md:col-span-12 rounded-2xl border border-black/10 bg-white p-4">

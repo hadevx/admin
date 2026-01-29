@@ -246,28 +246,6 @@ function Delivery() {
               </div>
             </div>
           </div>
-
-          {/* Optional: a small spacer card like bento style (visual balance) */}
-          <div className={`${bentoCard} lg:col-span-12 p-5`}>
-            <div className="flex items-center justify-between gap-4 flex-wrap">
-              <div>
-                <div className="text-sm font-semibold text-zinc-900">
-                  {language === "ar" ? "ملاحظة" : "Note"}
-                </div>
-                <div className="text-sm text-zinc-600">
-                  {language === "ar"
-                    ? "القيم الحالية تظهر على اليمين. قم بتحديث الإعدادات من البطاقة الكبيرة."
-                    : "Current values are shown on the right. Update settings from the large card."}
-                </div>
-              </div>
-              <button
-                type="button"
-                onClick={() => refetch()}
-                className="rounded-2xl border border-black/10 bg-white px-4 py-2.5 text-sm font-semibold text-zinc-900 hover:bg-zinc-50 transition">
-                {language === "ar" ? "تحديث البيانات" : "Refresh"}
-              </button>
-            </div>
-          </div>
         </div>
       </div>
     </Layout>
