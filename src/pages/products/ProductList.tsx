@@ -75,7 +75,7 @@ function ProductList() {
     colorIndex: number,
     sizeIndex: number,
     field: string,
-    value: any
+    value: any,
   ) => {
     const updated = [...variants];
     (updated[colorIndex].sizes[sizeIndex] as any)[field] = value;
@@ -132,7 +132,7 @@ function ProductList() {
 
       if (searchQuery) {
         filtered = filtered.filter((product: any) =>
-          product.name.toLowerCase().includes(searchQuery.toLowerCase())
+          product.name.toLowerCase().includes(searchQuery.toLowerCase()),
         );
       }
       if (selectedCategory) {
@@ -148,7 +148,7 @@ function ProductList() {
         filtered = filtered.filter((product: any) => product.countInStock >= 5);
       } else if (stockStatus === "low-stock") {
         filtered = filtered.filter(
-          (product: any) => product.countInStock > 0 && product.countInStock < 5
+          (product: any) => product.countInStock > 0 && product.countInStock < 5,
         );
       } else if (stockStatus === "out-of-stock") {
         filtered = filtered.filter((product: any) => product.countInStock === 0);
@@ -595,8 +595,8 @@ function ProductList() {
               {loadingUploadImage
                 ? texts[language].uploading
                 : loadingCreateOrder
-                ? texts[language].creating
-                : texts[language].create}
+                  ? texts[language].creating
+                  : texts[language].create}
             </Button>
           </DialogFooter>
         </DialogContent>
