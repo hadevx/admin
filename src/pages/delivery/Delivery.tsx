@@ -1,11 +1,11 @@
 import Layout from "../../Layout";
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useUpdateDeliverMutation } from "../../redux/queries/orderApi";
 import { toast } from "react-toastify";
 import { useGetDeliveryStatusQuery } from "../../redux/queries/productApi";
 import Spinner from "../../components/Spinner";
 import { Separator } from "../../components/ui/separator";
-import { Loader2Icon } from "lucide-react";
+import { Loader2Icon, Truck, Clock3, Coins, ShieldCheck } from "lucide-react";
 import { useSelector } from "react-redux";
 
 function Delivery() {
@@ -40,7 +40,7 @@ function Delivery() {
     },
   };
 
-  const t = labels[language];
+  const t = labels[language] || labels.en;
 
   const [timeToDeliver, setTimeToDeliver] = useState("");
   const [shippingFee, setShippingFee] = useState("");
@@ -49,157 +49,226 @@ function Delivery() {
   const { data: deliveryStatus, refetch, isLoading } = useGetDeliveryStatusQuery(undefined);
   const [updateDelivery, { isLoading: loadingUpdateDelivery }] = useUpdateDeliverMutation();
 
-  console.log(deliveryStatus);
+  const current = deliveryStatus?.[0];
+
+  // Prefill once when data arrives (nice UX, still no "new features")
+  useEffect(() => {
+    if (!current) return;
+    setTimeToDeliver((v) => (v ? v : current?.timeToDeliver || ""));
+    setShippingFee((v) => (v !== "" ? v : String(current?.shippingFee ?? "")));
+    setMinDeliveryCost((v) => (v !== "" ? v : String(current?.minDeliveryCost ?? "")));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [current]);
 
   const handleUpdateDelivery = async () => {
     await updateDelivery({ timeToDeliver, shippingFee, minDeliveryCost });
-    toast.success(t.updateSettings); // Optional: adjust toast for Arabic
+    toast.success(t.updateSettings);
     refetch();
   };
 
-  const render = () => {
+  const renderTime = () => {
+    const v = current?.timeToDeliver;
     if (language === "ar") {
-      if (deliveryStatus?.[0]?.timeToDeliver === "today") {
-        return "اليوم";
-      }
-      if (deliveryStatus?.[0]?.timeToDeliver === "tomorrow") {
-        return "غدا";
-      }
-      if (deliveryStatus?.[0]?.timeToDeliver === "two days") {
-        return "يومين";
-      }
-    } else {
-      return deliveryStatus?.[0]?.timeToDeliver;
+      if (v === "today") return "اليوم";
+      if (v === "tomorrow") return "غدا";
+      if (v === "two days") return "يومين";
     }
+    return v;
   };
+
+  const currentFeeText = useMemo(() => {
+    if (current?.shippingFee === 0) return t.free;
+    if (typeof current?.shippingFee === "number")
+      return `${current.shippingFee.toFixed(3)} ${language === "ar" ? "دك" : "KD"}`;
+    return "—";
+  }, [current, language, t.free]);
+
+  const currentMinText = useMemo(() => {
+    if (current?.minDeliveryCost === 0) return t.noMinimum;
+    if (typeof current?.minDeliveryCost === "number")
+      return `${current.minDeliveryCost.toFixed(3)} ${language === "ar" ? "دك" : "KD"}`;
+    return "—";
+  }, [current, language, t.noMinimum]);
+
+  const bentoCard = "rounded-3xl border border-black/10 bg-white/80 backdrop-blur shadow-sm";
 
   return (
     <Layout>
       <div
-        dir={language === "ar" ? "rtl" : ""}
-        className="px-4 w-full lg:w-4xl min-h-screen lg:min-h-auto lg:text-lg py-6 mt-[70px] lg:mt-[50px] space-y-5">
-        {/* Update Section */}
-        <section>
-          <div className={`flex items-center gap-2 mb-2 `}>
-            <h1 className="text-lg font-bold text-zinc-800 ">{t.updateSettings}</h1>
-          </div>
-          <Separator className="my-4 bg-black/10" />
+        dir={language === "ar" ? "rtl" : "ltr"}
+        className="px-4 w-full max-w-4xl  min-h-screen py-6 mt-[70px] lg:mt-[50px]">
+        {/* Bento Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
+          {/* Title (wide) */}
+          <div className={`${bentoCard} lg:col-span-8 p-5`}>
+            <div className="flex items-center justify-between gap-3">
+              <div className="flex items-center gap-3">
+                <div className="h-11 w-11 rounded-2xl bg-zinc-900 text-white grid place-items-center">
+                  <Truck className="h-5 w-5" />
+                </div>
+                <div>
+                  <h1 className="text-lg md:text-xl font-bold text-zinc-900">{t.updateSettings}</h1>
+                  <p className="text-sm text-zinc-600">
+                    {language === "ar"
+                      ? "قم بتحديث إعدادات وقت التوصيل والرسوم والحد الأدنى."
+                      : "Update delivery ETA, fees, and minimum order amount."}
+                  </p>
+                </div>
+              </div>
 
-          <div className="bg-white border rounded-xl p-5 space-y-3 lg:space-y-0 lg:flex lg:items-end lg:justify-between gap-6">
-            {/* Time to Deliver */}
-            <div className="w-full lg:w-[200px]">
-              <label className="block mb-1 text-sm font-medium text-zinc-700">
-                {t.timeToDeliver}
-              </label>
-              <select
-                onChange={(e) => setTimeToDeliver(e.target.value)}
-                value={timeToDeliver}
-                className="cursor-pointer text-base px-4 py-2 border rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 w-full">
-                <option value="" disabled>
-                  {t.chooseTime}
-                </option>
-                <option value="today">{language === "ar" ? "اليوم" : "Today"}</option>
-                <option value="tomorrow">{language === "ar" ? "غدًا" : "Tomorrow"}</option>
-                <option value="two days">{language === "ar" ? "يومين" : "2 days"}</option>
-              </select>
-            </div>
-
-            {/* Shipping Fee */}
-            <div className="w-full lg:w-[200px]">
-              <label className="block mb-1 text-sm font-medium text-zinc-700">
-                {t.shippingFee}
-              </label>
-              <select
-                value={shippingFee}
-                onChange={(e) => setShippingFee(e.target.value)}
-                className="cursor-pointer text-base px-4 py-2 border rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 w-full">
-                <option value="" disabled>
-                  {t.chooseFee}
-                </option>
-                {[0, 1, 2, 3, 4, 5].map((fee) => (
-                  <option key={fee} value={fee}>
-                    {fee === 0 ? t.free : `${fee}.000 ${language === "ar" ? "دك" : "KD"}`}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            {/* Min delivery cost */}
-            <div className="w-full lg:w-[200px]">
-              <p className="block mb-1 text-sm font-medium text-zinc-700">{t.minDeliveryCost}</p>
-              <select
-                value={minDeliveryCost}
-                onChange={(e) => setMinDeliveryCost(e.target.value)}
-                className="cursor-pointer px-4 text-base py-2 border rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 w-full">
-                <option value="" disabled>
-                  {t.minCost}
-                </option>
-                {[0, 1, 2, 3, 4, 5].map((fee) => (
-                  <option key={fee} value={fee}>
-                    {fee === 0 ? t.noMinimum : `${fee}.000 ${language === "ar" ? "دك" : "KD"}`}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            {/* Update Button */}
-            <div className="w-full mt-5 lg:w-[200px]">
               <button
                 onClick={handleUpdateDelivery}
                 disabled={loadingUpdateDelivery}
-                className="bg-zinc-900  drop-shadow-[0_0_10px_rgba(24,24,27,0.5)] hover:bg-zinc-800 text-white font-semibold px-6 py-2 rounded-lg shadow-lg transition-all duration-200 w-full flex justify-center items-center">
-                {loadingUpdateDelivery ? <Loader2Icon className="animate-spin" /> : t.updateBtn}
+                className="hidden md:flex bg-zinc-900 drop-shadow-[0_0_10px_rgba(24,24,27,0.35)] hover:bg-zinc-800 text-white font-semibold px-5 py-2.5 rounded-2xl transition-all duration-200 items-center gap-2 disabled:opacity-60">
+                {loadingUpdateDelivery ? <Loader2Icon className="animate-spin h-4 w-4" /> : null}
+                {t.updateBtn}
+              </button>
+            </div>
+
+            <Separator className="my-4 bg-black/10" />
+
+            {/* Inputs inside the wide card */}
+            <div className="grid grid-cols-1  gap-3">
+              {/* Time */}
+              <div className="rounded-2xl border border-black/10 bg-white p-4">
+                <div className="flex items-center gap-2 mb-2">
+                  <Clock3 className="h-4 w-4 text-zinc-700" />
+                  <label className="text-sm font-semibold text-zinc-800">{t.timeToDeliver}</label>
+                </div>
+                <select
+                  onChange={(e) => setTimeToDeliver(e.target.value)}
+                  value={timeToDeliver}
+                  className="cursor-pointer text-base px-4 py-2.5 border border-black/10 rounded-xl shadow-sm focus:ring-2 focus:ring-blue-500 w-full bg-white">
+                  <option value="" disabled>
+                    {t.chooseTime}
+                  </option>
+                  <option value="today">{language === "ar" ? "اليوم" : "Today"}</option>
+                  <option value="tomorrow">{language === "ar" ? "غدًا" : "Tomorrow"}</option>
+                  <option value="two days">{language === "ar" ? "يومين" : "2 days"}</option>
+                </select>
+              </div>
+
+              {/* Shipping fee */}
+              <div className="rounded-2xl border border-black/10 bg-white p-4">
+                <div className="flex items-center gap-2 mb-2">
+                  <Coins className="h-4 w-4 text-zinc-700" />
+                  <label className="text-sm font-semibold text-zinc-800">{t.shippingFee}</label>
+                </div>
+                <select
+                  value={shippingFee}
+                  onChange={(e) => setShippingFee(e.target.value)}
+                  className="cursor-pointer text-base px-4 py-2.5 border border-black/10 rounded-xl shadow-sm focus:ring-2 focus:ring-blue-500 w-full bg-white">
+                  <option value="" disabled>
+                    {t.chooseFee}
+                  </option>
+                  {[0, 1, 2, 3, 4, 5].map((fee) => (
+                    <option key={fee} value={fee}>
+                      {fee === 0 ? t.free : `${fee}.000 ${language === "ar" ? "دك" : "KD"}`}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Min */}
+              <div className="rounded-2xl border border-black/10 bg-white p-4">
+                <div className="flex items-center gap-2 mb-2">
+                  <ShieldCheck className="h-4 w-4 text-zinc-700" />
+                  <label className="text-sm font-semibold text-zinc-800">{t.minDeliveryCost}</label>
+                </div>
+                <select
+                  value={minDeliveryCost}
+                  onChange={(e) => setMinDeliveryCost(e.target.value)}
+                  className="cursor-pointer text-base px-4 py-2.5 border border-black/10 rounded-xl shadow-sm focus:ring-2 focus:ring-blue-500 w-full bg-white">
+                  <option value="" disabled>
+                    {t.minCost}
+                  </option>
+                  {[0, 1, 2, 3, 4, 5].map((fee) => (
+                    <option key={fee} value={fee}>
+                      {fee === 0 ? t.noMinimum : `${fee}.000 ${language === "ar" ? "دك" : "KD"}`}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            {/* Mobile update button */}
+            <button
+              onClick={handleUpdateDelivery}
+              disabled={loadingUpdateDelivery}
+              className="mt-4 md:hidden bg-zinc-900 drop-shadow-[0_0_10px_rgba(24,24,27,0.35)] hover:bg-zinc-800 text-white font-semibold px-6 py-3 rounded-2xl transition-all duration-200 w-full flex justify-center items-center gap-2 disabled:opacity-60">
+              {loadingUpdateDelivery ? <Loader2Icon className="animate-spin h-4 w-4" /> : null}
+              {t.updateBtn}
+            </button>
+          </div>
+
+          {/* Current status (stacked bento tiles) */}
+          <div className={`${bentoCard} lg:col-span-4 p-5`}>
+            <h2 className="text-lg font-bold text-zinc-900">{t.currentStatus}</h2>
+            <Separator className="my-4 bg-black/10" />
+
+            <div className="grid grid-cols-1 gap-3">
+              {/* Time tile */}
+              <div className="rounded-2xl border border-black/10 bg-white p-4">
+                <span className="block text-xs text-zinc-500">{t.timeToDeliver}</span>
+                {isLoading ? (
+                  <div className="mt-2">
+                    <Spinner className="border-t-black" />
+                  </div>
+                ) : (
+                  <p className="mt-1 text-base font-semibold text-zinc-900 capitalize">
+                    {renderTime() || "—"}
+                  </p>
+                )}
+              </div>
+
+              {/* Fee tile */}
+              <div className="rounded-2xl border border-black/10 bg-white p-4">
+                <span className="block text-xs text-zinc-500">{t.shippingFee}</span>
+                {isLoading ? (
+                  <div className="mt-2">
+                    <Spinner className="border-t-black" />
+                  </div>
+                ) : (
+                  <p className="mt-1 text-base font-semibold text-zinc-900">{currentFeeText}</p>
+                )}
+              </div>
+
+              {/* Min tile */}
+              <div className="rounded-2xl border border-black/10 bg-white p-4">
+                <span className="block text-xs text-zinc-500">{t.minDeliveryCost}</span>
+                {isLoading ? (
+                  <div className="mt-2">
+                    <Spinner className="border-t-black" />
+                  </div>
+                ) : (
+                  <p className="mt-1 text-base font-semibold text-zinc-900">{currentMinText}</p>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Optional: a small spacer card like bento style (visual balance) */}
+          <div className={`${bentoCard} lg:col-span-12 p-5`}>
+            <div className="flex items-center justify-between gap-4 flex-wrap">
+              <div>
+                <div className="text-sm font-semibold text-zinc-900">
+                  {language === "ar" ? "ملاحظة" : "Note"}
+                </div>
+                <div className="text-sm text-zinc-600">
+                  {language === "ar"
+                    ? "القيم الحالية تظهر على اليمين. قم بتحديث الإعدادات من البطاقة الكبيرة."
+                    : "Current values are shown on the right. Update settings from the large card."}
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => refetch()}
+                className="rounded-2xl border border-black/10 bg-white px-4 py-2.5 text-sm font-semibold text-zinc-900 hover:bg-zinc-50 transition">
+                {language === "ar" ? "تحديث البيانات" : "Refresh"}
               </button>
             </div>
           </div>
-        </section>
-
-        {/* Current Status Section */}
-        <section>
-          <div className={`flex lg:text-lg items-center gap-2 mb-2 `}>
-            <h1 className="text-lg font-bold text-zinc-800">{t.currentStatus}</h1>
-          </div>
-          <Separator className="my-4 bg-black/10" />
-
-          <div className="bg-white border rounded-xl p-5 flex flex-col lg:flex-row lg:items-center lg:justify-start gap-3 lg:gap-10 font-semibold text-zinc-800">
-            <div>
-              <span className="block text-xs text-zinc-500">{t.timeToDeliver}</span>
-              {isLoading ? (
-                <Spinner className="border-t-black" />
-              ) : (
-                <p className="capitalize">{render()}</p>
-              )}
-            </div>
-
-            <div>
-              <span className="block text-xs text-zinc-500">{t.shippingFee}</span>
-              {isLoading ? (
-                <Spinner className="border-t-black" />
-              ) : deliveryStatus?.[0]?.shippingFee === 0 ? (
-                <p>{t.free}</p>
-              ) : (
-                <p>
-                  {deliveryStatus?.[0]?.shippingFee?.toFixed(3)}
-                  {language === "ar" ? " دك" : "KD"}
-                </p>
-              )}
-            </div>
-
-            <div>
-              <span className="block text-xs text-zinc-500">{t.minDeliveryCost}</span>
-              {isLoading ? (
-                <Spinner className="border-t-black" />
-              ) : deliveryStatus?.[0]?.minDeliveryCost === 0 ? (
-                <p>{t.noMinimum}</p>
-              ) : (
-                <p>
-                  {deliveryStatus?.[0]?.minDeliveryCost?.toFixed(3)}{" "}
-                  {language === "ar" ? " دك" : "KD"}
-                </p>
-              )}
-            </div>
-          </div>
-        </section>
+        </div>
       </div>
     </Layout>
   );
