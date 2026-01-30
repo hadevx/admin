@@ -1,9 +1,9 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState, type JSX } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import Layout from "../../Layout";
 import { toast } from "react-toastify";
 import Loader from "../../components/Loader";
-import { PencilLine, Loader2Icon } from "lucide-react";
+import { PencilLine, Loader2Icon, Star, StarOff, ImagePlus, Trash2, Tag } from "lucide-react";
 import Lottie from "lottie-react";
 import upload from "./uploading.json";
 
@@ -24,6 +24,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogFooter,
+  DialogDescription,
 } from "@/components/ui/dialog";
 import { useSelector } from "react-redux";
 
@@ -37,80 +38,219 @@ import {
 import VariantItem from "./VariantItem";
 import { Switch } from "@/components/ui/switch";
 import { PERCENTAGE } from "./constants";
+import clsx from "clsx";
 
-function ProductDetails() {
-  const language = useSelector((state: any) => state.language.lang); // 'ar' or 'en'
+/** Types (minimal, safe) */
+type RootState = { language: { lang: "ar" | "en" } };
+
+type CategoryNode = {
+  _id: string;
+  name: string;
+  children?: CategoryNode[];
+};
+
+type ProductImage = { url: string; publicId?: string };
+
+type Product = {
+  _id: string;
+  name: string;
+  price: number;
+  discountedPrice?: number;
+  hasDiscount?: boolean;
+  discountBy?: number;
+  image: ProductImage[];
+  category: any; // API seems to return object when reading; but update expects id
+  countInStock: number;
+  description: string;
+  featured?: boolean;
+  variants?: any[];
+};
+
+function ProductDetails(): JSX.Element {
+  const language = useSelector((state: RootState) => state.language.lang);
   const dir = language === "ar" ? "rtl" : "ltr";
+  const isRTL = language === "ar";
 
-  const [newName, setNewName] = useState("");
-  const [newPrice, setNewPrice] = useState<number>();
-  const [newCategory, setNewCategory] = useState("");
-  const [newCountInStock, setNewCountInStock] = useState<number>();
-  const [newDescription, setNewDescription] = useState("");
-  const [clickEditProduct, setClickEditProduct] = useState(false);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [featured, setFeatured] = useState(false);
-  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const t = useMemo(() => {
+    return isRTL
+      ? {
+          title: "تفاصيل المنتج",
+          delete: "حذف المنتج",
+          createDiscount: "انشاء خصم",
+          edit: "تعديل",
+          cancel: "إلغاء",
+          update: "تحديث",
+          saving: "جاري الحفظ...",
+          uploading: "جاري الرفع...",
+          updating: "جاري التحديث...",
+          updated: "تم تحديث المنتج بنجاح",
+          deleted: "تم حذف المنتج بنجاح",
+          deleteConfirmTitle: "حذف المنتج",
+          deleteConfirmDesc: "هل أنت متأكد أنك تريد حذف هذا المنتج؟",
+          priceMustBePositive: "السعر يجب أن يكون رقمًا موجبًا",
+          uploadNewImages: "رفع صور/ه جديدة",
+          selectedFiles: "الملفات المحددة:",
+          name: "الاسم",
+          category: "الفئة",
+          price: "السعر",
+          stock: "المخزون",
+          featured: "منتج مميز",
+          yes: "نعم",
+          no: "لا",
+          description: "الوصف",
+          chooseCategory: "اختر الفئة",
+          discountTitle: "خصم المنتج",
+          enableDiscount: "تفعيل الخصم",
+          discountPercentage: "نسبة الخصم",
+          choosePercentage: "اختر نسبة",
+          discountedPrice: "السعر بعد الخصم:",
+          close: "إغلاق",
+          save: "حفظ",
+          imageUploadFailed: "فشل رفع الصورة",
+          updateError: "خطأ في تحديث المنتج",
+          deleteBtn: "حذف",
+          badgeEditing: "وضع التعديل",
+          badgeReadonly: "عرض فقط",
+          keepImagesHint: "عند اختيار صور جديدة سيتم استبدال جميع الصور الحالية.",
+          preview: "معاينة",
+        }
+      : {
+          title: "Product Details",
+          delete: "Delete Product",
+          createDiscount: "Create Discount",
+          edit: "Edit",
+          cancel: "Cancel",
+          update: "Update",
+          saving: "Saving...",
+          uploading: "Uploading...",
+          updating: "Updating...",
+          updated: "Product updated successfully",
+          deleted: "Product deleted successfully",
+          deleteConfirmTitle: "Delete Product",
+          deleteConfirmDesc: "Are you sure you want to delete this product?",
+          priceMustBePositive: "Price must be positive",
+          uploadNewImages: "Upload new image/s",
+          selectedFiles: "Selected files:",
+          name: "Name",
+          category: "Category",
+          price: "Price",
+          stock: "Stock",
+          featured: "Featured Product",
+          yes: "Yes",
+          no: "No",
+          description: "Description",
+          chooseCategory: "Choose a category",
+          discountTitle: "Product Discount",
+          enableDiscount: "Enable Discount",
+          discountPercentage: "Discount Percentage",
+          choosePercentage: "Choose percentage",
+          discountedPrice: "Discounted Price:",
+          close: "Close",
+          save: "Save",
+          imageUploadFailed: "Image upload failed",
+          updateError: "Error updating product",
+          deleteBtn: "Delete",
+          badgeEditing: "Editing",
+          badgeReadonly: "Read-only",
+          keepImagesHint: "Selecting new images will replace all existing ones.",
+          preview: "Preview",
+        };
+  }, [isRTL]);
 
   const { id: productId } = useParams();
   const navigate = useNavigate();
+
   const { data: product, refetch, isLoading: loadingProduct } = useGetProductByIdQuery(productId);
+
   const { data: categoryTree } = useGetCategoriesTreeQuery(undefined);
 
   const [deleteProduct, { isLoading: loadingDeleteProduct }] = useDeleteProductMutation();
   const [updateProduct, { isLoading: loadingUpdateProduct }] = useUpdateProductMutation();
   const { refetch: refetchProducts } = useGetProductsQuery(undefined);
   const [uploadProductImage, { isLoading: loadingUploadImage }] = useUploadProductImageMutation();
-  // --- Discount modal state ---
+
+  // UI / modals
+  const [clickEditProduct, setClickEditProduct] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isDiscountModalOpen, setIsDiscountModalOpen] = useState(false);
+
+  // fields
+  const [newName, setNewName] = useState("");
+  const [newPrice, setNewPrice] = useState<number | "">("");
+  const [newCategory, setNewCategory] = useState("");
+  const [newCountInStock, setNewCountInStock] = useState<number | "">("");
+  const [newDescription, setNewDescription] = useState("");
+  const [featured, setFeatured] = useState(false);
+
+  // images
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+
+  // discount
   const [hasDiscount, setHasDiscount] = useState(false);
   const [discountBy, setDiscountBy] = useState<number>(0);
   const [discountedPrice, setDiscountedPrice] = useState<number>(0);
 
-  console.log(typeof discountBy);
-  // --- Initialize state from product ---
+  const initializedRef = useRef(false);
+
+  // init from product (once)
   useEffect(() => {
-    if (product) {
-      setNewName(product.name);
-      setNewPrice(product.price);
-      setNewCategory(product.category);
-      setNewCountInStock(product.countInStock);
-      setNewDescription(product.description);
-      setFeatured(product.featured ?? false);
-      // discount values
-      setHasDiscount(product.hasDiscount ?? false);
-      setDiscountBy(product.discountBy ?? 0);
-      // setDiscountedPrice(product.discountedPrice ?? 0);
-    }
+    if (!product || initializedRef.current) return;
+    const p = product as Product;
+
+    setNewName(p.name ?? "");
+    setNewPrice(typeof p.price === "number" ? p.price : "");
+    // product.category might be object; keep id if possible
+    setNewCategory((p as any)?.category?._id || (p as any)?.category || "");
+    setNewCountInStock(typeof p.countInStock === "number" ? p.countInStock : "");
+    setNewDescription(p.description ?? "");
+    setFeatured(!!p.featured);
+
+    setHasDiscount(!!p.hasDiscount);
+    setDiscountBy(typeof p.discountBy === "number" ? p.discountBy : 0);
+
+    initializedRef.current = true;
   }, [product]);
 
-  // auto calculate discounted price
+  // calculate discounted
   useEffect(() => {
-    if (!newPrice) return;
+    const priceNum = typeof newPrice === "number" ? newPrice : 0;
+    if (!priceNum) {
+      setDiscountedPrice(0);
+      return;
+    }
     if (hasDiscount && discountBy > 0) {
-      const final = newPrice - newPrice * discountBy;
+      const final = priceNum - priceNum * discountBy;
       setDiscountedPrice(final > 0 ? final : 0);
     } else {
-      setDiscountedPrice(newPrice);
+      setDiscountedPrice(priceNum);
     }
   }, [discountBy, hasDiscount, newPrice]);
 
+  const busy = loadingUploadImage || loadingUpdateProduct;
+
   const handleDeleteProduct = async () => {
-    if (product) {
-      await deleteProduct(productId);
-      toast.success(language === "ar" ? "تم حذف المنتج بنجاح" : "Product deleted successfully");
+    try {
+      await deleteProduct(productId as string);
+      toast.success(t.deleted);
       refetchProducts();
       navigate("/admin/productlist");
+    } catch (e: any) {
+      toast.error(e?.data?.message || "Delete failed");
     }
   };
 
   const handleUpdateProduct = async () => {
-    if (typeof newPrice === "number" && newPrice <= 0) {
-      toast.error(language === "ar" ? "السعر يجب أن يكون رقمًا موجبًا" : "Price must be positive");
+    const p = product as Product;
+    const priceNum = typeof newPrice === "number" ? newPrice : p.price;
+
+    if (typeof priceNum === "number" && priceNum <= 0) {
+      toast.error(t.priceMustBePositive);
       return;
     }
 
-    let uploadedImages = [...product.image]; // keep existing images
+    let uploadedImages: ProductImage[] = Array.isArray(p?.image) ? [...p.image] : [];
+
+    // If user selected new images -> replace all
     if (selectedFiles.length > 0) {
       uploadedImages = [];
       for (const file of selectedFiles) {
@@ -118,30 +258,31 @@ function ProductDetails() {
         formData.append("images", file);
         try {
           const res = await uploadProductImage(formData).unwrap();
-          if (Array.isArray(res.images)) {
+
+          if (Array.isArray(res?.images)) {
             res.images.forEach((img: any) =>
-              uploadedImages.push({ url: img.imageUrl, publicId: img.publicId })
+              uploadedImages.push({ url: img.imageUrl, publicId: img.publicId }),
             );
-          } else {
+          } else if (res?.imageUrl) {
             uploadedImages.push({ url: res.imageUrl, publicId: res.publicId });
           }
         } catch (error: any) {
-          toast.error(error?.data?.message || "Image upload failed");
+          toast.error(error?.data?.message || t.imageUploadFailed);
           return;
         }
       }
     }
 
     const updatedProduct = {
-      _id: productId,
-      name: newName.trim() || product.name,
-      price: typeof newPrice === "number" ? newPrice : product.price,
+      _id: p?._id || productId,
+      name: (newName || p.name || "").trim(),
+      price: priceNum,
       image: uploadedImages,
-      category: newCategory || product.category,
-      countInStock: typeof newCountInStock === "number" ? newCountInStock : product.countInStock,
-      description: newDescription.trim() || product.description,
+      category: newCategory || (p as any)?.category?._id || (p as any)?.category,
+      countInStock: typeof newCountInStock === "number" ? newCountInStock : (p?.countInStock ?? 0),
+      description: (newDescription || p.description || "").trim(),
       featured,
-      // discount fields
+
       hasDiscount,
       discountBy,
       discountedPrice,
@@ -149,152 +290,200 @@ function ProductDetails() {
 
     try {
       await updateProduct(updatedProduct).unwrap();
-      toast.success(language === "ar" ? "تم تحديث المنتج بنجاح" : "Product updated successfully");
+      toast.success(t.updated);
       setClickEditProduct(false);
       setIsDiscountModalOpen(false);
+      setSelectedFiles([]);
       refetch();
       refetchProducts();
-      setSelectedFiles([]);
     } catch (err: any) {
-      toast.error(
-        err?.data?.message || (language === "ar" ? "خطأ في تحديث المنتج" : "Error updating product")
-      );
+      toast.error(err?.data?.message || t.updateError);
     }
   };
 
-  console.log("product details: ", product);
+  const renderCategoryOptions = (nodes: CategoryNode[], level = 0): React.ReactNode =>
+    nodes.map((node) => (
+      <React.Fragment key={node._id}>
+        <option value={node._id}>{`${"—".repeat(level)} ${node.name}`}</option>
+        {node.children?.length ? renderCategoryOptions(node.children, level + 1) : null}
+      </React.Fragment>
+    ));
+
+  const formatPrice = (v: number) => `${v.toFixed(3)} KD`;
+
+  const statusBadge = (
+    <span
+      className={clsx(
+        "inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-xs font-semibold",
+        clickEditProduct
+          ? "border-neutral-950/15 bg-neutral-950 text-white"
+          : "border-neutral-200 bg-white text-neutral-900",
+      )}>
+      {clickEditProduct ? <PencilLine className="h-3.5 w-3.5" /> : <EyeIcon />}
+      {clickEditProduct ? t.badgeEditing : t.badgeReadonly}
+    </span>
+  );
+
+  function EyeIcon() {
+    return (
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" className="text-neutral-900">
+        <path
+          d="M2.5 12s3.5-7.5 9.5-7.5S21.5 12 21.5 12s-3.5 7.5-9.5 7.5S2.5 12 2.5 12Z"
+          stroke="currentColor"
+          strokeWidth="2"
+        />
+        <path
+          d="M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Z"
+          stroke="currentColor"
+          strokeWidth="2"
+        />
+      </svg>
+    );
+  }
+
+  if (loadingProduct) {
+    return (
+      <Layout>
+        <Loader />
+      </Layout>
+    );
+  }
+
+  const p = product as Product | undefined;
+
   return (
     <Layout>
-      {loadingProduct ? (
-        <Loader />
-      ) : (
-        <div className={`px-4 w-full lg:w-4xl py-6 mb-10 mt-10 min-h-screen ${dir} font-custom`}>
-          {/* Header */}
-          <div
-            className={`flex justify-between items-center mb-6 ${
-              language === "ar" ? "flex-row-reverse" : ""
-            }`}>
-            <h1 className="text-2xl font-bold">
-              {language === "ar" ? "تفاصيل المنتج" : "Product Details"}
-            </h1>
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => setIsModalOpen(true)}
-                className="select-none bg-gradient-to-t from-rose-500 to-rose-400 hover:opacity-90 
-             text-white px-3 py-2 rounded-lg font-bold 
-             drop-shadow-[0_4px_8px_rgba(244,63,94,0.5)] hover:drop-shadow-[0_6px_12px_rgba(251,113,133,0.5)] 
-             transition-all">
-                {language === "ar" ? "حذف المنتج" : "Delete Product"}
-              </button>
-
-              <button
-                onClick={() => setIsDiscountModalOpen(true)}
-                className="select-none bg-black drop-shadow-[0_0_10px_rgba(24,24,27,0.5)]  text-white px-3 py-2 rounded-lg font-bold shadow-md">
-                {language === "ar" ? "انشاء خصم" : "Create Discount"}
-              </button>
-            </div>
+      <div
+        dir={dir}
+        className={clsx(
+          "px-4 w-full max-w-6xl py-6 mb-10 mt-10 min-h-screen font-custom",
+          isRTL ? "rtl" : "ltr",
+        )}>
+        {/* Header */}
+        <div
+          className={clsx(
+            "flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6",
+            isRTL ? "sm:flex-row-reverse" : "",
+          )}>
+          <div className="flex items-center gap-3">
+            <h1 className="text-2xl font-bold text-neutral-950">{t.title}</h1>
+            {statusBadge}
           </div>
 
-          <Separator className="my-4 bg-black/20" />
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              onClick={() => setIsDeleteModalOpen(true)}
+              className="select-none inline-flex items-center gap-2 bg-gradient-to-t from-rose-500 to-rose-400 hover:opacity-90 
+             text-white px-3 py-2 rounded-2xl font-bold 
+             drop-shadow-[0_4px_8px_rgba(244,63,94,0.5)] hover:drop-shadow-[0_6px_12px_rgba(251,113,133,0.5)] 
+             transition-all"
+              type="button">
+              <Trash2 className="h-4 w-4" />
+              {t.delete}
+            </button>
 
-          {/* Main Content */}
-          <div className="bg-white border rounded-xl p-6 space-y-6">
-            <div className="flex justify-between items-center">
-              <h2 className="text-xl font-semibold">{product?.name}</h2>
-              <div className="flex items-center gap-3">
-                {clickEditProduct && (
-                  <button
-                    onClick={handleUpdateProduct}
-                    disabled={loadingUploadImage || loadingUpdateProduct}
-                    className={`px-4 py-2 rounded-lg text-white font-semibold shadow transition
-                      ${
-                        loadingUploadImage || loadingUpdateProduct
-                          ? "bg-zinc-400"
-                          : "bg-black hover:opacity-90"
-                      }`}>
-                    {loadingUploadImage
-                      ? language === "ar"
-                        ? "جاري الرفع..."
-                        : "Uploading..."
-                      : loadingUpdateProduct
-                      ? language === "ar"
-                        ? "جاري التحديث..."
-                        : "Updating..."
-                      : language === "ar"
-                      ? "تحديث"
-                      : "Update"}
-                  </button>
+            <button
+              onClick={() => setIsDiscountModalOpen(true)}
+              className="select-none inline-flex items-center gap-2 bg-neutral-950 hover:bg-neutral-900 text-white px-3 py-2 rounded-2xl font-bold shadow-md"
+              type="button">
+              <Tag className="h-4 w-4" />
+              {t.createDiscount}
+            </button>
+
+            <button
+              onClick={() => setClickEditProduct((v) => !v)}
+              className="inline-flex items-center gap-2 rounded-2xl border border-neutral-200 bg-white px-3 py-2 font-semibold text-neutral-900 hover:bg-neutral-50 transition"
+              type="button">
+              {clickEditProduct ? (
+                <>
+                  <span>{t.cancel}</span>
+                </>
+              ) : (
+                <>
+                  <PencilLine className="h-4 w-4" />
+                  <span>{t.edit}</span>
+                </>
+              )}
+            </button>
+
+            {clickEditProduct ? (
+              <button
+                onClick={handleUpdateProduct}
+                disabled={busy}
+                className={clsx(
+                  "inline-flex items-center gap-2 rounded-2xl px-4 py-2 font-semibold text-white transition",
+                  busy
+                    ? "bg-neutral-400 cursor-not-allowed"
+                    : "bg-neutral-950 hover:bg-neutral-900",
                 )}
-                <button
-                  onClick={() => setClickEditProduct(!clickEditProduct)}
-                  className="bg-zinc-50 border  p-2 rounded-lg text-black font-semibold  hover:opacity-70 transition flex items-center gap-2">
-                  {clickEditProduct ? (
-                    language === "ar" ? (
-                      "إلغاء"
-                    ) : (
-                      "Cancel"
-                    )
-                  ) : (
-                    <PencilLine size={18} />
-                  )}
-                </button>
+                type="button">
+                {busy ? <Loader2Icon className="h-4 w-4 animate-spin" /> : null}
+                {loadingUploadImage ? t.uploading : loadingUpdateProduct ? t.updating : t.update}
+              </button>
+            ) : null}
+          </div>
+        </div>
+
+        <Separator className="my-4 bg-black/10" />
+
+        {/* Main content (bento) */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
+          {/* Images card */}
+          <div className="lg:col-span-5 rounded-3xl border border-neutral-200 bg-white/80 backdrop-blur shadow-sm overflow-hidden">
+            <div className="p-5 flex items-center justify-between gap-3">
+              <div className="min-w-0">
+                <p className="text-sm font-semibold text-neutral-900">{p?.name}</p>
+                <p className="text-xs text-neutral-500">
+                  {clickEditProduct ? t.keepImagesHint : " "}
+                </p>
+              </div>
+
+              <div className="inline-flex items-center gap-2">
+                <span
+                  className={clsx(
+                    "inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-xs font-semibold",
+                    "border-neutral-200 bg-white text-neutral-900",
+                  )}>
+                  <ImagePlus className="h-3.5 w-3.5" />
+                  {p?.image?.length || 0}
+                </span>
               </div>
             </div>
 
-            <Separator />
-
-            {/* Images & Details */}
-            <div className="flex flex-col sm:flex-row lg:flex-row gap-5">
-              <div className="flex-shrink-0 w-full sm:w-80 lg:w-96 h-96 lg:h-96">
-                {!clickEditProduct ? (
-                  product?.image?.length > 1 ? (
-                    <Carousel className="h-full">
-                      <CarouselContent>
-                        {product.image.map((img: any, index: number) => (
-                          <CarouselItem key={index}>
-                            <img
-                              src={img.url}
-                              alt={`Product ${index + 1}`}
-                              loading="lazy"
-                              className="w-full h-80 lg:h-96 object-cover rounded-lg"
-                            />
-                          </CarouselItem>
-                        ))}
-                      </CarouselContent>
-                      <CarouselPrevious className="absolute top-1/2 left-2 -translate-y-1/2 bg-black/50 text-white rounded-full p-2 hover:bg-white/50">
-                        &#8592;
-                      </CarouselPrevious>
-                      <CarouselNext className="absolute top-1/2 right-2 -translate-y-1/2 bg-black/50 text-white rounded-full p-2 hover:bg-white/50">
-                        &#8594;
-                      </CarouselNext>
-                    </Carousel>
-                  ) : (
-                    <img
-                      src={product?.image[0]?.url}
-                      alt="Product"
-                      className="w-full h-96 lg:h-96 object-cover rounded-lg"
-                    />
-                  )
+            <div className="px-5 pb-5">
+              {!clickEditProduct ? (
+                p?.image?.length && p.image.length > 1 ? (
+                  <Carousel className="w-full">
+                    <CarouselContent>
+                      {p.image.map((img, index) => (
+                        <CarouselItem key={index}>
+                          <img
+                            src={img.url}
+                            alt={`Product ${index + 1}`}
+                            loading="lazy"
+                            className="w-full h-[360px] sm:h-[420px] object-cover rounded-2xl"
+                          />
+                        </CarouselItem>
+                      ))}
+                    </CarouselContent>
+                    <CarouselPrevious className="absolute top-1/2 left-2 -translate-y-1/2 bg-black/50 text-white rounded-full p-2 hover:bg-black/60" />
+                    <CarouselNext className="absolute top-1/2 right-2 -translate-y-1/2 bg-black/50 text-white rounded-full p-2 hover:bg-black/60" />
+                  </Carousel>
                 ) : (
-                  <label className="cursor-pointer h-full flex flex-col items-center justify-center w-full p-4 bg-gray-50 border-2 border-dashed border-gray-300 rounded-lg shadow hover:bg-gray-100 hover:border-gray-400 transition">
+                  <img
+                    src={p?.image?.[0]?.url}
+                    alt="Product"
+                    className="w-full h-[360px] sm:h-[420px] object-cover rounded-2xl"
+                  />
+                )
+              ) : (
+                <div className="space-y-3">
+                  <label className="cursor-pointer h-[360px] sm:h-[420px] flex flex-col items-center justify-center w-full p-4 bg-neutral-50 border-2 border-dashed border-neutral-300 rounded-2xl hover:bg-neutral-100 hover:border-neutral-400 transition">
                     <div className="w-44 h-44">
                       <Lottie animationData={upload} loop />
                     </div>
-                    <span className="text-gray-700 font-medium">
-                      {language === "ar" ? "رفع صور/ه جديدة" : "Upload new image/s"}
-                    </span>
-                    {selectedFiles.length > 0 && (
-                      <div className="mt-2">
-                        <p className="text-sm font-medium text-gray-700">
-                          {language === "ar" ? "الملفات المحددة:" : "Selected files:"}
-                        </p>
-                        <ul className="list-disc list-inside text-sm text-gray-600">
-                          {selectedFiles.map((file, index) => (
-                            <li key={index}>{file.name}</li>
-                          ))}
-                        </ul>
-                      </div>
-                    )}
+                    <span className="text-neutral-700 font-semibold">{t.uploadNewImages}</span>
+
                     <input
                       type="file"
                       multiple
@@ -304,269 +493,308 @@ function ProductDetails() {
                       className="hidden"
                     />
                   </label>
-                )}
+
+                  {selectedFiles.length > 0 ? (
+                    <div className="rounded-2xl border border-neutral-200 bg-white p-4">
+                      <p className="text-sm font-semibold text-neutral-900">{t.selectedFiles}</p>
+                      <ul className="mt-2 list-disc pl-5 text-sm text-neutral-700 space-y-1">
+                        {selectedFiles.map((file, idx) => (
+                          <li key={idx} className="break-all">
+                            {file.name}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  ) : null}
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Details card */}
+          <div className="lg:col-span-7 rounded-3xl border border-neutral-200 bg-white/80 backdrop-blur shadow-sm">
+            <div className="p-5">
+              <div className="flex items-center justify-between gap-3 flex-wrap">
+                <h2 className="text-lg font-semibold text-neutral-950">{p?.name}</h2>
+
+                <div className="inline-flex items-center gap-2">
+                  <span
+                    className={clsx(
+                      "inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-xs font-semibold",
+                      p?.featured
+                        ? "border-amber-200 bg-amber-50 text-amber-800"
+                        : "border-neutral-200 bg-white text-neutral-700",
+                    )}>
+                    {p?.featured ? (
+                      <Star className="h-3.5 w-3.5" />
+                    ) : (
+                      <StarOff className="h-3.5 w-3.5" />
+                    )}
+                    {t.featured}: {p?.featured ? t.yes : t.no}
+                  </span>
+                </div>
               </div>
 
-              {/* Product Fields */}
-              <div className="flex-1 grid grid-cols-3 gap-6">
+              <Separator className="my-4 bg-black/10" />
+
+              {/* Grid fields */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 {/* Name */}
-                <div>
-                  <label className="text-gray-600">{language === "ar" ? ":الاسم" : "Name:"}</label>
+                <div className="rounded-2xl border border-neutral-200 bg-white p-4">
+                  <div className="text-xs text-neutral-500">{t.name}</div>
                   {!clickEditProduct ? (
-                    <p className="font-bold">{product?.name}</p>
+                    <div className="mt-1 font-semibold text-neutral-950 break-words">{p?.name}</div>
                   ) : (
                     <input
                       value={newName}
                       onChange={(e) => setNewName(e.target.value)}
-                      className="w-full p-2 bg-gray-50 border rounded-lg shadow"
+                      className="mt-2 w-full rounded-xl border border-neutral-200 bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-neutral-950/10"
                     />
                   )}
                 </div>
 
                 {/* Category */}
-                <div>
-                  <label className="text-gray-600">
-                    {language === "ar" ? ":الفئة" : "Category:"}
-                  </label>
+                <div className="rounded-2xl border border-neutral-200 bg-white p-4">
+                  <div className="text-xs text-neutral-500">{t.category}</div>
                   {!clickEditProduct ? (
-                    <p className="font-bold">{product?.category?.name}</p>
+                    <div className="mt-1 font-semibold text-neutral-950 break-words">
+                      {(p as any)?.category?.name || "—"}
+                    </div>
                   ) : (
                     <select
                       value={newCategory}
                       onChange={(e) => setNewCategory(e.target.value)}
-                      className="w-full px-4 py-2 bg-white border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm">
+                      className="mt-2 w-full rounded-xl border border-neutral-200 bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500/30">
                       <option value="" disabled>
-                        -- {language === "ar" ? "اختر الفئة" : "Choose a category"} --
+                        -- {t.chooseCategory} --
                       </option>
-                      {categoryTree && renderCategoryOptions(categoryTree)}
+                      {categoryTree ? renderCategoryOptions(categoryTree as CategoryNode[]) : null}
                     </select>
                   )}
                 </div>
 
                 {/* Price */}
-                <div>
-                  <label className="text-gray-600">{language === "ar" ? ":السعر" : "Price:"}</label>
+                <div className="rounded-2xl border border-neutral-200 bg-white p-4">
+                  <div className="text-xs text-neutral-500">{t.price}</div>
                   {!clickEditProduct ? (
-                    <div className="font-bold">
-                      {product?.hasDiscount ? (
+                    <div className="mt-1 font-semibold text-neutral-950">
+                      {p?.hasDiscount ? (
                         <div className="flex flex-col">
-                          <span className="line-through text-gray-500 text-sm">
-                            {product?.price.toFixed(3)} KD
+                          <span className="line-through text-neutral-500 text-sm">
+                            {formatPrice(p.price)}
                           </span>
-                          <span className="text-green-600 text-lg">
-                            {product?.discountedPrice.toFixed(3)} KD
+                          <span className="text-emerald-600 text-lg">
+                            {formatPrice(p.discountedPrice ?? p.price)}
                           </span>
                         </div>
                       ) : (
-                        <span>{product?.price.toFixed(3)} KD</span>
+                        <span className="text-lg">{formatPrice(p?.price ?? 0)}</span>
                       )}
                     </div>
                   ) : (
                     <input
                       value={newPrice}
-                      onChange={(e) => setNewPrice(Number(e.target.value))}
-                      className="w-full p-2 bg-gray-50 border rounded-lg shadow"
+                      onChange={(e) =>
+                        setNewPrice(e.target.value === "" ? "" : Number(e.target.value))
+                      }
+                      inputMode="decimal"
+                      className="mt-2 w-full rounded-xl border border-neutral-200 bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-neutral-950/10"
                     />
                   )}
                 </div>
 
                 {/* Stock */}
-                <div>
-                  <label className="text-gray-600">
-                    {language === "ar" ? ":المخزون" : "Stock:"}
-                  </label>
-
+                <div className="rounded-2xl border border-neutral-200 bg-white p-4">
+                  <div className="text-xs text-neutral-500">{t.stock}</div>
                   {!clickEditProduct ? (
-                    <p className="font-bold">{product?.countInStock}</p>
+                    <div className="mt-1 font-semibold text-neutral-950">
+                      {p?.countInStock ?? 0}
+                    </div>
                   ) : (
                     <input
                       value={newCountInStock}
-                      onChange={(e) => setNewCountInStock(Number(e.target.value))}
-                      disabled={product?.variants && product.variants.length > 0} // 🔒 Disable if variants exist
-                      className={`w-full p-2 bg-gray-50 border rounded-lg shadow ${
-                        product?.variants?.length > 0 ? "opacity-50 cursor-not-allowed" : ""
-                      }`}
+                      onChange={(e) =>
+                        setNewCountInStock(e.target.value === "" ? "" : Number(e.target.value))
+                      }
+                      disabled={!!(p?.variants && p.variants.length > 0)}
+                      className={clsx(
+                        "mt-2 w-full rounded-xl border border-neutral-200 bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-neutral-950/10",
+                        p?.variants?.length ? "opacity-60 cursor-not-allowed" : "",
+                      )}
                     />
                   )}
                 </div>
+
                 {/* Featured */}
-                <div className="">
-                  <label className="text-gray-600">
-                    {language === "ar" ? ":منتج مميز" : "Featured Product:"}
-                  </label>
+                <div className="rounded-2xl border border-neutral-200 bg-white p-4">
+                  <div className="text-xs text-neutral-500">{t.featured}</div>
                   {!clickEditProduct ? (
-                    <p className="font-bold">
-                      {product?.featured
-                        ? language === "ar"
-                          ? "نعم"
-                          : "Yes"
-                        : language === "ar"
-                        ? "لا"
-                        : "No"}
-                    </p>
+                    <div className="mt-1 font-semibold text-neutral-950">
+                      {p?.featured ? t.yes : t.no}
+                    </div>
                   ) : (
-                    <div className="w-full ">
+                    <div className="mt-2 flex items-center gap-3">
                       <Switch
                         id="featured"
-                        className="scale-150 mt-2"
+                        className="scale-125"
                         checked={featured}
                         onCheckedChange={setFeatured}
                       />
+                      <span className="text-sm font-semibold text-neutral-700">
+                        {featured ? t.yes : t.no}
+                      </span>
                     </div>
                   )}
                 </div>
-                {/* Description */}
-                <div className="col-span-3 lg:col-span-3">
-                  <label className="text-gray-600">
-                    {language === "ar" ? ":الوصف" : "Description:"}
-                  </label>
+
+                {/* Discount quick view */}
+                <div className="rounded-2xl border border-neutral-200 bg-white p-4">
+                  <div className="text-xs text-neutral-500">{isRTL ? "الخصم" : "Discount"}</div>
+                  <div className="mt-1 font-semibold text-neutral-950">
+                    {p?.hasDiscount
+                      ? `${Math.round((p.discountBy ?? 0) * 100)}%`
+                      : isRTL
+                        ? "لا يوجد"
+                        : "None"}
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setIsDiscountModalOpen(true)}
+                    className="mt-2 text-xs font-semibold text-neutral-900 underline">
+                    {isRTL ? "تعديل الخصم" : "Edit discount"}
+                  </button>
+                </div>
+
+                {/* Description - full width */}
+                <div className="sm:col-span-3 rounded-2xl border border-neutral-200 bg-white p-4">
+                  <div className="text-xs text-neutral-500">{t.description}</div>
                   {!clickEditProduct ? (
-                    <p className="font-bold break-words whitespace-pre-line">
-                      {product?.description}
-                    </p>
+                    <div className="mt-1 font-semibold text-neutral-950 whitespace-pre-line break-words">
+                      {p?.description || "—"}
+                    </div>
                   ) : (
                     <textarea
                       value={newDescription}
                       onChange={(e) => setNewDescription(e.target.value)}
-                      className="w-full h-24 p-2 bg-gray-50 border rounded-lg shadow"
+                      className="mt-2 w-full h-28 rounded-xl border border-neutral-200 bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-neutral-950/10"
                     />
                   )}
                 </div>
               </div>
             </div>
           </div>
+        </div>
 
-          {/* Variants section */}
-          {product?.variants.map((v: any) => (
-            <VariantItem key={v._id} variant={v} productId={product._id} language={language} />
-          ))}
+        {/* Variants */}
+        {p?.variants?.length
+          ? p.variants.map((v: any) => (
+              <VariantItem key={v._id} variant={v} productId={p._id} language={language} />
+            ))
+          : null}
 
-          {/* Delete Modal */}
-          <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>{language === "ar" ? "حذف المنتج" : "Delete Product"}</DialogTitle>
-              </DialogHeader>
-              {language === "ar"
-                ? "هل أنت متأكد أنك تريد حذف هذا المنتج؟"
-                : "Are you sure you want to delete this product?"}
-              <DialogFooter className="mt-4 flex justify-end gap-2">
-                <Button variant="outline" onClick={() => setIsModalOpen(false)}>
-                  {language === "ar" ? "إلغاء" : "Cancel"}
-                </Button>
-                <Button
-                  disabled={loadingDeleteProduct}
-                  variant="destructive"
-                  className="bg-gradient-to-t from-rose-500 hover:opacity-90 to-rose-400"
-                  onClick={handleDeleteProduct}>
-                  {loadingDeleteProduct ? (
-                    <Loader2Icon className="animate-spin" />
-                  ) : language === "ar" ? (
-                    "حذف"
-                  ) : (
-                    "Delete"
-                  )}
-                </Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
-          {/* Discount Modal */}
-          <div>
-            <Dialog open={isDiscountModalOpen} onOpenChange={setIsDiscountModalOpen}>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>{language === "ar" ? "خصم المنتج" : "Product Discount"}</DialogTitle>
-                </DialogHeader>
-                <div className="space-y-4">
-                  {/* Enable discount */}
-                  <div className="flex items-center gap-3">
-                    <Switch
-                      checked={hasDiscount}
-                      onCheckedChange={setHasDiscount}
-                      className="scale-125"
-                    />
-                    <span>{language === "ar" ? "تفعيل الخصم" : "Enable Discount"}</span>
+        {/* Delete Modal */}
+        <Dialog open={isDeleteModalOpen} onOpenChange={setIsDeleteModalOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>{t.deleteConfirmTitle}</DialogTitle>
+              <DialogDescription>{t.deleteConfirmDesc}</DialogDescription>
+            </DialogHeader>
+
+            <DialogFooter className="mt-4 flex justify-end gap-2">
+              <Button variant="outline" onClick={() => setIsDeleteModalOpen(false)}>
+                {t.cancel}
+              </Button>
+              <Button
+                disabled={loadingDeleteProduct}
+                variant="destructive"
+                className="bg-gradient-to-t from-rose-500 hover:opacity-90 to-rose-400"
+                onClick={handleDeleteProduct}>
+                {loadingDeleteProduct ? <Loader2Icon className="animate-spin" /> : t.deleteBtn}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Discount Modal */}
+        <Dialog open={isDiscountModalOpen} onOpenChange={setIsDiscountModalOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>{t.discountTitle}</DialogTitle>
+              <DialogDescription>
+                {isRTL
+                  ? "تطبيق خصم على المنتج وحساب السعر النهائي تلقائيًا."
+                  : "Enable a discount and auto-calculate the final price."}
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className="space-y-4">
+              <div className="flex items-center gap-3">
+                <Switch
+                  checked={hasDiscount}
+                  onCheckedChange={setHasDiscount}
+                  className="scale-125"
+                />
+                <span className="font-semibold text-neutral-900">{t.enableDiscount}</span>
+              </div>
+
+              {hasDiscount ? (
+                <>
+                  <div>
+                    <label className="text-sm font-semibold text-neutral-700">
+                      {t.discountPercentage}
+                    </label>
+                    <select
+                      value={discountBy}
+                      onChange={(e) => setDiscountBy(Number(e.target.value))}
+                      className="mt-2 w-full rounded-xl border border-neutral-200 bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500/30">
+                      <option value={0} disabled>
+                        -- {t.choosePercentage} --
+                      </option>
+                      {PERCENTAGE.map((p) => (
+                        <option key={p} value={p}>
+                          {Math.round(p * 100)}%
+                        </option>
+                      ))}
+                    </select>
                   </div>
 
-                  {hasDiscount && (
-                    <>
-                      {/* Discount percentage */}
-                      <div>
-                        <label className="text-gray-600">
-                          {language === "ar" ? "نسبة الخصم" : "Discount Percentage"}
-                        </label>
-                        <select
-                          value={discountBy}
-                          onChange={(e) => setDiscountBy(Number(e.target.value))}
-                          className="w-full px-4 py-2 bg-white border border-gray-300 rounded-lg shadow-sm mt-1">
-                          <option value={0} disabled>
-                            -- {language === "ar" ? "اختر نسبة" : "Choose percentage"} --
-                          </option>
-                          {PERCENTAGE.map((p) => (
-                            <option key={p} value={p}>
-                              {p * 100}%
-                            </option>
-                          ))}
-                        </select>
-                      </div>
-
-                      {/* Final price */}
-                      <div>
-                        <p className="font-semibold" dir="rtl">
-                          {language === "ar" ? "السعر بعد الخصم:" : "Discounted Price:"}{" "}
-                          <span className="text-green-600">{discountedPrice.toFixed(3)} KD</span>
-                        </p>
-                      </div>
-                    </>
-                  )}
+                  <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-4">
+                    <p className="text-sm font-semibold text-neutral-900">
+                      {t.discountedPrice}{" "}
+                      <span className="text-emerald-700">{discountedPrice.toFixed(3)} KD</span>
+                    </p>
+                  </div>
+                </>
+              ) : (
+                <div className="rounded-2xl border border-neutral-200 bg-white p-4 text-sm text-neutral-700">
+                  {isRTL ? "الخصم غير مفعّل." : "Discount is disabled."}
                 </div>
-                <DialogFooter>
-                  <Button variant="outline" onClick={() => setIsDiscountModalOpen(false)}>
-                    {language === "ar" ? "إلغاء" : "Cancel"}
-                  </Button>
-                  <Button
-                    disabled={loadingUpdateProduct}
-                    onClick={handleUpdateProduct}
-                    className="bg-black text-white">
-                    {loadingUpdateProduct
-                      ? language === "ar"
-                        ? "جاري الحفظ..."
-                        : "Saving..."
-                      : language === "ar"
-                      ? "حفظ"
-                      : "Save"}
-                  </Button>
-                </DialogFooter>
-              </DialogContent>
-            </Dialog>
-          </div>
-        </div>
-      )}
+              )}
+            </div>
+
+            <DialogFooter className="mt-2">
+              <Button variant="outline" onClick={() => setIsDiscountModalOpen(false)}>
+                {t.cancel}
+              </Button>
+              <Button
+                disabled={loadingUpdateProduct || loadingUploadImage}
+                onClick={handleUpdateProduct}
+                className="bg-neutral-950 text-white hover:bg-neutral-900">
+                {loadingUpdateProduct || loadingUploadImage ? (
+                  <>
+                    <Loader2Icon className="h-4 w-4 animate-spin mr-2" />
+                    {t.saving}
+                  </>
+                ) : (
+                  t.save
+                )}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      </div>
     </Layout>
   );
 }
-
-/* // --- Helpers ---
-const findCategoryNameById = (id: any, nodes: any) => {
-  if (!id || !Array.isArray(nodes)) return null;
-  for (const node of nodes) {
-    if (String(node._id) === String(id)) return node.name;
-    if (node.children) {
-      const result: any = findCategoryNameById(id, node.children);
-      if (result) return result;
-    }
-  }
-  return null;
-}; */
-
-const renderCategoryOptions = (nodes: any, level = 0) =>
-  nodes.map((node: any) => (
-    <React.Fragment key={node._id}>
-      <option value={node._id}>
-        {"⤷ ".repeat(level)} {node.name}
-      </option>
-      {node.children && renderCategoryOptions(node.children, level + 1)}
-    </React.Fragment>
-  ));
 
 export default ProductDetails;
