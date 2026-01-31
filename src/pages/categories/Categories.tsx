@@ -173,6 +173,7 @@ function Categories(): JSX.Element {
   const categories = data?.categories || [];
   const pages = data?.pages || 1;
 
+  console.log(categories);
   const filteredCategories = useMemo(() => {
     const bySearch = categories.filter((cat) =>
       String(cat.name || "")
@@ -321,7 +322,7 @@ function Categories(): JSX.Element {
       ) : (
         <div
           dir={language === "ar" ? "rtl" : "ltr"}
-          className="px-4 mb-10 py-3 mt-[70px] lg:mt-[50px] w-full max-w-4xl min-h-screen lg:min-h-auto">
+          className="px-4 mb-10 py-3 mt-[70px] lg:mt-[50px] w-full max-w-6xl min-h-screen lg:min-h-auto">
           {/* Header */}
           <div className="flex items-start justify-between gap-3">
             <div>

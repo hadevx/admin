@@ -6,17 +6,10 @@ import { useGetOrdersQuery } from "../../redux/queries/orderApi";
 import { Layers, Search } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import Loader from "../../components/Loader";
-import {
-  Pagination,
-  PaginationContent,
-  PaginationItem,
-  PaginationLink,
-  PaginationNext,
-  PaginationPrevious,
-} from "@/components/ui/pagination";
 import { useSelector } from "react-redux";
 import { texts } from "./translations";
 import MobiusBand from "./../../components/MobiusBand";
+import Paginate from "@/components/Paginate";
 
 function Order() {
   const navigate = useNavigate();
@@ -185,26 +178,8 @@ function Order() {
                 </table>
 
                 {/* Pagination */}
-                <Pagination className="py-2">
-                  <PaginationContent>
-                    <PaginationItem>
-                      <PaginationPrevious onClick={() => page > 1 && setPage(page - 1)} href="#" />
-                    </PaginationItem>
-                    {[...Array(pages).keys()].map((x) => (
-                      <PaginationItem key={x + 1}>
-                        <PaginationLink
-                          href="#"
-                          isActive={page === x + 1}
-                          onClick={() => setPage(x + 1)}>
-                          {x + 1}
-                        </PaginationLink>
-                      </PaginationItem>
-                    ))}
-                    <PaginationItem>
-                      <PaginationNext onClick={() => page < pages && setPage(page + 1)} href="#" />
-                    </PaginationItem>
-                  </PaginationContent>
-                </Pagination>
+                {/* Pagination */}
+                <Paginate page={page} pages={pages} setPage={setPage} />
               </div>
             </div>
           </div>

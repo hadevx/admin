@@ -35,7 +35,7 @@ export default function MobiusBand() {
       setDateTime(
         `اليوم ${dayName} الساعة ${hours}:${minutes.toString().padStart(2, "0")}:${seconds
           .toString()
-          .padStart(2, "0")} ${period}`
+          .padStart(2, "0")} ${period}`,
       );
     };
 
@@ -49,7 +49,7 @@ export default function MobiusBand() {
 
     setLoading(true);
     const url = `https://weather.visualcrossing.com/VisualCrossingWebServices/rest/services/timeline/${encodeURIComponent(
-      location
+      location,
     )}?unitGroup=metric&key=${apiKey}&contentType=json`;
 
     fetch(url)
