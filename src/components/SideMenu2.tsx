@@ -92,21 +92,37 @@ function SideMenu() {
   // Your exact menu content JSX (same as desktop)
   const menuContent = (
     <div className="flex flex-col h-full text-black px-2 lg:px-[2rem] py-[2rem] border-r-[2px] w-64 lg:w-auto min-h-screen ">
-      <div className="mt-10 flex items-center gap-2 p-2">
-        <a href="https://webschema.online" target="_blank">
+      <div className="mt-10 flex items-center gap-3 p-2">
+        <a
+          href="https://webschema.online"
+          target="_blank"
+          rel="noreferrer"
+          className="shrink-0"
+          aria-label="Open website">
           <motion.div
-            whileHover={{ scale: 0.95 }}
-            className="rounded-full select-none border-2 border-gray-400 hover:border-gray-900 size-12 flex justify-center items-center transition">
-            <div className="rounded-full hover:opacity-80 bg-gradient-to-r shadow-md from-zinc-600 to-zinc-800 text-white size-10 flex justify-center items-center font-semibold text-lg">
-              {/*    {adminUserInfo?.name.charAt(0).toUpperCase()}
-            {adminUserInfo?.name.charAt(adminUserInfo?.name.length - 1).toUpperCase()} */}
-              <img src={logo} alt="logo" width={"25px"} />
+            whileHover={{ scale: 0.96 }}
+            whileTap={{ scale: 0.98 }}
+            className="relative rounded-2xl select-none border border-white/10 bg-black
+                 shadow-[0_14px_40px_rgba(0,0,0,0.35)]
+                 h-12 w-12 flex items-center justify-center transition">
+            <div
+              className="relative h-10 w-10 rounded-2xl bg-gradient-to-br from-zinc-700 to-zinc-900
+                      border border-white/10 shadow-md grid place-items-center">
+              <img src={logo} alt="logo" className="h-6 w-6 object-contain" />
             </div>
+
+            {/* small online dot */}
+            <span
+              className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full
+                   bg-emerald-500 border-2 border-black"
+              aria-hidden="true"
+            />
           </motion.div>
         </a>
-        <div>
-          <p className="text-sm font-bold">{adminUserInfo?.name}</p>
-          <p className="text-sm text-gray-500">{adminUserInfo?.email}</p>
+
+        <div className="min-w-0">
+          <p className="text-sm font-black text-neutral-900 truncate">{adminUserInfo?.name}</p>
+          <p className="text-xs text-neutral-500 truncate">{adminUserInfo?.email}</p>
         </div>
       </div>
 
@@ -119,7 +135,7 @@ function SideMenu() {
             onClick={() => setIsMenuOpen(false)}
             className={clsx(
               "flex gap-3 hover:bg-white px-3 py-2 rounded-lg hover:shadow transition-all duration-300",
-              pathname === "/admin/summary" && "bg-white shadow"
+              pathname === "/admin/summary" && "bg-white shadow",
             )}>
             <ScrollText strokeWidth={1} />
             <p>{t.summary}</p>
@@ -129,7 +145,7 @@ function SideMenu() {
             onClick={() => setIsMenuOpen(false)}
             className={clsx(
               "flex gap-3 hover:bg-white px-3 py-2 rounded-lg hover:shadow transition-all duration-300",
-              (pathname === "/admin" || pathname.startsWith("/admin/orders")) && "bg-white shadow"
+              (pathname === "/admin" || pathname.startsWith("/admin/orders")) && "bg-white shadow",
             )}>
             <ShoppingBasket strokeWidth={1} />
             <p>{t.orders}</p>
@@ -139,7 +155,7 @@ function SideMenu() {
             onClick={() => setIsMenuOpen(false)}
             className={clsx(
               "flex gap-3 hover:bg-white px-3 py-2 rounded-lg hover:shadow transition-all duration-300",
-              pathname.startsWith("/admin/productlist") && "bg-white shadow"
+              pathname.startsWith("/admin/productlist") && "bg-white shadow",
             )}>
             <Box strokeWidth={1} />
             <p>{t.products}</p>
@@ -149,7 +165,7 @@ function SideMenu() {
             onClick={() => setIsMenuOpen(false)}
             className={clsx(
               "flex gap-3 hover:bg-white px-3 py-2 rounded-lg hover:shadow-[0_0_5px_rgba(0,0,0,0.1)]",
-              pathname === "/admin/categories" && "bg-white shadow-[0_0_5px_rgba(0,0,0,0.1)]"
+              pathname === "/admin/categories" && "bg-white shadow-[0_0_5px_rgba(0,0,0,0.1)]",
             )}>
             <Boxes strokeWidth={1} />
             <p>{t.categories}</p>
@@ -159,7 +175,7 @@ function SideMenu() {
             onClick={() => setIsMenuOpen(false)}
             className={clsx(
               "flex gap-3 hover:bg-white px-3 py-2 rounded-lg hover:shadow transition-all duration-300",
-              pathname.startsWith("/admin/userlist") && "bg-white shadow"
+              pathname.startsWith("/admin/userlist") && "bg-white shadow",
             )}>
             <Users strokeWidth={1} />
             <p>{t.customers}</p>
@@ -169,7 +185,7 @@ function SideMenu() {
             onClick={() => setIsMenuOpen(false)}
             className={clsx(
               "flex gap-3 hover:bg-white px-3 py-2 rounded-lg hover:shadow transition-all duration-300",
-              pathname.startsWith("/admin/discounts") && "bg-white shadow"
+              pathname.startsWith("/admin/discounts") && "bg-white shadow",
             )}>
             <TicketPercent strokeWidth={1} />
             <p>{t.discounts}</p>
@@ -179,7 +195,7 @@ function SideMenu() {
             onClick={() => setIsMenuOpen(false)}
             className={clsx(
               "flex gap-3 hover:bg-white px-3 py-2 rounded-lg hover:shadow transition-all duration-300",
-              pathname === "/admin/delivery" && "bg-white shadow"
+              pathname === "/admin/delivery" && "bg-white shadow",
             )}>
             <Truck strokeWidth={1} />
             <p>{t.delivery}</p>
@@ -189,7 +205,7 @@ function SideMenu() {
             onClick={() => setIsMenuOpen(false)}
             className={clsx(
               "group flex gap-3 hover:bg-white px-3 py-2 rounded-lg hover:shadow transition-all duration-300 ",
-              pathname === "/admin/settings" && "bg-white shadow"
+              pathname === "/admin/settings" && "bg-white shadow",
             )}>
             <Settings
               strokeWidth={1}
