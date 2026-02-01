@@ -10,7 +10,7 @@ import {
   useUpdateCategoryMutation,
 } from "../../redux/queries/productApi";
 import { toast } from "react-toastify";
-import Badge from "../../components/Badge";
+// import Badge from "../../components/Badge";
 import Loader from "../../components/Loader";
 import { Button } from "@/components/ui/button";
 import {
@@ -118,7 +118,7 @@ function Categories(): JSX.Element {
       categoryExists: "هذه الفئة موجودة بالفعل.",
       subOf: "فرعي من",
       main: "رئيسية",
-      manage: "إدارة قائمة الفئات والتسلسل الهرمي والصور.",
+      manage: "إدارة قائمة الفئات.",
       filters: "الفلاتر",
       list: "قائمة الفئات",
       hierarchy: "التسلسل",
@@ -333,12 +333,12 @@ function Categories(): JSX.Element {
                 <div>
                   <h1 className="text-xl lg:text-2xl font-extrabold text-zinc-900 flex items-center gap-2">
                     {t.categories}
-                    <Badge icon={false}>
+                    {/* <Badge icon={false}>
                       <p className="text-base lg:text-sm font-semibold">
                         {data?.total || 0}{" "}
                         <span className="hidden lg:inline">{t.totalCategories}</span>
                       </p>
-                    </Badge>
+                    </Badge> */}
                   </h1>
                   <p className="text-sm text-zinc-600">{t.manage}</p>
                 </div>
