@@ -13,7 +13,7 @@ export default function Unauthorized() {
     await logoutApiCall(undefined).unwrap();
     dispatch(logout());
     // toast.success(res.message);
-    navigate("/admin/login");
+    navigate("/login");
   };
   return (
     <div className="flex flex-col items-center justify-center h-screen bg-black text-white">

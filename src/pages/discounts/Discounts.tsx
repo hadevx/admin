@@ -362,7 +362,7 @@ function Discounts(): JSX.Element {
                   {categories?.length === 0 ? (
                     <p className="py-3 text-sm text-zinc-700">
                       {t.noCategories}{" "}
-                      <Link to="/admin/categories" className="underline text-blue-600">
+                      <Link to="/categories" className="underline text-blue-600">
                         {t.createCategory}
                       </Link>
                     </p>

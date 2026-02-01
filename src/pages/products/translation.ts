@@ -40,7 +40,7 @@ export const texts: any = {
     outOfStock: "نفذ ",
     searchProducts: "ابحث عن المنتجات...",
     name: "الاسم",
-    variants: "الانواع",
+    variants: "المتغيرات",
     category: "الفئة",
     stock: "المخزون",
     status: "الحالة",

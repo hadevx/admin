@@ -41,7 +41,7 @@ function UserDetails() {
     try {
       if (user?.isAdmin) {
         toast.error(
-          language === "ar" ? "لا يمكن حذف مستخدم مسؤول" : "Cannot delete an admin user."
+          language === "ar" ? "لا يمكن حذف مستخدم مسؤول" : "Cannot delete an admin user.",
         );
         return;
       }
@@ -50,7 +50,7 @@ function UserDetails() {
       toast.success(language === "ar" ? "تم حذف المستخدم بنجاح" : "User deleted successfully");
       refetch();
 
-      navigate("/admin/userlist");
+      navigate("/userlist");
     } catch (error: any) {
       const errorMsg =
         error?.data?.message ||
@@ -69,7 +69,7 @@ function UserDetails() {
       ) : (
         <div
           className={clsx(
-            "px-4 min-h-screen lg:w-4xl py-3 w-full mb-10  flex flex-col mt-[70px] lg:mt-[50px]"
+            "px-4 min-h-screen lg:w-4xl py-3 w-full mb-10  flex flex-col mt-[70px] lg:mt-[50px]",
           )}
           dir={language === "ar" ? "rtl" : "ltr"}>
           {/* Header */}
@@ -199,7 +199,7 @@ function UserDetails() {
                     key={order._id}
                     className="flex mb-2 flex-col hover:bg-gray-100 transition-all duration-300 gap-4 border  p-4  rounded-lg w-full">
                     <Link
-                      to={`/admin/orders/${order._id}`}
+                      to={`/orders/${order._id}`}
                       className="grid grid-cols-3  md:grid-cols-2 lg:grid-cols-5 gap-3">
                       <div
                         className={`flex gap-2 flex-wrap ${

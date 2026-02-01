@@ -10,7 +10,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogFooter,
+  // DialogFooter,
   DialogDescription,
 } from "@/components/ui/dialog";
 import {
@@ -357,33 +357,75 @@ const VariantItem = ({ variant, productId, language }: Props) => {
 
       {/* Edit Modal */}
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
-        <DialogContent className="max-w-xl rounded-3xl p-6">
-          <DialogHeader>
-            <DialogTitle className="text-xl font-semibold">{t.editVariant}</DialogTitle>
-            <DialogDescription className="text-sm">{t.editVariantDesc}</DialogDescription>
-          </DialogHeader>
+        <DialogContent className="w-[calc(100vw-1rem)] sm:w-[calc(100vw-2rem)] max-w-2xl p-0 overflow-hidden max-h-[90vh] flex flex-col rounded-3xl">
+          {/* ================= HEADER ================= */}
+          <div className="px-4 sm:px-6 py-4 border-b bg-white shrink-0">
+            <DialogHeader>
+              <DialogTitle className="text-lg sm:text-xl font-bold">{t.editVariant}</DialogTitle>
+              <DialogDescription className="text-sm text-neutral-500">
+                {t.editVariantDesc}
+              </DialogDescription>
+            </DialogHeader>
+          </div>
 
-          <div className="space-y-5 mt-4">
-            {/* Color */}
+          {/* ================= BODY ================= */}
+          <div className="flex-1 min-h-0 overflow-y-auto px-4 sm:px-6 py-6 bg-neutral-50 space-y-4">
+            {/* ================= COLOR ================= */}
             <div className={clsx(tile, "p-4")}>
-              <label className="block text-sm font-semibold text-neutral-900 mb-2">{t.color}</label>
-              <select
-                value={localVariant.color}
-                onChange={(e) => setLocalVariant({ ...localVariant, color: e.target.value })}
-                className="w-full rounded-xl border border-neutral-200 bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500/25">
-                <option value="">{t.selectColor}</option>
-                {COLORS.map((c) => (
-                  <option key={c} value={c}>
-                    {c}
-                  </option>
-                ))}
-              </select>
+              <div className="flex items-center justify-between mb-3">
+                <div>
+                  <p className="text-sm font-semibold">{t.color}</p>
+                  <p className="text-xs text-neutral-500">
+                    {isRTL ? "اكتب اللون أو اختره" : "Type or select a color"}
+                  </p>
+                </div>
+
+                <span
+                  className="h-4 w-4 rounded-full border"
+                  style={{ backgroundColor: localVariant.color?.toLowerCase() || "transparent" }}
+                />
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-12 gap-2">
+                {/* Type color */}
+                <div className="sm:col-span-7">
+                  <input
+                    value={localVariant.color}
+                    onChange={(e) => setLocalVariant({ ...localVariant, color: e.target.value })}
+                    placeholder="Black / White / Red"
+                    className="w-full rounded-xl border px-3 py-2 text-sm"
+                  />
+                </div>
+
+                {/* Select color */}
+                <div className="sm:col-span-5">
+                  <select
+                    value=""
+                    onChange={(e) =>
+                      e.target.value && setLocalVariant({ ...localVariant, color: e.target.value })
+                    }
+                    className="w-full rounded-xl border px-3 py-2 text-sm">
+                    <option value="">{t.selectColor}</option>
+                    {COLORS.map((c) => (
+                      <option key={c} value={c}>
+                        {c}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
             </div>
 
-            {/* Sizes */}
+            {/* ================= SIZES ================= */}
             <div className={clsx(tile, "p-4")}>
-              <div className="flex items-center justify-between gap-3">
-                <label className="block text-sm font-semibold text-neutral-900">{t.sizes}</label>
+              <div className="flex items-center justify-between mb-3">
+                <div>
+                  <p className="text-sm font-semibold">{t.sizes}</p>
+                  <p className="text-xs text-neutral-500">
+                    {isRTL ? "اكتب المقاس أو اختره" : "Type or select a size"}
+                  </p>
+                </div>
+
                 <button
                   type="button"
                   onClick={() =>
@@ -392,102 +434,102 @@ const VariantItem = ({ variant, productId, language }: Props) => {
                       sizes: [...localVariant.sizes, { size: "", stock: 0 }],
                     })
                   }
-                  className="inline-flex items-center gap-2 rounded-2xl bg-neutral-950 text-white px-3 py-2 text-xs font-semibold hover:bg-neutral-900 transition">
+                  className="inline-flex items-center gap-2 rounded-xl bg-neutral-950 text-white px-3 py-2 text-xs font-semibold">
                   <Plus size={14} />
                   {t.addSize}
                 </button>
               </div>
 
-              <div className="mt-3 space-y-2">
-                {localVariant.sizes.map((s, idx) => (
-                  <div key={idx} className="grid grid-cols-12 gap-2 items-center">
-                    <div className="col-span-7">
-                      <select
-                        value={s.size}
-                        onChange={(e) => {
-                          const sizes = localVariant.sizes.map((item, i) =>
-                            i === idx ? { ...item, size: e.target.value } : item,
-                          );
-                          setLocalVariant({ ...localVariant, sizes });
-                        }}
-                        className="w-full rounded-xl border border-neutral-200 bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500/25">
-                        <option value="">{t.selectSize}</option>
-                        {SIZES.map((sz) => (
-                          <option key={sz} value={sz}>
-                            {sz}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
+              <div className="space-y-3">
+                {localVariant.sizes.map((row, idx) => {
+                  const updateRow = (patch: any) => {
+                    const next = localVariant.sizes.map((r, i) =>
+                      i === idx ? { ...r, ...patch } : r,
+                    );
+                    setLocalVariant({ ...localVariant, sizes: next });
+                  };
 
-                    <div className="col-span-4">
-                      <input
-                        type="number"
-                        min={0}
-                        value={s.stock}
-                        onKeyDown={(e) => {
-                          if (e.key === "-" || e.key === "+") e.preventDefault();
-                        }}
-                        onChange={(e) => {
-                          const next = Number(e.target.value);
-                          const sizes = localVariant.sizes.map((item, i) =>
-                            i === idx ? { ...item, stock: isNaN(next) ? 0 : next } : item,
-                          );
-                          setLocalVariant({ ...localVariant, sizes });
-                        }}
-                        className="w-full rounded-xl border border-neutral-200 bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500/25 text-center"
-                      />
-                    </div>
+                  return (
+                    <div key={idx} className="rounded-xl border bg-white p-3 space-y-2">
+                      <div className="grid grid-cols-1 sm:grid-cols-12 gap-2">
+                        {/* Type size */}
+                        <div className="sm:col-span-5">
+                          <input
+                            value={row.size}
+                            onChange={(e) => updateRow({ size: e.target.value })}
+                            placeholder="XS / S / M / Custom"
+                            className="w-full rounded-xl border px-3 py-2 text-sm"
+                          />
+                        </div>
 
-                    <div className="col-span-1 flex justify-end">
-                      <button
-                        type="button"
-                        onClick={() => {
-                          const sizes = localVariant.sizes.filter((_, i) => i !== idx);
-                          setLocalVariant({ ...localVariant, sizes });
-                        }}
-                        className="h-10 w-10 rounded-xl border border-rose-200 bg-rose-50 text-rose-700 hover:bg-rose-100 transition grid place-items-center"
-                        aria-label="remove size">
-                        <Trash2 size={16} />
-                      </button>
+                        {/* Select size */}
+                        <div className="sm:col-span-4">
+                          <select
+                            value=""
+                            onChange={(e) => e.target.value && updateRow({ size: e.target.value })}
+                            className="w-full rounded-xl border px-3 py-2 text-sm">
+                            <option value="">{t.selectSize}</option>
+                            {SIZES.map((s) => (
+                              <option key={s} value={s}>
+                                {s}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+
+                        {/* Stock */}
+                        <div className="sm:col-span-2">
+                          <input
+                            type="number"
+                            min={0}
+                            value={row.stock}
+                            onChange={(e) => updateRow({ stock: Number(e.target.value) || 0 })}
+                            className="w-full rounded-xl border px-3 py-2 text-sm text-center"
+                          />
+                        </div>
+
+                        {/* Remove */}
+                        <div className="sm:col-span-1 flex justify-end">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const next = localVariant.sizes.filter((_, i) => i !== idx);
+                              setLocalVariant({ ...localVariant, sizes: next });
+                            }}
+                            className="h-10 w-10 rounded-xl border bg-rose-50 text-rose-700 grid place-items-center">
+                            <Trash2 size={16} />
+                          </button>
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
 
-            {/* Images */}
+            {/* ================= IMAGES ================= */}
             <div className={clsx(tile, "p-4")}>
-              <label className="block text-sm font-semibold text-neutral-900 mb-2">
-                {t.images}
-              </label>
+              <p className="text-sm font-semibold mb-2">{t.images}</p>
 
-              {/* Preview existing images with remove option */}
               <div className="flex flex-wrap gap-2 mb-3">
-                {localVariant.images?.length ? (
-                  localVariant.images.map((img, idx) => (
-                    <div key={idx} className="relative w-16 h-16">
-                      <img
-                        src={img.url}
-                        alt={`variant-img-${idx}`}
-                        className="w-full h-full object-cover rounded-xl border border-neutral-200"
-                      />
+                {localVariant.images.length ? (
+                  localVariant.images.map((img, i) => (
+                    <div key={i} className="relative w-16 h-16">
+                      <img src={img.url} className="w-full h-full rounded-xl object-cover border" />
                       <button
-                        type="button"
                         onClick={() =>
                           setLocalVariant({
                             ...localVariant,
-                            images: localVariant.images.filter((_, i) => i !== idx),
+                            images: localVariant.images.filter((_, x) => x !== i),
                           })
                         }
-                        className="absolute -top-2 -right-2 bg-rose-500 text-white rounded-full p-1 shadow"
-                        aria-label="remove image">
+                        className="absolute -top-2 -right-2 bg-rose-500 text-white rounded-full p-1">
                         <X size={12} />
                       </button>
                     </div>
                   ))
                 ) : (
-                  <div className="text-sm text-neutral-500">{t.noImages}</div>
+                  <p className="text-xs text-neutral-500">{t.noImages}</p>
                 )}
               </div>
 
@@ -500,45 +542,27 @@ const VariantItem = ({ variant, productId, language }: Props) => {
                     selectedFiles: e.target.files ? Array.from(e.target.files) : [],
                   })
                 }
-                className="w-full cursor-pointer rounded-xl border border-neutral-200 bg-white px-3 py-2 text-sm"
+                className="w-full rounded-xl border px-3 py-2 text-sm"
               />
-
-              <p className="text-xs text-neutral-500 mt-2">{t.uploadHint}</p>
-
-              {/* Show selected files */}
-              {localVariant.selectedFiles?.length ? (
-                <div className="mt-3 rounded-2xl border border-neutral-200 bg-neutral-50 p-3">
-                  <p className="text-xs font-semibold text-neutral-700">
-                    {isRTL ? "الملفات الجديدة:" : "New files:"}
-                  </p>
-                  <ul className="mt-2 list-disc pl-5 text-xs text-neutral-600 space-y-1">
-                    {localVariant.selectedFiles.map((f, i) => (
-                      <li key={i} className="break-all">
-                        {f.name}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              ) : null}
             </div>
           </div>
 
-          <DialogFooter className="flex justify-end gap-3 mt-6">
+          {/* ================= FOOTER ================= */}
+          <div className="px-4 sm:px-6 py-4 border-t bg-white shrink-0 flex justify-end gap-3">
             <button
-              type="button"
               onClick={() => setIsOpen(false)}
-              className="px-4 py-2 bg-white border border-neutral-200 rounded-2xl hover:bg-neutral-50 font-semibold">
+              className="px-4 py-2 rounded-xl border font-semibold">
               {t.cancel}
             </button>
+
             <button
-              type="button"
               onClick={handleUpdateProductVariant}
               disabled={updating}
-              className="px-4 py-2 bg-neutral-950 text-white rounded-2xl hover:bg-neutral-900 disabled:opacity-50 font-semibold inline-flex items-center gap-2">
-              {updating ? <Loader2Icon className="h-4 w-4 animate-spin" /> : null}
+              className="px-4 py-2 rounded-xl bg-neutral-950 text-white font-semibold inline-flex items-center gap-2">
+              {updating && <Loader2Icon className="h-4 w-4 animate-spin" />}
               {updating ? t.saving : t.save}
             </button>
-          </DialogFooter>
+          </div>
         </DialogContent>
       </Dialog>
     </div>

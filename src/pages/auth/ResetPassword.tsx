@@ -17,10 +17,10 @@ export default function ResetPassword() {
     try {
       const { data } = await axios.post(
         `https://backend.webschema.online/api/users/reset-password/${token}`,
-        { password }
+        { password },
       );
       setMessage(data.message);
-      setTimeout(() => navigate("/admin/login"), 2000);
+      setTimeout(() => navigate("/login"), 2000);
     } catch (err: any) {
       setMessage(err.response?.data?.message || "Error resetting password");
     } finally {

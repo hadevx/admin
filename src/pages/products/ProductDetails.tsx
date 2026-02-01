@@ -138,8 +138,8 @@ function ProductDetails(): JSX.Element {
           keepImagesHint: "عند اختيار صور جديدة سيتم استبدال جميع الصور الحالية.",
           preview: "معاينة",
 
-          variants: "الخيارات",
-          addVariant: "إضافة خيار",
+          variants: "المتغيرات",
+          addVariant: "إضافة متغير",
           addVariantTitle: "إضافة خيار جديد",
           addVariantDesc: "أضف لوناً ومقاسات مع المخزون. يمكن إضافة صور خاصة بالخيار (اختياري).",
           color: "اللون",
@@ -303,7 +303,7 @@ function ProductDetails(): JSX.Element {
       await deleteProduct(productId as string);
       toast.success(t.deleted);
       refetchProducts();
-      navigate("/admin/productlist");
+      navigate("/productlist");
     } catch (e: any) {
       toast.error(e?.data?.message || "Delete failed");
     }
@@ -412,36 +412,6 @@ function ProductDetails(): JSX.Element {
     ));
 
   const formatPrice = (v: number) => `${v.toFixed(3)} KD`;
-
-  const statusBadge = (
-    <span
-      className={clsx(
-        "inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-xs font-semibold",
-        clickEditProduct
-          ? "border-neutral-950/15 bg-neutral-950 text-white"
-          : "border-neutral-200 bg-white text-neutral-900",
-      )}>
-      {clickEditProduct ? <PencilLine className="h-3.5 w-3.5" /> : <EyeIcon />}
-      {clickEditProduct ? t.badgeEditing : t.badgeReadonly}
-    </span>
-  );
-
-  function EyeIcon() {
-    return (
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" className="text-neutral-900">
-        <path
-          d="M2.5 12s3.5-7.5 9.5-7.5S21.5 12 21.5 12s-3.5 7.5-9.5 7.5S2.5 12 2.5 12Z"
-          stroke="currentColor"
-          strokeWidth="2"
-        />
-        <path
-          d="M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Z"
-          stroke="currentColor"
-          strokeWidth="2"
-        />
-      </svg>
-    );
-  }
 
   // ✅ Variant helpers
   const resetVariantForm = () => {
@@ -570,7 +540,6 @@ function ProductDetails(): JSX.Element {
           )}>
           <div className="flex items-center gap-3">
             <h1 className="text-2xl font-bold text-neutral-950">{t.title}</h1>
-            {statusBadge}
           </div>
 
           <div className="flex flex-wrap items-center gap-2">

@@ -8,7 +8,6 @@ import { Separator } from "@/components/ui/separator";
 import Loader from "../../components/Loader";
 import { useSelector } from "react-redux";
 import { texts } from "./translations";
-import MobiusBand from "./../../components/MobiusBand";
 import Paginate from "@/components/Paginate";
 
 function Order() {
@@ -30,7 +29,7 @@ function Order() {
     ? orders.filter((order: any) => {
         const query = searchQuery.toLowerCase();
         return (
-          order._id.toLowerCase().includes(query) ||
+          order._id?.toLowerCase().includes(query) ||
           order.user?.name?.toLowerCase().includes(query) ||
           order.paymentMethod?.toLowerCase().includes(query)
         );
@@ -39,11 +38,33 @@ function Order() {
 
   const handleSearchChange = (e: ChangeEvent<HTMLInputElement>) => {
     setSearchQuery(e.target.value);
+    setPage(1); // ✅ better UX on mobile too
+  };
+
+  const StatusBadge = ({ order }: { order: any }) => {
+    if (order?.isDelivered) {
+      return (
+        <Badge variant="success" icon={false} className="p-1 rounded-full">
+          {texts[language].delivered}
+        </Badge>
+      );
+    }
+    if (order?.isCanceled) {
+      return (
+        <Badge variant="danger" icon={false} className="p-1 rounded-full">
+          {texts[language].canceled}
+        </Badge>
+      );
+    }
+    return (
+      <Badge variant="pending" icon={false} className="p-1 rounded-full">
+        {texts[language].processing}
+      </Badge>
+    );
   };
 
   return (
     <Layout>
-      <MobiusBand />
       {isLoading ? (
         <Loader />
       ) : (
@@ -67,11 +88,13 @@ function Order() {
                 </Badge>
               </h1>
             </div>
+
             <Separator className="my-4 bg-black/20" />
 
             {/* Container */}
             <div className="mt-5 mb-2 overflow-hidden w-full max-w-full lg:w-4xl">
-              <div className="flex flex-col lg:flex-row items-center gap-2 mb-5">
+              {/* ✅ Responsive: stack nicely on mobile; keep desktop as-is */}
+              <div className="flex flex-col lg:flex-row items-stretch lg:items-center gap-2 mb-5">
                 <div className="relative w-full lg:w-full">
                   <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400 pointer-events-none">
                     <Search className="h-5 w-5" />
@@ -85,19 +108,20 @@ function Order() {
                   />
                 </div>
 
-                <div className="flex gap-2 items-center w-full">
-                  <div className="bg-blue-50 border flex-1 border-blue-200 text-blue-700 text-sm sm:text-sm font-semibold rounded-lg p-3 lg:px-4 lg:py-3 text-center">
+                {/* ✅ Mobile: 2 cards in a row; Desktop: same */}
+                <div className="grid grid-cols-2 gap-2 w-full lg:flex lg:gap-2 lg:items-center">
+                  <div className="bg-blue-50 border border-blue-200 text-blue-700 text-sm font-semibold rounded-lg p-3 lg:px-4 lg:py-3 text-center">
                     {texts[language].revenue}: {data?.totalRevenue}{" "}
                     {language === "ar" ? "دك" : "KD"}
                   </div>
-                  <div className="bg-blue-50 border flex-1 border-blue-200 text-blue-700 text-sm sm:text-sm font-semibold rounded-lg p-3 lg:px-4 lg:py-3 text-center">
-                    {texts[language].itemsSold}: {data?.totalItems}{" "}
+                  <div className="bg-blue-50 border border-blue-200 text-blue-700 text-sm font-semibold rounded-lg p-3 lg:px-4 lg:py-3 text-center">
+                    {texts[language].itemsSold}: {data?.totalItems}
                   </div>
                 </div>
               </div>
 
-              {/* Table */}
-              <div className="rounded-lg border lg:p-5 bg-white overflow-x-auto">
+              {/* ✅ Desktop table (UNCHANGED) */}
+              <div className="hidden lg:block rounded-lg border lg:p-5 bg-white overflow-x-auto">
                 <table className="w-full min-w-[700px] rounded-lg border-gray-200 text-sm text-left text-gray-700">
                   <thead className="bg-white text-gray-900/50 font-semibold">
                     <tr>
@@ -124,13 +148,14 @@ function Order() {
                       </th>
                     </tr>
                   </thead>
+
                   <tbody className="divide-y divide-gray-200 bg-white">
                     {filteredOrders?.length ? (
                       filteredOrders?.map((order: any) => (
                         <tr
                           key={order?._id}
                           className="cursor-pointer hover:bg-gray-100 transition-all duration-300 font-bold"
-                          onClick={() => navigate(`/admin/orders/${order?._id}`)}>
+                          onClick={() => navigate(`/orders/${order?._id}`)}>
                           <td className="px-4 py-5 max-w-20 truncate whitespace-nowrap">
                             #{order._id}
                           </td>
@@ -140,28 +165,13 @@ function Order() {
                             {order?.orderItems?.length}
                           </td>
                           <td className="px-4 py-5 whitespace-nowrap">
-                            {order?.createdAt.substring(0, 10)}
+                            {order?.createdAt?.substring(0, 10)}
                           </td>
-                          <td className=" whitespace-nowrap">
-                            {order?.isDelivered ? (
-                              <Badge variant="success" icon={false} className="p-1 rounded-full">
-                                {" "}
-                                {texts[language].delivered}
-                              </Badge>
-                            ) : order?.isCanceled ? (
-                              <Badge variant="danger" icon={false} className="p-1 rounded-full">
-                                {" "}
-                                {texts[language].canceled}
-                              </Badge>
-                            ) : (
-                              <Badge variant="pending" icon={false} className="p-1 rounded-full">
-                                {" "}
-                                {texts[language].processing}
-                              </Badge>
-                            )}
+                          <td className="whitespace-nowrap">
+                            <StatusBadge order={order} />
                           </td>
                           <td className="px-4 py-5 whitespace-nowrap">
-                            {order?.totalPrice.toFixed(3)} KD
+                            {order?.totalPrice?.toFixed(3)} KD
                           </td>
                         </tr>
                       ))
@@ -177,8 +187,71 @@ function Order() {
                   </tbody>
                 </table>
 
-                {/* Pagination */}
-                {/* Pagination */}
+                <Paginate page={page} pages={pages} setPage={setPage} />
+              </div>
+
+              {/* ✅ Mobile view: cards (responsive) */}
+              <div className="lg:hidden">
+                {filteredOrders?.length ? (
+                  <div className="space-y-3">
+                    {filteredOrders.map((order: any) => (
+                      <button
+                        key={order?._id}
+                        type="button"
+                        onClick={() => navigate(`/orders/${order?._id}`)}
+                        className="w-full text-left rounded-xl border bg-white p-4 active:scale-[0.99] transition">
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="min-w-0">
+                            <p className="font-black text-sm text-neutral-900 truncate">
+                              #{order?._id}
+                            </p>
+                            <p className="text-xs text-neutral-500 mt-0.5 truncate">
+                              {order?.user?.name || "-"}
+                            </p>
+                          </div>
+                          <div className="shrink-0">
+                            <StatusBadge order={order} />
+                          </div>
+                        </div>
+
+                        <div className="mt-3 grid grid-cols-2 gap-2 text-xs">
+                          <div className="rounded-lg bg-neutral-50 border px-3 py-2">
+                            <p className="text-neutral-500">{texts[language].payment}</p>
+                            <p className="font-bold text-neutral-900 truncate">
+                              {order?.paymentMethod || "-"}
+                            </p>
+                          </div>
+                          <div className="rounded-lg bg-neutral-50 border px-3 py-2">
+                            <p className="text-neutral-500">{texts[language].items}</p>
+                            <p className="font-bold text-neutral-900">
+                              {order?.orderItems?.length ?? 0}
+                            </p>
+                          </div>
+
+                          <div className="rounded-lg bg-neutral-50 border px-3 py-2">
+                            <p className="text-neutral-500">{texts[language].createdAt}</p>
+                            <p className="font-bold text-neutral-900">
+                              {order?.createdAt?.substring(0, 10) || "-"}
+                            </p>
+                          </div>
+                          <div className="rounded-lg bg-neutral-50 border px-3 py-2">
+                            <p className="text-neutral-500">{texts[language].total}</p>
+                            <p className="font-bold text-neutral-900">
+                              {order?.totalPrice?.toFixed(3)} KD
+                            </p>
+                          </div>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="rounded-xl border bg-white p-6 text-center text-sm text-gray-500">
+                    {texts[language].noOrders}
+                  </div>
+                )}
+
+                {/* Pagination (mobile) */}
+
                 <Paginate page={page} pages={pages} setPage={setPage} />
               </div>
             </div>
