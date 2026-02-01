@@ -38,12 +38,18 @@ function Customers() {
       noUsersFound: "لم يتم العثور على مستخدمين.",
     },
   };
+
   const t = labels[language];
+  const isRTL = language === "ar";
 
   const [searchQuery, setSearchQuery] = useState("");
   const [page, setPage] = useState(1);
 
-  const { data, isLoading } = useGetUsersQuery<any>({ pageNumber: page, keyword: searchQuery });
+  const { data, isLoading } = useGetUsersQuery<any>({
+    pageNumber: page,
+    keyword: searchQuery,
+  });
+
   const users = data?.users || [];
   const pages = data?.pages || 1;
   const totalUsers = data?.total || 0;
@@ -54,11 +60,13 @@ function Customers() {
   useEffect(() => {
     if (data) {
       const filtered = users.filter((user: any) =>
-        user.email.toLowerCase().includes(searchQuery.toLowerCase())
+        String(user.email || "")
+          .toLowerCase()
+          .includes(searchQuery.toLowerCase()),
       );
       setFilteredUsers(filtered);
     }
-  }, [data, searchQuery]);
+  }, [data, searchQuery, users]);
 
   return (
     <Layout>
@@ -67,13 +75,11 @@ function Customers() {
       ) : (
         <div className="lg:px-4 mb-10 lg:w-4xl w-full min-h-screen lg:min-h-auto flex text-xs lg:text-lg justify-between py-3 mt-[70px] lg:mt-[50px] px-4">
           <div className="w-full">
-            <div
-              className={`flex justify-between items-center ${
-                language === "ar" ? "flex-row-reverse" : ""
-              }`}>
+            {/* Header */}
+            <div className={isRTL ? "flex justify-end" : "flex justify-between"}>
               <h1
-                dir={language === "ar" ? "rtl" : "ltr"}
-                className="text-lg lg:text-2xl font-black flex gap-2 lg:gap-5 items-center">
+                dir={isRTL ? "rtl" : "ltr"}
+                className="text-lg lg:text-2xl font-black flex gap-2 lg:gap-5 items-center flex-wrap">
                 {t.users}:{" "}
                 <Badge icon={false}>
                   <Users strokeWidth={1} />
@@ -84,23 +90,39 @@ function Customers() {
                 </Badge>
               </h1>
             </div>
+
             <Separator className="my-4 bg-black/20" />
 
             <div className="mt-5 mb-2 overflow-hidden">
+              {/* Search */}
               <div className="relative w-full lg:w-64 mb-5">
-                <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400">
+                <span
+                  className={`
+                    absolute inset-y-0 flex items-center text-gray-400
+                    ${isRTL ? "right-0 pr-3" : "left-0 pl-3"}
+                  `}>
                   <Search className="h-5 w-5" />
                 </span>
+
                 <input
+                  dir={isRTL ? "rtl" : "ltr"}
                   type="text"
                   value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onChange={(e) => {
+                    setSearchQuery(e.target.value);
+                    setPage(1); // ✅ reset page on new search
+                  }}
                   placeholder={t.searchPlaceholder}
-                  className="w-full border bg-white border-gray-300 rounded-lg py-3 pl-10 pr-4 text-sm focus:outline-none focus:border-blue-500 focus:border-2"
+                  className={`
+                    w-full border bg-white border-gray-300 rounded-lg py-3 text-sm
+                    focus:outline-none focus:border-blue-500 focus:border-2
+                    ${isRTL ? "pr-10 pl-4" : "pl-10 pr-4"}
+                  `}
                 />
               </div>
 
-              <div className="rounded-lg border lg:p-5 overflow-x-scroll md:overflow-auto bg-white">
+              {/* ✅ Desktop table (unchanged design) */}
+              <div className="hidden lg:block rounded-lg border lg:p-5 overflow-x-scroll md:overflow-auto bg-white">
                 <table className="w-full rounded-lg text-xs lg:text-sm border-gray-200 text-left text-gray-700">
                   <thead className="bg-white text-gray-900/50 font-semibold">
                     <tr>
@@ -117,7 +139,7 @@ function Customers() {
                         <tr
                           key={user._id}
                           className="cursor-pointer hover:bg-gray-100 transition-all duration-300 font-bold"
-                          onClick={() => navigate(`/admin/userlist/${user._id}`)}>
+                          onClick={() => navigate(`/userlist/${user._id}`)}>
                           <td className="px-4 py-5">{user.name}</td>
                           <td className="px-4 py-5">{user.email}</td>
                           <td className="px-4 py-5">{user.phone}</td>
@@ -144,6 +166,68 @@ function Customers() {
                 </table>
 
                 <Paginate page={page} pages={pages} setPage={setPage} />
+              </div>
+
+              {/* ✅ Mobile cards */}
+              <div className="lg:hidden">
+                {filteredUsers.length > 0 ? (
+                  <div className="space-y-3">
+                    {filteredUsers.map((user: any) => (
+                      <button
+                        key={user._id}
+                        type="button"
+                        onClick={() => navigate(`/userlist/${user._id}`)}
+                        className="w-full text-left rounded-xl border bg-white p-4 active:scale-[0.99] transition">
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="min-w-0">
+                            <p className="font-black text-sm text-neutral-900 truncate">
+                              {user?.name || "-"}
+                            </p>
+                            <p className="text-xs text-neutral-500 mt-0.5 truncate">
+                              {user?.email || "-"}
+                            </p>
+                          </div>
+
+                          <div className="shrink-0">
+                            {user?.isAdmin ? (
+                              <span className="inline-flex items-center justify-center h-9 w-9 rounded-xl border bg-blue-50 border-blue-200">
+                                <Crown className="h-4 w-4 text-blue-600" />
+                              </span>
+                            ) : (
+                              <span className="text-[11px] font-bold px-3 py-1 rounded-full border bg-neutral-50 text-neutral-700">
+                                {t.user}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+
+                        <div className="mt-3 grid grid-cols-2 gap-2 text-xs">
+                          <div className="rounded-lg bg-neutral-50 border px-3 py-2">
+                            <p className="text-neutral-500">{t.phone}</p>
+                            <p className="font-bold text-neutral-900 truncate">
+                              {user?.phone || "-"}
+                            </p>
+                          </div>
+
+                          <div className="rounded-lg bg-neutral-50 border px-3 py-2">
+                            <p className="text-neutral-500">{t.registeredIn}</p>
+                            <p className="font-bold text-neutral-900">
+                              {user?.createdAt?.substring(0, 10) || "-"}
+                            </p>
+                          </div>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="rounded-xl border bg-white p-6 text-center text-sm text-gray-500">
+                    {t.noUsersFound}
+                  </div>
+                )}
+
+                <div className="mt-4">
+                  <Paginate page={page} pages={pages} setPage={setPage} />
+                </div>
               </div>
             </div>
           </div>

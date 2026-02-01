@@ -38,7 +38,7 @@ function Order() {
 
   const handleSearchChange = (e: ChangeEvent<HTMLInputElement>) => {
     setSearchQuery(e.target.value);
-    setPage(1); // ✅ better UX on mobile too
+    setPage(1);
   };
 
   const StatusBadge = ({ order }: { order: any }) => {
@@ -93,7 +93,7 @@ function Order() {
 
             {/* Container */}
             <div className="mt-5 mb-2 overflow-hidden w-full max-w-full lg:w-4xl">
-              {/* ✅ Responsive: stack nicely on mobile; keep desktop as-is */}
+              {/* Responsive controls */}
               <div className="flex flex-col lg:flex-row items-stretch lg:items-center gap-2 mb-5">
                 <div className="relative w-full lg:w-full">
                   <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400 pointer-events-none">
@@ -108,7 +108,6 @@ function Order() {
                   />
                 </div>
 
-                {/* ✅ Mobile: 2 cards in a row; Desktop: same */}
                 <div className="grid grid-cols-2 gap-2 w-full lg:flex lg:gap-2 lg:items-center">
                   <div className="bg-blue-50 border border-blue-200 text-blue-700 text-sm font-semibold rounded-lg p-3 lg:px-4 lg:py-3 text-center">
                     {texts[language].revenue}: {data?.totalRevenue}{" "}
@@ -120,7 +119,7 @@ function Order() {
                 </div>
               </div>
 
-              {/* ✅ Desktop table (UNCHANGED) */}
+              {/* Desktop table (unchanged) */}
               <div className="hidden lg:block rounded-lg border lg:p-5 bg-white overflow-x-auto">
                 <table className="w-full min-w-[700px] rounded-lg border-gray-200 text-sm text-left text-gray-700">
                   <thead className="bg-white text-gray-900/50 font-semibold">
@@ -190,7 +189,7 @@ function Order() {
                 <Paginate page={page} pages={pages} setPage={setPage} />
               </div>
 
-              {/* ✅ Mobile view: cards (responsive) */}
+              {/* Mobile cards */}
               <div className="lg:hidden">
                 {filteredOrders?.length ? (
                   <div className="space-y-3">
@@ -202,13 +201,17 @@ function Order() {
                         className="w-full text-left rounded-xl border bg-white p-4 active:scale-[0.99] transition">
                         <div className="flex items-start justify-between gap-3">
                           <div className="min-w-0">
+                            {/* ✅ Mobile title is USER NAME (instead of ID) */}
                             <p className="font-black text-sm text-neutral-900 truncate">
+                              {order?.user?.name || texts[language].customer}
+                            </p>
+
+                            {/* ✅ Secondary line shows order id (small) */}
+                            <p className="text-xs text-neutral-500 mt-0.5 truncate">
                               #{order?._id}
                             </p>
-                            <p className="text-xs text-neutral-500 mt-0.5 truncate">
-                              {order?.user?.name || "-"}
-                            </p>
                           </div>
+
                           <div className="shrink-0">
                             <StatusBadge order={order} />
                           </div>
@@ -221,6 +224,7 @@ function Order() {
                               {order?.paymentMethod || "-"}
                             </p>
                           </div>
+
                           <div className="rounded-lg bg-neutral-50 border px-3 py-2">
                             <p className="text-neutral-500">{texts[language].items}</p>
                             <p className="font-bold text-neutral-900">
@@ -234,6 +238,7 @@ function Order() {
                               {order?.createdAt?.substring(0, 10) || "-"}
                             </p>
                           </div>
+
                           <div className="rounded-lg bg-neutral-50 border px-3 py-2">
                             <p className="text-neutral-500">{texts[language].total}</p>
                             <p className="font-bold text-neutral-900">
@@ -249,8 +254,6 @@ function Order() {
                     {texts[language].noOrders}
                   </div>
                 )}
-
-                {/* Pagination (mobile) */}
 
                 <Paginate page={page} pages={pages} setPage={setPage} />
               </div>
