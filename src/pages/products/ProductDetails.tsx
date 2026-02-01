@@ -27,6 +27,7 @@ import {
   useGetProductsQuery,
   useUploadProductImageMutation,
   useGetCategoriesTreeQuery,
+  useUploadVariantImageMutation,
 } from "../../redux/queries/productApi";
 
 import { Separator } from "@/components/ui/separator";
@@ -64,6 +65,14 @@ type CategoryNode = {
 
 type ProductImage = { url: string; publicId?: string };
 
+type VariantSize = { size: string; stock: number; price?: number };
+type ProductVariant = {
+  _id?: string;
+  color: string;
+  images?: ProductImage[];
+  sizes: VariantSize[];
+};
+
 type Product = {
   _id: string;
   name: string;
@@ -72,14 +81,14 @@ type Product = {
   hasDiscount?: boolean;
   discountBy?: number;
   image: ProductImage[];
-  category: any; // API seems to return object when reading; but update expects id
+  category: any; // API returns object when reading; update expects id
   countInStock: number;
   description: string;
   featured?: boolean;
-  variants?: any[];
+  variants?: ProductVariant[];
 };
 
-type VariantSizeInput = { size: string; stock: number | "" };
+type VariantSizeInput = { size: string; stock: number | ""; price?: number | "" };
 
 function ProductDetails(): JSX.Element {
   const language = useSelector((state: RootState) => state.language.lang);
@@ -129,7 +138,6 @@ function ProductDetails(): JSX.Element {
           keepImagesHint: "عند اختيار صور جديدة سيتم استبدال جميع الصور الحالية.",
           preview: "معاينة",
 
-          // ✅ NEW (variants)
           variants: "الخيارات",
           addVariant: "إضافة خيار",
           addVariantTitle: "إضافة خيار جديد",
@@ -146,6 +154,9 @@ function ProductDetails(): JSX.Element {
           required: "مطلوب",
           invalidSizes: "أضف مقاس واحد على الأقل مع مخزون صحيح",
           colorRequired: "الرجاء إدخال اللون",
+          variantAdded: "تم إضافة الخيار بنجاح",
+          variantFailed: "فشل إضافة الخيار",
+          colorExists: "هذا اللون موجود بالفعل",
         }
       : {
           title: "Product Details",
@@ -188,7 +199,6 @@ function ProductDetails(): JSX.Element {
           keepImagesHint: "Selecting new images will replace all existing ones.",
           preview: "Preview",
 
-          // ✅ NEW (variants)
           variants: "Variants",
           addVariant: "Add Variant",
           addVariantTitle: "Add New Variant",
@@ -205,6 +215,9 @@ function ProductDetails(): JSX.Element {
           required: "Required",
           invalidSizes: "Add at least 1 size with valid stock",
           colorRequired: "Please enter a color",
+          variantAdded: "Variant added successfully",
+          variantFailed: "Failed to add variant",
+          colorExists: "This color already exists",
         };
   }, [isRTL]);
 
@@ -217,14 +230,16 @@ function ProductDetails(): JSX.Element {
   const [deleteProduct, { isLoading: loadingDeleteProduct }] = useDeleteProductMutation();
   const [updateProduct, { isLoading: loadingUpdateProduct }] = useUpdateProductMutation();
   const { refetch: refetchProducts } = useGetProductsQuery(undefined);
+
   const [uploadProductImage, { isLoading: loadingUploadImage }] = useUploadProductImageMutation();
+  const [uploadVariantImage, { isLoading: loadingUploadVariant }] = useUploadVariantImageMutation();
 
   // UI / modals
   const [clickEditProduct, setClickEditProduct] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isDiscountModalOpen, setIsDiscountModalOpen] = useState(false);
 
-  // ✅ NEW: Add Variant modal
+  // ✅ Add Variant modal state
   const [isAddVariantOpen, setIsAddVariantOpen] = useState(false);
   const [variantColor, setVariantColor] = useState("");
   const [variantSizes, setVariantSizes] = useState<VariantSizeInput[]>([{ size: "", stock: "" }]);
@@ -266,7 +281,7 @@ function ProductDetails(): JSX.Element {
     initializedRef.current = true;
   }, [product]);
 
-  // calculate discounted
+  // calculate discounted price
   useEffect(() => {
     const priceNum = typeof newPrice === "number" ? newPrice : 0;
     if (!priceNum) {
@@ -281,7 +296,7 @@ function ProductDetails(): JSX.Element {
     }
   }, [discountBy, hasDiscount, newPrice]);
 
-  const busy = loadingUploadImage || loadingUpdateProduct;
+  const busy = loadingUploadImage || loadingUpdateProduct || loadingUploadVariant;
 
   const handleDeleteProduct = async () => {
     try {
@@ -292,6 +307,40 @@ function ProductDetails(): JSX.Element {
     } catch (e: any) {
       toast.error(e?.data?.message || "Delete failed");
     }
+  };
+
+  const uploadManyImages = async (files: File[], uploader: any): Promise<ProductImage[] | null> => {
+    // uploader is either uploadProductImage or uploadVariantImage
+    const uploaded: ProductImage[] = [];
+    if (!files?.length) return uploaded;
+
+    // if your backend supports multiple files at once, you can batch here
+    // but to stay compatible with either, we can send a single request with "images" array:
+    try {
+      const formData = new FormData();
+      files.forEach((f) => formData.append("images", f));
+      const res = await uploader(formData).unwrap();
+
+      if (Array.isArray(res?.images)) {
+        res.images.forEach((img: any) =>
+          uploaded.push({ url: img.imageUrl, publicId: img.publicId }),
+        );
+      } else if (res?.imageUrl) {
+        uploaded.push({ url: res.imageUrl, publicId: res.publicId });
+      }
+
+      return uploaded;
+    } catch (err: any) {
+      toast.error(err?.data?.message || t.imageUploadFailed);
+      return null;
+    }
+  };
+
+  const computeTotalStockFromVariants = (variants: ProductVariant[] = []) => {
+    return variants.reduce((acc, v) => {
+      const sum = (v?.sizes || []).reduce((s, size) => s + (Number(size.stock) || 0), 0);
+      return acc + sum;
+    }, 0);
   };
 
   const handleUpdateProduct = async () => {
@@ -307,26 +356,15 @@ function ProductDetails(): JSX.Element {
 
     // If user selected new images -> replace all
     if (selectedFiles.length > 0) {
-      uploadedImages = [];
-      for (const file of selectedFiles) {
-        const formData = new FormData();
-        formData.append("images", file);
-        try {
-          const res = await uploadProductImage(formData).unwrap();
-
-          if (Array.isArray(res?.images)) {
-            res.images.forEach((img: any) =>
-              uploadedImages.push({ url: img.imageUrl, publicId: img.publicId }),
-            );
-          } else if (res?.imageUrl) {
-            uploadedImages.push({ url: res.imageUrl, publicId: res.publicId });
-          }
-        } catch (error: any) {
-          toast.error(error?.data?.message || t.imageUploadFailed);
-          return;
-        }
-      }
+      const res = await uploadManyImages(selectedFiles, uploadProductImage);
+      if (!res) return;
+      uploadedImages = res;
     }
+
+    const currentVariants = Array.isArray(p?.variants) ? p.variants : [];
+    const stockFromVariants = currentVariants.length
+      ? computeTotalStockFromVariants(currentVariants)
+      : null;
 
     const updatedProduct = {
       _id: p?._id || productId,
@@ -334,13 +372,22 @@ function ProductDetails(): JSX.Element {
       price: priceNum,
       image: uploadedImages,
       category: newCategory || (p as any)?.category?._id || (p as any)?.category,
-      countInStock: typeof newCountInStock === "number" ? newCountInStock : (p?.countInStock ?? 0),
+      // if product has variants -> stock should come from variants
+      countInStock:
+        currentVariants.length > 0
+          ? (stockFromVariants ?? p?.countInStock ?? 0)
+          : typeof newCountInStock === "number"
+            ? newCountInStock
+            : (p?.countInStock ?? 0),
       description: (newDescription || p.description || "").trim(),
       featured,
 
       hasDiscount,
       discountBy,
       discountedPrice,
+
+      // keep existing variants untouched on normal update
+      variants: currentVariants,
     };
 
     try {
@@ -396,7 +443,7 @@ function ProductDetails(): JSX.Element {
     );
   }
 
-  // ✅ NEW: Variant helpers
+  // ✅ Variant helpers
   const resetVariantForm = () => {
     setVariantColor("");
     setVariantSizes([{ size: "", stock: "" }]);
@@ -411,8 +458,7 @@ function ProductDetails(): JSX.Element {
   const updateSizeRow = (idx: number, patch: Partial<VariantSizeInput>) =>
     setVariantSizes((prev) => prev.map((row, i) => (i === idx ? { ...row, ...patch } : row)));
 
-  const buildVariantPayload = async () => {
-    // validate
+  const buildVariantPayload = async (): Promise<ProductVariant | null> => {
     const color = variantColor.trim();
     if (!color) {
       toast.error(t.colorRequired);
@@ -420,7 +466,10 @@ function ProductDetails(): JSX.Element {
     }
 
     const cleanedSizes = variantSizes
-      .map((s) => ({ size: s.size.trim(), stock: s.stock === "" ? NaN : Number(s.stock) }))
+      .map((s) => ({
+        size: (s.size || "").trim(),
+        stock: s.stock === "" ? NaN : Number(s.stock),
+      }))
       .filter((s) => s.size.length > 0);
 
     const invalid =
@@ -432,32 +481,17 @@ function ProductDetails(): JSX.Element {
     }
 
     // upload variant images if provided
-    const uploadedVariantImages: ProductImage[] = [];
+    let uploadedVariantImages: ProductImage[] = [];
     if (variantFiles.length > 0) {
-      for (const file of variantFiles) {
-        const formData = new FormData();
-        formData.append("images", file);
-        try {
-          const res = await uploadProductImage(formData).unwrap();
-
-          if (Array.isArray(res?.images)) {
-            res.images.forEach((img: any) =>
-              uploadedVariantImages.push({ url: img.imageUrl, publicId: img.publicId }),
-            );
-          } else if (res?.imageUrl) {
-            uploadedVariantImages.push({ url: res.imageUrl, publicId: res.publicId });
-          }
-        } catch (error: any) {
-          toast.error(error?.data?.message || t.imageUploadFailed);
-          return null;
-        }
-      }
+      const res = await uploadManyImages(variantFiles, uploadVariantImage);
+      if (!res) return null;
+      uploadedVariantImages = res;
     }
 
     return {
       color,
       sizes: cleanedSizes.map((s) => ({ size: s.size, stock: s.stock })),
-      images: uploadedVariantImages, // optional
+      images: uploadedVariantImages,
     };
   };
 
@@ -468,31 +502,27 @@ function ProductDetails(): JSX.Element {
     const payload = await buildVariantPayload();
     if (!payload) return;
 
-    // Merge with existing variants
-    const existing = Array.isArray(p.variants) ? [...p.variants] : [];
+    const existing: ProductVariant[] = Array.isArray(p.variants) ? [...p.variants] : [];
 
-    // Prevent duplicate color (optional but helpful)
+    // prevent duplicate color
     const duplicate = existing.some(
-      (v: any) => String(v?.color || "").toLowerCase() === payload.color.toLowerCase(),
+      (v) => String(v?.color || "").toLowerCase() === payload.color.toLowerCase(),
     );
     if (duplicate) {
-      toast.error(isRTL ? "هذا اللون موجود بالفعل" : "This color already exists");
+      toast.error(t.colorExists);
       return;
     }
 
     const nextVariants = [...existing, payload];
+    const totalStock = computeTotalStockFromVariants(nextVariants);
 
     try {
-      // Note: your backend must accept `variants` on updateProduct.
-      // If it expects a different endpoint, tell me your API shape and I’ll adjust.
       await updateProduct({
         _id: p._id,
         name: (newName || p.name || "").trim(),
         price: typeof newPrice === "number" ? newPrice : p.price,
         image: Array.isArray(p.image) ? p.image : [],
         category: newCategory || (p as any)?.category?._id || (p as any)?.category,
-        countInStock:
-          typeof newCountInStock === "number" ? newCountInStock : (p?.countInStock ?? 0),
         description: (newDescription || p.description || "").trim(),
         featured,
 
@@ -501,15 +531,16 @@ function ProductDetails(): JSX.Element {
         discountedPrice,
 
         variants: nextVariants,
+        countInStock: totalStock, // ✅ keep stock synced with variants
       }).unwrap();
 
-      toast.success(isRTL ? "تم إضافة الخيار بنجاح" : "Variant added successfully");
+      toast.success(t.variantAdded);
       setIsAddVariantOpen(false);
       resetVariantForm();
       refetch();
       refetchProducts();
     } catch (err: any) {
-      toast.error(err?.data?.message || (isRTL ? "فشل إضافة الخيار" : "Failed to add variant"));
+      toast.error(err?.data?.message || t.variantFailed);
     }
   };
 
@@ -543,7 +574,7 @@ function ProductDetails(): JSX.Element {
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
-            {/* ✅ NEW: Add Variant button */}
+            {/* ✅ Add Variant button */}
             <button
               onClick={() => setIsAddVariantOpen(true)}
               className="select-none inline-flex items-center gap-2 rounded-2xl border border-neutral-200 bg-white px-3 py-2 font-semibold text-neutral-900 hover:bg-neutral-50 transition"
@@ -605,7 +636,7 @@ function ProductDetails(): JSX.Element {
 
         <Separator className="my-4 bg-black/10" />
 
-        {/* Main content (bento) */}
+        {/* Main content */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
           {/* Images card */}
           <div className="lg:col-span-5 rounded-3xl border border-neutral-200 bg-white/80 backdrop-blur shadow-sm overflow-hidden">
@@ -712,7 +743,6 @@ function ProductDetails(): JSX.Element {
 
               <Separator className="my-4 bg-black/10" />
 
-              {/* Grid fields */}
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 {/* Name */}
                 <div className="rounded-2xl border border-neutral-200 bg-white p-4">
@@ -840,7 +870,7 @@ function ProductDetails(): JSX.Element {
                   </button>
                 </div>
 
-                {/* Description - full width */}
+                {/* Description */}
                 <div className="sm:col-span-3 rounded-2xl border border-neutral-200 bg-white p-4">
                   <div className="text-xs text-neutral-500">{t.description}</div>
                   {!clickEditProduct ? (
@@ -860,10 +890,15 @@ function ProductDetails(): JSX.Element {
           </div>
         </div>
 
-        {/* Variants */}
+        {/* Variants list */}
         {p?.variants?.length
           ? p.variants.map((v: any) => (
-              <VariantItem key={v._id} variant={v} productId={p._id} language={language} />
+              <VariantItem
+                key={v._id || v.color}
+                variant={v}
+                productId={p._id}
+                language={language}
+              />
             ))
           : null}
 
@@ -952,10 +987,10 @@ function ProductDetails(): JSX.Element {
                 {t.cancel}
               </Button>
               <Button
-                disabled={loadingUpdateProduct || loadingUploadImage}
+                disabled={busy}
                 onClick={handleUpdateProduct}
                 className="bg-neutral-950 text-white hover:bg-neutral-900">
-                {loadingUpdateProduct || loadingUploadImage ? (
+                {busy ? (
                   <>
                     <Loader2Icon className="h-4 w-4 animate-spin mr-2" />
                     {t.saving}
@@ -968,7 +1003,7 @@ function ProductDetails(): JSX.Element {
           </DialogContent>
         </Dialog>
 
-        {/* ✅ NEW: Add Variant Modal */}
+        {/* ✅ Add Variant Modal */}
         <Dialog
           open={isAddVariantOpen}
           onOpenChange={(open) => {
@@ -996,7 +1031,7 @@ function ProductDetails(): JSX.Element {
                   placeholder={t.enterColor}
                   className="w-full rounded-xl border border-neutral-200 bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-neutral-950/10"
                 />
-                {/* quick preview dot (best effort) */}
+                {/* quick preview dot */}
                 <div className="mt-2 flex items-center gap-2 text-xs text-neutral-500">
                   <span
                     className="h-3 w-3 rounded-full border border-neutral-200"
@@ -1026,15 +1061,14 @@ function ProductDetails(): JSX.Element {
                   {variantSizes.map((row, idx) => (
                     <div key={idx} className="grid grid-cols-12 gap-2 items-center">
                       <div className="col-span-5">
-                        <div className="relative">
-                          <input
-                            value={row.size}
-                            onChange={(e) => updateSizeRow(idx, { size: e.target.value })}
-                            placeholder={t.size}
-                            className="w-full rounded-xl border border-neutral-200 bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-neutral-950/10"
-                          />
-                        </div>
+                        <input
+                          value={row.size}
+                          onChange={(e) => updateSizeRow(idx, { size: e.target.value })}
+                          placeholder={t.size}
+                          className="w-full rounded-xl border border-neutral-200 bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-neutral-950/10"
+                        />
                       </div>
+
                       <div className="col-span-5">
                         <div className="relative">
                           <Package className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-neutral-400" />
@@ -1051,6 +1085,7 @@ function ProductDetails(): JSX.Element {
                           />
                         </div>
                       </div>
+
                       <div className="col-span-2 flex justify-end">
                         <button
                           type="button"
@@ -1081,6 +1116,7 @@ function ProductDetails(): JSX.Element {
                 <input
                   type="file"
                   multiple
+                  accept="image/*"
                   onChange={(e) =>
                     setVariantFiles(e.target.files ? Array.from(e.target.files) : [])
                   }
