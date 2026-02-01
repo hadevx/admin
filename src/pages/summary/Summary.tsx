@@ -227,7 +227,9 @@ const SummaryBarChart = (): JSX.Element => {
       ) : (
         <div className={clsx("w-full px-4 py-6 mt-[70px]", "max-w-6xl", isRTL ? "rtl" : "ltr")}>
           {/* Header */}
-          <div className="mb-6 flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3">
+          <div
+            className="mb-6 flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3"
+            dir={language === "ar" ? "rtl" : "ltr"}>
             <div>
               <h1 className="text-2xl sm:text-3xl font-semibold tracking-tight text-neutral-950">
                 {isRTL ? "لوحة الإحصائيات" : "Summary Dashboard"}

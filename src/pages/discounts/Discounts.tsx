@@ -70,7 +70,7 @@ function Discounts(): JSX.Element {
     },
     ar: {
       setDiscounts: "الخصومات",
-      subtitle: "أنشئ خصومات للفئات وأدر الخصومات الحالية.",
+      subtitle: "ادارة وانشاء الخصومات",
       createDiscount: "إنشاء خصم",
       discountBy: "نسبة الخصم",
       categories: "الفئات",
@@ -216,7 +216,7 @@ function Discounts(): JSX.Element {
       ) : (
         <div
           dir={language === "ar" ? "rtl" : "ltr"}
-          className="px-4 w-full max-w-4xl  min-h-screen mt-[70px] lg:mt-[50px] lg:py-6">
+          className="px-4 w-full max-w-4xl  min-h-screen mt-[70px] lg:mt-[50px] lg:py-6 pb-6">
           {/* Header */}
           <div className="flex items-start justify-between gap-3">
             <div>
