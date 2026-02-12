@@ -1,28 +1,33 @@
 import { useEffect, useMemo, useState, type ChangeEvent, type JSX } from "react";
 import Layout from "../../Layout";
+import { useGetProductsQuery } from "../../redux/queries/productApi";
 import {
+  useUploadCategoryImageMutation,
   useCreateCategoryMutation,
   useDeleteCategoryMutation,
   useGetCategoriesQuery,
   useGetCategoriesTreeQuery,
-  useGetProductsQuery,
-  useUploadCategoryImageMutation,
   useUpdateCategoryMutation,
-} from "../../redux/queries/productApi";
+} from "../../redux/queries/categoryApi";
 import { toast } from "react-toastify";
-// import Badge from "../../components/Badge";
 import Loader from "../../components/Loader";
+import Badge from "../../components/Badge";
+import Paginate from "@/components/Paginate";
+
 import { Button } from "@/components/ui/button";
 import {
-  Plus,
-  Trash2,
   Boxes,
+  Plus,
   Search,
-  Loader2Icon,
+  Trash2,
   SquarePen,
-  FolderTree,
+  Loader2Icon,
   Image as ImageIcon,
+  SlidersHorizontal,
+  X,
+  FolderTree,
 } from "lucide-react";
+
 import {
   Dialog,
   DialogContent,
@@ -32,16 +37,8 @@ import {
 } from "@/components/ui/dialog";
 import { Separator } from "@/components/ui/separator";
 import { clsx } from "clsx";
-import CategoryTree from "./CategoryTree";
-import {
-  Pagination,
-  PaginationContent,
-  PaginationItem,
-  PaginationLink,
-  PaginationNext,
-  PaginationPrevious,
-} from "@/components/ui/pagination";
 import { useSelector } from "react-redux";
+import CategoryTree from "./CategoryTree";
 
 type RootState = {
   language: { lang: "en" | "ar" };
@@ -60,8 +57,17 @@ type CategoriesResponse = {
   total: number;
 };
 
+type TreeNode = {
+  _id: string;
+  name: string;
+  children?: TreeNode[];
+};
+
+type ParentOption = { id: string; label: string };
+
 function Categories(): JSX.Element {
   const language = useSelector((state: RootState) => state.language.lang);
+  const isRTL = language === "ar";
 
   const labels = {
     en: {
@@ -74,9 +80,10 @@ function Categories(): JSX.Element {
       subCategories: "Subcategories",
       tableName: "Name",
       tableParent: "Parent",
+      tableType: "Type",
       tableActions: "Actions",
       noCategoriesFound: "No categories found.",
-      noParent: "No Parent (Main Category)",
+      noParent: "Main Category",
       enterCategoryName: "Enter category name",
       cancel: "Cancel",
       create: "Create",
@@ -89,11 +96,20 @@ function Categories(): JSX.Element {
       main: "Main",
       manage: "Manage your category list, hierarchy, and images.",
       filters: "Filters",
-      list: "Category list",
-      hierarchy: "Hierarchy",
       editCategory: "Edit Category",
       imageUpload: "Category image",
       preview: "Preview",
+      total: "Total",
+      showing: "Showing",
+      onThisPage: "on this page",
+      type: "Category type",
+      clear: "Clear",
+      show: "Show",
+      hide: "Hide",
+      hierarchy: "Hierarchy",
+      delete: "Delete",
+      edit: "Edit",
+      activeFilters: "Active filters",
     },
     ar: {
       categories: "الفئات",
@@ -105,9 +121,10 @@ function Categories(): JSX.Element {
       subCategories: "الفئات الفرعية",
       tableName: "الاسم",
       tableParent: "الرئيسية",
+      tableType: "النوع",
       tableActions: "الاجراءات",
       noCategoriesFound: "لم يتم العثور على أي فئات.",
-      noParent: "بدون رئيسية (فئة رئيسية)",
+      noParent: "فئه رئيسيه",
       enterCategoryName: "أدخل اسم الفئة",
       cancel: "إلغاء",
       create: "إنشاء",
@@ -120,11 +137,20 @@ function Categories(): JSX.Element {
       main: "رئيسية",
       manage: "إدارة قائمة الفئات.",
       filters: "الفلاتر",
-      list: "قائمة الفئات",
-      hierarchy: "التسلسل",
       editCategory: "تعديل الفئة",
       imageUpload: "صورة الفئة",
       preview: "معاينة",
+      total: "الإجمالي",
+      showing: "المعروض",
+      onThisPage: "في هذه الصفحة",
+      type: "نوع الفئات",
+      clear: "مسح",
+      show: "عرض",
+      hide: "إخفاء",
+      hierarchy: "التسلسل",
+      delete: "حذف",
+      edit: "تعديل",
+      activeFilters: "فلاتر مفعّلة",
     },
   } as const;
 
@@ -141,7 +167,9 @@ function Categories(): JSX.Element {
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [categoryError, setCategoryError] = useState<boolean>(false);
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
+
   const [filterType, setFilterType] = useState<"all" | "main" | "sub">("all");
+  const [showMobileFilters, setShowMobileFilters] = useState(false);
 
   const [isEditModalOpen, setIsEditModalOpen] = useState<boolean>(false);
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
@@ -172,20 +200,55 @@ function Categories(): JSX.Element {
 
   const categories = data?.categories || [];
   const pages = data?.pages || 1;
+  const totalAllCategories = data?.total ?? 0;
 
-  console.log(categories);
+  /* ---------------- Parent dropdown: use FULL TREE (not paginated list) ---------------- */
+  const normalizeTree = (raw: any): TreeNode[] => {
+    if (!raw) return [];
+    if (Array.isArray(raw)) return raw as TreeNode[];
+    if (Array.isArray(raw.categories)) return raw.categories as TreeNode[];
+    if (Array.isArray(raw.data)) return raw.data as TreeNode[];
+    return [];
+  };
+
+  const flattenTree = (nodes: TreeNode[] = [], prefix = ""): ParentOption[] => {
+    return nodes.flatMap((n) => {
+      const label = prefix ? `${prefix} > ${n.name}` : n.name;
+      return [{ id: n._id, label }, ...flattenTree(n.children || [], label)];
+    });
+  };
+
+  const parentOptions = useMemo(() => {
+    const nodes = normalizeTree(tree);
+    return flattenTree(nodes);
+  }, [tree]);
+
   const filteredCategories = useMemo(() => {
     const bySearch = categories.filter((cat) =>
       String(cat.name || "")
         .toLowerCase()
         .includes(searchTerm.toLowerCase()),
     );
+
     return bySearch.filter((cat) => {
       if (filterType === "main") return !cat.parent;
       if (filterType === "sub") return !!cat.parent;
       return true;
     });
   }, [categories, searchTerm, filterType]);
+
+  const activeFiltersCount = useMemo(() => {
+    let n = 0;
+    if (filterType !== "all") n++;
+    if (searchTerm.trim()) n++;
+    return n;
+  }, [filterType, searchTerm]);
+
+  const clearFilters = () => {
+    setFilterType("all");
+    setSearchTerm("");
+    setPage(1);
+  };
 
   const resetForm = () => {
     setCategory("");
@@ -238,6 +301,7 @@ function Categories(): JSX.Element {
       toast.success(`${t.create} ${t.categories} successfully.`);
       resetForm();
       setIsModalOpen(false);
+
       refetch();
       refetchTree();
       refetchProducts();
@@ -295,6 +359,7 @@ function Categories(): JSX.Element {
       resetForm();
       setEditingCategory(null);
       setIsEditModalOpen(false);
+
       refetch();
       refetchTree();
       refetchProducts();
@@ -312,247 +377,347 @@ function Categories(): JSX.Element {
     }
   }, [isModalOpen, isEditModalOpen]);
 
-  const bentoCard = "rounded-3xl border border-black/10 bg-white/80 backdrop-blur shadow-sm";
-  const tile = "rounded-2xl border border-black/10 bg-white p-4";
-
   return (
     <Layout>
       {isLoadingCategories ? (
         <Loader />
       ) : (
         <div
-          dir={language === "ar" ? "rtl" : "ltr"}
-          className="px-4 mb-10 py-3 mt-[70px] lg:mt-[50px] w-full max-w-6xl min-h-screen lg:min-h-auto">
-          {/* Header */}
-          <div className="flex items-start justify-between gap-3">
-            <div>
-              <div className="flex items-center gap-3">
-                <div className="h-11 w-11 rounded-2xl bg-zinc-900 text-white grid place-items-center">
-                  <Boxes className="h-5 w-5" />
-                </div>
-                <div>
-                  <h1 className="text-xl lg:text-2xl font-extrabold text-zinc-900 flex items-center gap-2">
-                    {t.categories}
-                    {/* <Badge icon={false}>
-                      <p className="text-base lg:text-sm font-semibold">
-                        {data?.total || 0}{" "}
-                        <span className="hidden lg:inline">{t.totalCategories}</span>
-                      </p>
-                    </Badge> */}
-                  </h1>
-                  <p className="text-sm text-zinc-600">{t.manage}</p>
-                </div>
-              </div>
+          dir={isRTL ? "ltr" : "ltr"}
+          className="flex w-full mb-10 lg:w-4xl min-h-screen lg:min-h-auto justify-between py-3 mt-[70px] lg:mt-[50px] px-4">
+          <div className="w-full">
+            {/* HEADER (ProductList-like) */}
+            <div className={`flex justify-between items-center ${isRTL ? "flex-row-reverse" : ""}`}>
+              <h1
+                dir={isRTL ? "rtl" : "ltr"}
+                className="text-lg lg:text-2xl font-black flex gap-2 lg:gap-5 items-center">
+                {t.categories}:
+                <Badge icon={false}>
+                  <Boxes className="size-5 sm:size-6" />
+                  <p className="text-sm lg:text-sm">
+                    {totalAllCategories}{" "}
+                    <span className="hidden lg:inline">{t.totalCategories}</span>
+                  </p>
+                </Badge>
+              </h1>
+
+              <button
+                onClick={openCreate}
+                className="inline-flex items-center gap-2 rounded-md bg-neutral-950 dark:bg-white dark:text-neutral-950 px-3 py-2 text-sm font-semibold text-white hover:bg-neutral-900 dark:hover:bg-white/90 transition">
+                {t.addCategory}
+                <Plus className="size-4" />
+              </button>
             </div>
 
-            <button
-              onClick={openCreate}
-              className="bg-zinc-900 drop-shadow-[0_0_10px_rgba(24,24,27,0.35)] hover:bg-zinc-800 transition-all duration-200 text-white font-semibold flex items-center gap-2 text-sm shadow-sm px-4 py-2.5 rounded-2xl">
-              <Plus className="h-4 w-4" />
-              {t.addCategory}
-            </button>
-          </div>
+            <Separator className="my-4 bg-black/20 dark:bg-white/10" />
 
-          <Separator className="my-5 bg-black/10" />
-
-          {/* Bento grid */}
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
-            {/* Filters card */}
-            <section className={`${bentoCard} lg:col-span-4 p-5`}>
-              <div className="flex items-center justify-between">
-                <h2 className="text-base font-bold text-zinc-900">{t.filters}</h2>
-              </div>
-
-              <Separator className="my-4 bg-black/10" />
-
-              <div className="grid grid-cols-1 gap-3">
-                <div className={tile}>
-                  <div className="flex items-center gap-2 mb-2">
-                    <Search className="h-4 w-4 text-zinc-700" />
-                    <p className="text-sm font-semibold text-zinc-800">
-                      {language === "ar" ? "بحث" : "Search"}
-                    </p>
-                  </div>
-
-                  <div className="relative">
-                    <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-zinc-400">
-                      <Search className="h-4 w-4" />
-                    </span>
-                    <input
-                      type="text"
-                      placeholder={t.searchPlaceholder}
-                      value={searchTerm}
-                      onChange={(e: ChangeEvent<HTMLInputElement>) => setSearchTerm(e.target.value)}
-                      className="w-full border bg-white border-black/10 rounded-xl py-2.5 pl-10 pr-4 text-sm outline-none focus:ring-2 focus:ring-blue-500"
-                    />
-                  </div>
+            {/* SEARCH + MOBILE FILTER BUTTON */}
+            <div className="mt-5 mb-2">
+              <div className="flex flex-wrap items-center gap-3 mb-4">
+                <div className="relative w-full lg:w-full">
+                  <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400 dark:text-zinc-400">
+                    <Search className="h-5 w-5" />
+                  </span>
+                  <input
+                    type="text"
+                    placeholder={t.searchPlaceholder}
+                    value={searchTerm}
+                    onChange={(e: ChangeEvent<HTMLInputElement>) => {
+                      setSearchTerm(e.target.value);
+                      setPage(1);
+                    }}
+                    className="w-full bg-white dark:bg-zinc-900 border border-gray-300 dark:border-white/10 rounded-lg py-2.5 pl-10 pr-4 text-sm text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 dark:placeholder:text-zinc-500 focus:outline-none focus:border-blue-500 focus:border-2 dark:focus:border-blue-400"
+                  />
                 </div>
 
-                <div className={tile}>
-                  <p className="text-sm font-semibold text-zinc-800 mb-2">
-                    {language === "ar" ? "نوع الفئات" : "Category type"}
-                  </p>
+                {/* Mobile only: filters toggle */}
+                <div className="w-full lg:hidden">
+                  <button
+                    type="button"
+                    onClick={() => setShowMobileFilters((v) => !v)}
+                    className="w-full bg-white dark:bg-zinc-900 border border-gray-300 dark:border-white/10 rounded-lg px-3 py-2.5 text-sm font-bold text-zinc-900 dark:text-zinc-100 flex items-center justify-between">
+                    <span className="flex items-center gap-2">
+                      <SlidersHorizontal className="h-4 w-4" />
+                      {t.filters}
+                      {activeFiltersCount > 0 ? (
+                        <span className="ml-2 inline-flex items-center justify-center rounded-full bg-black text-white dark:bg-white dark:text-black text-xs w-5 h-5">
+                          {activeFiltersCount}
+                        </span>
+                      ) : null}
+                    </span>
+                    <span className="text-gray-500 dark:text-zinc-400">
+                      {showMobileFilters ? t.hide : t.show}
+                    </span>
+                  </button>
+                </div>
+              </div>
+
+              {/* FILTERS */}
+              <div className={`${showMobileFilters ? "block" : "hidden"} lg:block`}>
+                <div className="grid w-full grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 lg:gap-4 mb-5">
                   <select
                     value={filterType}
-                    onChange={(e) => setFilterType(e.target.value as any)}
-                    className="w-full border bg-white border-black/10 rounded-xl py-2.5 px-4 text-sm outline-none focus:ring-2 focus:ring-blue-500">
+                    onChange={(e) => {
+                      setFilterType(e.target.value as any);
+                      setPage(1);
+                    }}
+                    className="border bg-white dark:bg-zinc-900 border-gray-300 dark:border-white/10 rounded-lg p-2 text-sm text-zinc-900 dark:text-zinc-100">
                     <option value="all">{t.allCategories}</option>
                     <option value="main">{t.mainCategories}</option>
                     <option value="sub">{t.subCategories}</option>
                   </select>
+
+                  {/* showing count on this page */}
+                  <div className="border bg-white dark:bg-zinc-900 border-gray-300 dark:border-white/10 rounded-lg p-2 text-sm flex items-center justify-between">
+                    <span className="text-gray-500 dark:text-zinc-400">{t.showing}</span>
+                    <span className="font-black text-gray-900 dark:text-zinc-100">
+                      {filteredCategories.length}
+                    </span>
+                  </div>
+
+                  {/* total */}
+                  <div className="border bg-white dark:bg-zinc-900 border-gray-300 dark:border-white/10 rounded-lg p-2 text-sm flex items-center justify-between">
+                    <span className="text-gray-500 dark:text-zinc-400">{t.total}</span>
+                    <span className="font-black text-gray-900 dark:text-zinc-100">
+                      {totalAllCategories}
+                    </span>
+                  </div>
+
+                  {/* placeholder tile to keep 4-col symmetry on desktop */}
+                  <div className="hidden lg:block border bg-white dark:bg-zinc-900 border-gray-300 dark:border-white/10 rounded-lg p-2 text-sm text-gray-500 dark:text-zinc-400">
+                    {t.manage}
+                  </div>
                 </div>
 
-                <div className={`${tile} bg-zinc-50`}>
-                  <div className="text-xs text-zinc-500">
-                    {language === "ar" ? "النتائج" : "Results"}
+                {activeFiltersCount > 0 ? (
+                  <div className="flex items-center justify-between mb-5">
+                    <p className="text-xs text-gray-500 dark:text-zinc-400">
+                      {t.activeFilters}: <span className="font-bold">{activeFiltersCount}</span>
+                    </p>
+                    <button
+                      type="button"
+                      onClick={clearFilters}
+                      className="text-xs font-bold text-gray-700 dark:text-zinc-200 hover:text-black dark:hover:text-white inline-flex items-center gap-1">
+                      <X className="h-4 w-4" />
+                      {t.clear}
+                    </button>
                   </div>
-                  <div className="text-2xl font-extrabold text-zinc-900">
-                    {filteredCategories.length}
-                  </div>
-                  <div className="text-xs text-zinc-500">
-                    {language === "ar" ? "ضمن الصفحة الحالية" : "on this page"}
-                  </div>
-                </div>
-              </div>
-            </section>
+                ) : null}
 
-            {/* List card (table) */}
-            <section className={`${bentoCard} lg:col-span-8 p-5`}>
-              <div className="flex items-center justify-between gap-3">
-                <h2 className="text-base font-bold text-zinc-900">{t.list}</h2>
-              </div>
-
-              <Separator className="my-4 bg-black/10" />
-
-              <div className="rounded-2xl border border-black/10 bg-white overflow-hidden">
-                <div className="overflow-x-auto">
-                  <table className="w-full text-sm text-left text-zinc-700">
-                    <thead className="bg-white text-zinc-900/60 font-semibold">
+                {/* DESKTOP TABLE (ProductList-like) */}
+                <div className="hidden lg:block rounded-lg mb-10 border border-gray-200 dark:border-white/10 lg:p-5 bg-white dark:bg-zinc-950 overflow-x-auto">
+                  <table className="w-full min-w-[800px] border-gray-200 text-sm text-left text-gray-700 dark:text-zinc-200">
+                    <thead className="bg-white dark:bg-zinc-950 text-gray-900/50 dark:text-zinc-400 font-semibold">
                       <tr>
-                        <th className="px-4 py-3 border-b border-black/10">{t.tableName}</th>
-                        <th className="px-4 py-3 border-b border-black/10">{t.tableParent}</th>
-                        <th className="px-4 py-3 border-b border-black/10">{t.tableActions}</th>
+                        <th className="px-4 py-3 border-b border-gray-200 dark:border-white/10">
+                          {t.tableName}
+                        </th>
+                        <th className="px-4 py-3 border-b border-gray-200 dark:border-white/10">
+                          {t.tableParent}
+                        </th>
+                        <th className="px-4 py-3 border-b border-gray-200 dark:border-white/10">
+                          {t.tableType}
+                        </th>
+                        <th className="px-4 py-3 border-b border-gray-200 dark:border-white/10">
+                          {t.tableActions}
+                        </th>
                       </tr>
                     </thead>
 
-                    <tbody className="divide-y divide-black/5 bg-white">
+                    <tbody className="divide-y divide-gray-200 dark:divide-white/10 bg-white dark:bg-zinc-950">
                       {filteredCategories.length > 0 ? (
-                        filteredCategories.map((cat) => (
-                          <tr key={cat._id} className="font-semibold">
-                            <td className="px-4 py-3">
-                              <div className="flex items-center gap-3">
-                                {cat.image ? (
-                                  <img
-                                    src={cat.image}
-                                    alt={cat.name}
-                                    className="w-10 h-10 object-cover rounded-xl border border-black/10"
-                                  />
-                                ) : (
-                                  <div className="w-10 h-10 rounded-xl border border-black/10 bg-zinc-50 grid place-items-center">
-                                    <ImageIcon className="h-4 w-4 text-zinc-500" />
-                                  </div>
-                                )}
-                                <span className="truncate">{cat.name}</span>
-                              </div>
-                            </td>
-
-                            <td className="px-4 py-3">
-                              {cat.parent?.name ? (
-                                <span className="text-zinc-500 text-sm">
-                                  {t.subOf} {cat.parent.name}
-                                </span>
-                              ) : (
-                                <span className="text-sm text-zinc-500">{t.main}</span>
-                              )}
-                            </td>
-
-                            <td className="px-4 py-3">
-                              <div className="flex items-center gap-2">
-                                <button
-                                  disabled={isDeleting && deletingCategoryId === cat._id}
-                                  onClick={() => handleDeleteCategory(cat._id, cat.name)}
-                                  className="text-zinc-900 hover:bg-zinc-100 bg-zinc-50 border border-black/10 p-2 rounded-xl transition flex items-center justify-center min-w-[36px] min-h-[36px] disabled:opacity-60"
-                                  title={language === "ar" ? "حذف" : "Delete"}>
-                                  {isDeleting && deletingCategoryId === cat._id ? (
-                                    <Loader2Icon className="animate-spin h-4 w-4" />
+                        filteredCategories.map((cat) => {
+                          const isMain = !cat.parent?.name;
+                          return (
+                            <tr
+                              key={cat._id}
+                              className="hover:bg-gray-100 dark:hover:bg-white/5 transition-all font-bold">
+                              <td className="px-4 py-3">
+                                <div className="flex items-center gap-2 max-w-72">
+                                  {cat.image ? (
+                                    <img
+                                      className="w-16 h-16 object-cover rounded-md bg-gray-50 dark:bg-zinc-900 border border-gray-200 dark:border-white/10 shrink-0"
+                                      src={cat.image}
+                                      alt={cat.name}
+                                      loading="lazy"
+                                    />
                                   ) : (
-                                    <Trash2 className="h-4 w-4" />
+                                    <div className="w-16 h-16 rounded-md bg-gray-50 dark:bg-zinc-900 border border-gray-200 dark:border-white/10 shrink-0 grid place-items-center">
+                                      <ImageIcon className="h-5 w-5 text-gray-400 dark:text-zinc-500" />
+                                    </div>
                                   )}
-                                </button>
+                                  <p className="truncate text-zinc-900 dark:text-zinc-100">
+                                    {cat.name}
+                                  </p>
+                                </div>
+                              </td>
 
-                                <button
-                                  onClick={() => openEdit(cat)}
-                                  className="text-zinc-900 hover:bg-zinc-100 bg-zinc-50 border border-black/10 p-2 rounded-xl transition flex items-center justify-center min-w-[36px] min-h-[36px]"
-                                  title={language === "ar" ? "تعديل" : "Edit"}>
-                                  <SquarePen className="h-4 w-4" />
-                                </button>
-                              </div>
-                            </td>
-                          </tr>
-                        ))
+                              <td className="px-4 py-3">
+                                {cat.parent?.name ? (
+                                  <span className="text-gray-700 dark:text-zinc-200">
+                                    {cat.parent.name}
+                                  </span>
+                                ) : (
+                                  <span className="text-gray-500 dark:text-zinc-400">—</span>
+                                )}
+                              </td>
+
+                              <td className="px-4 py-3">
+                                <span className="text-gray-700 dark:text-zinc-200">
+                                  {isMain ? t.main : t.subCategories}
+                                </span>
+                              </td>
+
+                              <td className="px-4 py-3">
+                                <div className="flex items-center gap-2">
+                                  <button
+                                    disabled={isDeleting && deletingCategoryId === cat._id}
+                                    onClick={() => handleDeleteCategory(cat._id, cat.name)}
+                                    className="text-zinc-900 dark:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-white/10 bg-zinc-50 dark:bg-white/5 border border-black/10 dark:border-white/10 p-2 rounded-xl transition flex items-center justify-center min-w-[36px] min-h-[36px] disabled:opacity-60"
+                                    title={t.delete}>
+                                    {isDeleting && deletingCategoryId === cat._id ? (
+                                      <Loader2Icon className="animate-spin h-4 w-4" />
+                                    ) : (
+                                      <Trash2 className="h-4 w-4" />
+                                    )}
+                                  </button>
+
+                                  <button
+                                    onClick={() => openEdit(cat)}
+                                    className="text-zinc-900 dark:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-white/10 bg-zinc-50 dark:bg-white/5 border border-black/10 dark:border-white/10 p-2 rounded-xl transition flex items-center justify-center min-w-[36px] min-h-[36px]"
+                                    title={t.edit}>
+                                    <SquarePen className="h-4 w-4" />
+                                  </button>
+                                </div>
+                              </td>
+                            </tr>
+                          );
+                        })
                       ) : (
                         <tr>
-                          <td colSpan={3} className="px-4 py-10 text-center text-zinc-500">
+                          <td
+                            colSpan={4}
+                            className="px-4 py-6 text-center text-gray-500 dark:text-zinc-400">
                             {t.noCategoriesFound}
                           </td>
                         </tr>
                       )}
                     </tbody>
                   </table>
+
+                  <Paginate page={page} pages={pages} setPage={setPage} />
                 </div>
 
-                {/* Pagination */}
-                <div className="px-3 py-3 border-t border-black/10">
-                  <Pagination>
-                    <PaginationContent>
-                      <PaginationItem>
-                        <PaginationPrevious
-                          onClick={() => page > 1 && setPage(page - 1)}
-                          href="#"
-                        />
-                      </PaginationItem>
+                {/* MOBILE CARDS (ProductList-like) */}
+                <div className="lg:hidden mb-10">
+                  {filteredCategories.length > 0 ? (
+                    <div className="space-y-3">
+                      {filteredCategories.map((cat) => {
+                        const isMain = !cat.parent?.name;
 
-                      {[...Array(pages).keys()].map((x) => (
-                        <PaginationItem key={x + 1}>
-                          <PaginationLink
-                            href="#"
-                            isActive={page === x + 1}
-                            onClick={() => setPage(x + 1)}>
-                            {x + 1}
-                          </PaginationLink>
-                        </PaginationItem>
-                      ))}
+                        return (
+                          <div
+                            key={cat._id}
+                            className="w-full rounded-2xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-950 p-3 shadow-sm hover:bg-gray-50 dark:hover:bg-white/5 transition">
+                            <div className="flex gap-3 items-stretch">
+                              {/* Image */}
+                              <div className="shrink-0">
+                                {cat.image ? (
+                                  <img
+                                    className="w-20 h-20 rounded-xl object-cover bg-gray-50 dark:bg-zinc-900 border border-gray-200 dark:border-white/10"
+                                    src={cat.image}
+                                    alt="thumbnail"
+                                    loading="lazy"
+                                  />
+                                ) : (
+                                  <div className="w-20 h-20 rounded-xl bg-gray-50 dark:bg-zinc-900 border border-gray-200 dark:border-white/10 grid place-items-center">
+                                    <ImageIcon className="h-5 w-5 text-gray-400 dark:text-zinc-500" />
+                                  </div>
+                                )}
+                              </div>
 
-                      <PaginationItem>
-                        <PaginationNext
-                          onClick={() => page < pages && setPage(page + 1)}
-                          href="#"
-                        />
-                      </PaginationItem>
-                    </PaginationContent>
-                  </Pagination>
+                              {/* Content */}
+                              <div className="min-w-0 flex-1 flex flex-col justify-between">
+                                <div className="flex items-start justify-between gap-2">
+                                  <div className="min-w-0">
+                                    <p className="text-black dark:text-zinc-100 truncate font-bold">
+                                      {cat.name}
+                                    </p>
+                                    <p className="text-xs text-gray-500 dark:text-zinc-400 mt-0.5 truncate">
+                                      {isMain ? t.main : `${t.subOf} ${cat.parent?.name || "—"}`}
+                                    </p>
+                                  </div>
+
+                                  <span className="inline-flex items-center rounded-full border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-900 px-3 py-1 text-xs font-black text-gray-900 dark:text-zinc-100">
+                                    {isMain ? t.main : t.subCategories}
+                                  </span>
+                                </div>
+
+                                <div className="mt-3 flex items-center justify-between gap-2">
+                                  <div className="text-xs text-gray-600 dark:text-zinc-300 font-bold truncate">
+                                    {t.tableParent}: {cat.parent?.name || "—"}
+                                  </div>
+
+                                  <div className="flex items-center gap-2">
+                                    <button
+                                      disabled={isDeleting && deletingCategoryId === cat._id}
+                                      onClick={() => handleDeleteCategory(cat._id, cat.name)}
+                                      className="text-zinc-900 dark:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-white/10 bg-zinc-50 dark:bg-white/5 border border-black/10 dark:border-white/10 p-2 rounded-xl transition flex items-center justify-center min-w-[36px] min-h-[36px] disabled:opacity-60"
+                                      title={t.delete}>
+                                      {isDeleting && deletingCategoryId === cat._id ? (
+                                        <Loader2Icon className="animate-spin h-4 w-4" />
+                                      ) : (
+                                        <Trash2 className="h-4 w-4" />
+                                      )}
+                                    </button>
+
+                                    <button
+                                      onClick={() => openEdit(cat)}
+                                      className="text-zinc-900 dark:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-white/10 bg-zinc-50 dark:bg-white/5 border border-black/10 dark:border-white/10 p-2 rounded-xl transition flex items-center justify-center min-w-[36px] min-h-[36px]"
+                                      title={t.edit}>
+                                      <SquarePen className="h-4 w-4" />
+                                    </button>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
+
+                      <div className="pt-2">
+                        <Paginate page={page} pages={pages} setPage={setPage} />
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="text-center text-gray-500 dark:text-zinc-400 py-10">
+                      {t.noCategoriesFound}
+                    </div>
+                  )}
                 </div>
+
+                {/* TREE */}
+                {tree ? (
+                  <div className="rounded-lg border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-950 p-4 lg:p-5 mb-10">
+                    <div className="flex items-center gap-2">
+                      <FolderTree className="h-4 w-4 text-zinc-900 dark:text-zinc-100" />
+                      <h2 className="text-base font-black text-zinc-900 dark:text-zinc-100">
+                        {t.hierarchy}
+                      </h2>
+                    </div>
+                    <Separator className="my-4 bg-black/10 dark:bg-white/10" />
+                    <CategoryTree data={normalizeTree(tree)} />
+                  </div>
+                ) : null}
               </div>
-            </section>
-
-            {/* Tree full width */}
-            {tree ? (
-              <section className={`${bentoCard} lg:col-span-12 p-5`}>
-                <div className="flex items-center gap-2">
-                  <FolderTree className="h-4 w-4 text-zinc-900" />
-                  <h2 className="text-base font-bold text-zinc-900">{t.hierarchy}</h2>
-                </div>
-                <Separator className="my-4 bg-black/10" />
-                <CategoryTree data={tree} />
-              </section>
-            ) : null}
+            </div>
           </div>
         </div>
       )}
 
       {/* Create modal */}
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-        <DialogContent>
+        <DialogContent className="bg-white dark:bg-zinc-950 border border-black/10 dark:border-white/10 text-zinc-900 dark:text-zinc-100">
           <DialogHeader>
             <DialogTitle>{t.addCategory}</DialogTitle>
           </DialogHeader>
@@ -566,32 +731,34 @@ function Categories(): JSX.Element {
             }}
             placeholder={t.enterCategoryName}
             className={clsx(
-              "w-full border bg-white rounded-xl py-3 px-4 text-sm outline-none focus:ring-2 focus:ring-blue-500",
-              categoryError ? "border-rose-500 border-2" : "border-black/10",
+              "w-full border rounded-xl py-3 px-4 text-sm outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 dark:placeholder:text-zinc-500 dark:focus:ring-blue-400",
+              categoryError ? "border-rose-500 border-2" : "border-black/10 dark:border-white/10",
             )}
           />
 
           <select
-            className="w-full border bg-white border-black/10 rounded-xl py-3 px-4 text-sm outline-none focus:ring-2 focus:ring-blue-500 my-2"
+            className="w-full border rounded-xl py-3 px-4 text-sm outline-none focus:ring-2 focus:ring-blue-500 my-2 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 border-black/10 dark:border-white/10 dark:focus:ring-blue-400"
             value={parent}
             onChange={(e) => setParent(e.target.value)}>
             <option value="">{t.noParent}</option>
-            {categories.map((cat) => (
-              <option key={cat._id} value={cat._id}>
-                {cat.name}
+            {parentOptions.map((opt) => (
+              <option key={opt.id} value={opt.id}>
+                {opt.label}
               </option>
             ))}
           </select>
 
-          <div className="rounded-2xl border border-black/10 bg-white p-4">
-            <div className="text-sm font-semibold text-zinc-800 mb-2">{t.imageUpload}</div>
+          <div className="rounded-2xl border border-black/10 dark:border-white/10 bg-white dark:bg-zinc-950 p-4">
+            <div className="text-sm font-semibold text-zinc-800 dark:text-zinc-200 mb-2">
+              {t.imageUpload}
+            </div>
             <input
               type="file"
               accept="image/*"
               onChange={(e) => {
                 if (e.target.files && e.target.files[0]) setImageFile(e.target.files[0]);
               }}
-              className="w-full text-sm"
+              className="w-full text-sm text-zinc-900 dark:text-zinc-100 file:text-zinc-900 dark:file:text-zinc-100"
             />
 
             {imageFile ? (
@@ -599,11 +766,11 @@ function Categories(): JSX.Element {
                 <img
                   src={URL.createObjectURL(imageFile)}
                   alt="Preview"
-                  className="w-16 h-16 object-cover rounded-xl border border-black/10"
+                  className="w-16 h-16 object-cover rounded-xl border border-black/10 dark:border-white/10"
                 />
                 <div className="min-w-0">
-                  <div className="text-xs text-zinc-500">{t.preview}</div>
-                  <div className="text-sm font-semibold text-zinc-900 truncate">
+                  <div className="text-xs text-zinc-500 dark:text-zinc-400">{t.preview}</div>
+                  <div className="text-sm font-semibold text-zinc-900 dark:text-zinc-100 truncate">
                     {imageFile.name}
                   </div>
                 </div>
@@ -624,7 +791,7 @@ function Categories(): JSX.Element {
 
       {/* Edit modal */}
       <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
-        <DialogContent>
+        <DialogContent className="bg-white dark:bg-zinc-950 border border-black/10 dark:border-white/10 text-zinc-900 dark:text-zinc-100">
           <DialogHeader>
             <DialogTitle>{t.editCategory}</DialogTitle>
           </DialogHeader>
@@ -638,32 +805,36 @@ function Categories(): JSX.Element {
             }}
             placeholder={t.enterCategoryName}
             className={clsx(
-              "w-full border bg-white rounded-xl py-3 px-4 text-sm outline-none focus:ring-2 focus:ring-blue-500",
-              categoryError ? "border-rose-500 border-2" : "border-black/10",
+              "w-full border rounded-xl py-3 px-4 text-sm outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 dark:placeholder:text-zinc-500 dark:focus:ring-blue-400",
+              categoryError ? "border-rose-500 border-2" : "border-black/10 dark:border-white/10",
             )}
           />
 
           <select
-            className="w-full border bg-white border-black/10 rounded-xl py-3 px-4 text-sm outline-none focus:ring-2 focus:ring-blue-500 my-2"
+            className="w-full border rounded-xl py-3 px-4 text-sm outline-none focus:ring-2 focus:ring-blue-500 my-2 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 border-black/10 dark:border-white/10 dark:focus:ring-blue-400"
             value={parent}
             onChange={(e) => setParent(e.target.value)}>
             <option value="">{t.noParent}</option>
-            {categories.map((cat) => (
-              <option key={cat._id} value={cat._id}>
-                {cat.name}
-              </option>
-            ))}
+            {parentOptions
+              .filter((opt) => opt.id !== editingCategory?._id)
+              .map((opt) => (
+                <option key={opt.id} value={opt.id}>
+                  {opt.label}
+                </option>
+              ))}
           </select>
 
-          <div className="rounded-2xl border border-black/10 bg-white p-4">
-            <div className="text-sm font-semibold text-zinc-800 mb-2">{t.imageUpload}</div>
+          <div className="rounded-2xl border border-black/10 dark:border-white/10 bg-white dark:bg-zinc-950 p-4">
+            <div className="text-sm font-semibold text-zinc-800 dark:text-zinc-200 mb-2">
+              {t.imageUpload}
+            </div>
             <input
               type="file"
               accept="image/*"
               onChange={(e) => {
                 if (e.target.files && e.target.files[0]) setImageFile(e.target.files[0]);
               }}
-              className="w-full text-sm"
+              className="w-full text-sm text-zinc-900 dark:text-zinc-100 file:text-zinc-900 dark:file:text-zinc-100"
             />
 
             {editingCategory?.image || imageFile ? (
@@ -673,11 +844,11 @@ function Categories(): JSX.Element {
                     imageFile ? URL.createObjectURL(imageFile) : (editingCategory?.image as string)
                   }
                   alt="Preview"
-                  className="w-16 h-16 object-cover rounded-xl border border-black/10"
+                  className="w-16 h-16 object-cover rounded-xl border border-black/10 dark:border-white/10"
                 />
                 <div className="min-w-0">
-                  <div className="text-xs text-zinc-500">{t.preview}</div>
-                  <div className="text-sm font-semibold text-zinc-900 truncate">
+                  <div className="text-xs text-zinc-500 dark:text-zinc-400">{t.preview}</div>
+                  <div className="text-sm font-semibold text-zinc-900 dark:text-zinc-100 truncate">
                     {imageFile ? imageFile.name : editingCategory?.name}
                   </div>
                 </div>

@@ -68,7 +68,7 @@ function Order() {
       {isLoading ? (
         <Loader />
       ) : (
-        <div className="px-4 flex lg:w-4xl flex-col w-full min-h-screen lg:min-h-auto py-3 mt-[70px]">
+        <div className="px-4 flex lg:w-4xl flex-col w-full min-h-screen lg:min-h-auto py-3 mt-[70px] text-neutral-900 dark:text-neutral-100">
           {/* Header */}
           <div className="w-full">
             <div
@@ -77,11 +77,11 @@ function Order() {
               }`}>
               <h1
                 dir={language === "ar" ? "rtl" : "ltr"}
-                className="text-lg lg:text-2xl font-black flex gap-2 lg:gap-5 items-center flex-wrap">
+                className="text-lg lg:text-2xl font-black flex gap-2 lg:gap-5 items-center flex-wrap text-neutral-900 dark:text-neutral-50">
                 {texts[language].orders}:
                 <Badge icon={false}>
-                  <Layers />
-                  <p className="text-lg lg:text-sm">
+                  <Layers className="size-5 sm:size-6" />
+                  <p className="text-sm lg:text-sm">
                     {data?.total > 0 ? data?.total : "0"}{" "}
                     <span className="hidden lg:inline">{texts[language].orders}</span>
                   </p>
@@ -89,13 +89,14 @@ function Order() {
               </h1>
             </div>
 
-            <Separator className="my-4 bg-black/20" />
+            <Separator className="my-4 bg-black/20 dark:bg-white/10" />
 
             {/* Container */}
             <div className="mt-5 mb-2 overflow-hidden w-full max-w-full lg:w-4xl">
-              {/* Responsive controls */}
-              <div className="flex flex-col lg:flex-row items-stretch lg:items-center gap-2 mb-5">
-                <div className="relative w-full lg:w-full">
+              {/* ✅ Controls: search FULL width (always) */}
+              <div className="w-full space-y-3 mb-5">
+                {/* Search (full width) */}
+                <div className="relative w-full">
                   <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400 pointer-events-none">
                     <Search className="h-5 w-5" />
                   </span>
@@ -104,56 +105,77 @@ function Order() {
                     placeholder={texts[language].searchPlaceholder}
                     value={searchQuery}
                     onChange={handleSearchChange}
-                    className="w-full border bg-white border-gray-300 rounded-lg py-3 pl-10 pr-4 text-sm focus:outline-none focus:border-blue-500 focus:border-2"
+                    className="
+                      w-full rounded-lg py-3 pl-10 pr-4 text-sm outline-none transition
+                      border bg-white border-gray-300 text-neutral-900
+                      focus:border-blue-500 focus:border-2
+                      dark:bg-neutral-950 dark:border-neutral-800 dark:text-neutral-100 dark:placeholder:text-neutral-500
+                      dark:focus:border-sky-400
+                    "
                   />
                 </div>
 
-                <div className="grid grid-cols-2 gap-2 w-full lg:flex lg:gap-2 lg:items-center">
-                  <div className="bg-blue-50 border border-blue-200 text-blue-700 text-sm font-semibold rounded-lg p-3 lg:px-4 lg:py-3 text-center">
+                {/* Revenue + items */}
+                <div className="grid grid-cols-2 gap-2 w-full">
+                  <div
+                    className="
+                      text-sm font-semibold rounded-lg p-3 text-center
+                      bg-blue-50 border border-blue-200 text-blue-700
+                      dark:bg-sky-950/30 dark:border-sky-900/60 dark:text-sky-200
+                    ">
                     {texts[language].revenue}: {data?.totalRevenue}{" "}
                     {language === "ar" ? "دك" : "KD"}
                   </div>
-                  <div className="bg-blue-50 border border-blue-200 text-blue-700 text-sm font-semibold rounded-lg p-3 lg:px-4 lg:py-3 text-center">
+                  <div
+                    className="
+                      text-sm font-semibold rounded-lg p-3 text-center
+                      bg-blue-50 border border-blue-200 text-blue-700
+                      dark:bg-sky-950/30 dark:border-sky-900/60 dark:text-sky-200
+                    ">
                     {texts[language].itemsSold}: {data?.totalItems}
                   </div>
                 </div>
               </div>
 
-              {/* Desktop table (unchanged) */}
-              <div className="hidden lg:block rounded-lg border lg:p-5 bg-white overflow-x-auto">
-                <table className="w-full min-w-[700px] rounded-lg border-gray-200 text-sm text-left text-gray-700">
-                  <thead className="bg-white text-gray-900/50 font-semibold">
+              {/* Desktop table */}
+              <div className="hidden lg:block rounded-lg border lg:p-5 bg-white overflow-x-auto dark:bg-neutral-950 dark:border-neutral-800">
+                <table className="w-full min-w-[700px] rounded-lg text-sm text-left text-gray-700 dark:text-neutral-200">
+                  <thead className="bg-white text-gray-900/50 font-semibold dark:bg-neutral-950 dark:text-neutral-400">
                     <tr>
-                      <th className="px-4 py-3 border-b whitespace-nowrap">
+                      <th className="px-4 py-3 border-b border-gray-200 dark:border-neutral-800 whitespace-nowrap">
                         {texts[language].orderId}
                       </th>
-                      <th className="px-4 py-3 border-b whitespace-nowrap">
+                      <th className="px-4 py-3 border-b border-gray-200 dark:border-neutral-800 whitespace-nowrap">
                         {texts[language].customer}
                       </th>
-                      <th className="px-4 py-3 border-b whitespace-nowrap">
+                      <th className="px-4 py-3 border-b border-gray-200 dark:border-neutral-800 whitespace-nowrap">
                         {texts[language].payment}
                       </th>
-                      <th className="px-4 py-3 border-b whitespace-nowrap">
+                      <th className="px-4 py-3 border-b border-gray-200 dark:border-neutral-800 whitespace-nowrap">
                         {texts[language].items}
                       </th>
-                      <th className="px-4 py-3 border-b whitespace-nowrap">
+                      <th className="px-4 py-3 border-b border-gray-200 dark:border-neutral-800 whitespace-nowrap">
                         {texts[language].createdAt}
                       </th>
-                      <th className="px-4 py-3 border-b whitespace-nowrap">
+                      <th className="px-4 py-3 border-b border-gray-200 dark:border-neutral-800 whitespace-nowrap">
                         {texts[language].status}
                       </th>
-                      <th className="px-4 py-3 border-b whitespace-nowrap">
+                      <th className="px-4 py-3 border-b border-gray-200 dark:border-neutral-800 whitespace-nowrap">
                         {texts[language].total}
                       </th>
                     </tr>
                   </thead>
 
-                  <tbody className="divide-y divide-gray-200 bg-white">
+                  <tbody className="divide-y divide-gray-200 bg-white dark:divide-neutral-800 dark:bg-neutral-950">
                     {filteredOrders?.length ? (
                       filteredOrders?.map((order: any) => (
                         <tr
                           key={order?._id}
-                          className="cursor-pointer hover:bg-gray-100 transition-all duration-300 font-bold"
+                          className="
+                            cursor-pointer transition-all duration-300 font-bold
+                            hover:bg-gray-100
+                            dark:hover:bg-neutral-900/60
+                          "
                           onClick={() => navigate(`/orders/${order?._id}`)}>
                           <td className="px-4 py-5 max-w-20 truncate whitespace-nowrap">
                             #{order._id}
@@ -178,7 +200,7 @@ function Order() {
                       <tr>
                         <td
                           colSpan={7}
-                          className="px-4 py-6 text-center text-gray-500 whitespace-nowrap">
+                          className="px-4 py-6 text-center text-gray-500 dark:text-neutral-500 whitespace-nowrap">
                           {texts[language].noOrders}
                         </td>
                       </tr>
@@ -198,16 +220,17 @@ function Order() {
                         key={order?._id}
                         type="button"
                         onClick={() => navigate(`/orders/${order?._id}`)}
-                        className="w-full text-left rounded-xl border bg-white p-4 active:scale-[0.99] transition">
+                        className="
+                          w-full text-left rounded-xl border p-4 transition active:scale-[0.99]
+                          bg-white border-gray-200
+                          dark:bg-neutral-950 dark:border-neutral-800
+                        ">
                         <div className="flex items-start justify-between gap-3">
                           <div className="min-w-0">
-                            {/* ✅ Mobile title is USER NAME (instead of ID) */}
-                            <p className="font-black text-sm text-neutral-900 truncate">
+                            <p className="font-black text-sm text-neutral-900 dark:text-neutral-50 truncate">
                               {order?.user?.name || texts[language].customer}
                             </p>
-
-                            {/* ✅ Secondary line shows order id (small) */}
-                            <p className="text-xs text-neutral-500 mt-0.5 truncate">
+                            <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-0.5 truncate">
                               #{order?._id}
                             </p>
                           </div>
@@ -218,30 +241,38 @@ function Order() {
                         </div>
 
                         <div className="mt-3 grid grid-cols-2 gap-2 text-xs">
-                          <div className="rounded-lg bg-neutral-50 border px-3 py-2">
-                            <p className="text-neutral-500">{texts[language].payment}</p>
-                            <p className="font-bold text-neutral-900 truncate">
+                          <div className="rounded-lg border px-3 py-2 bg-neutral-50 dark:bg-neutral-900/40 dark:border-neutral-800">
+                            <p className="text-neutral-500 dark:text-neutral-400">
+                              {texts[language].payment}
+                            </p>
+                            <p className="font-bold text-neutral-900 dark:text-neutral-50 truncate">
                               {order?.paymentMethod || "-"}
                             </p>
                           </div>
 
-                          <div className="rounded-lg bg-neutral-50 border px-3 py-2">
-                            <p className="text-neutral-500">{texts[language].items}</p>
-                            <p className="font-bold text-neutral-900">
+                          <div className="rounded-lg border px-3 py-2 bg-neutral-50 dark:bg-neutral-900/40 dark:border-neutral-800">
+                            <p className="text-neutral-500 dark:text-neutral-400">
+                              {texts[language].items}
+                            </p>
+                            <p className="font-bold text-neutral-900 dark:text-neutral-50">
                               {order?.orderItems?.length ?? 0}
                             </p>
                           </div>
 
-                          <div className="rounded-lg bg-neutral-50 border px-3 py-2">
-                            <p className="text-neutral-500">{texts[language].createdAt}</p>
-                            <p className="font-bold text-neutral-900">
+                          <div className="rounded-lg border px-3 py-2 bg-neutral-50 dark:bg-neutral-900/40 dark:border-neutral-800">
+                            <p className="text-neutral-500 dark:text-neutral-400">
+                              {texts[language].createdAt}
+                            </p>
+                            <p className="font-bold text-neutral-900 dark:text-neutral-50">
                               {order?.createdAt?.substring(0, 10) || "-"}
                             </p>
                           </div>
 
-                          <div className="rounded-lg bg-neutral-50 border px-3 py-2">
-                            <p className="text-neutral-500">{texts[language].total}</p>
-                            <p className="font-bold text-neutral-900">
+                          <div className="rounded-lg border px-3 py-2 bg-neutral-50 dark:bg-neutral-900/40 dark:border-neutral-800">
+                            <p className="text-neutral-500 dark:text-neutral-400">
+                              {texts[language].total}
+                            </p>
+                            <p className="font-bold text-neutral-900 dark:text-neutral-50">
                               {order?.totalPrice?.toFixed(3)} KD
                             </p>
                           </div>
@@ -250,7 +281,7 @@ function Order() {
                     ))}
                   </div>
                 ) : (
-                  <div className="rounded-xl border bg-white p-6 text-center text-sm text-gray-500">
+                  <div className="rounded-xl border bg-white p-6 text-center text-sm text-gray-500 dark:bg-neutral-950 dark:border-neutral-800 dark:text-neutral-500">
                     {texts[language].noOrders}
                   </div>
                 )}

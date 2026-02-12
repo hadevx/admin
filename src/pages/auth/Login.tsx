@@ -1,27 +1,48 @@
-import { useState, useContext, useEffect } from "react";
-import { EyeOff, Eye, Store, Loader2 } from "lucide-react";
+import { useState, useContext, useEffect, useMemo } from "react";
+import { EyeOff, Eye, Loader2 } from "lucide-react";
 import { useNavigate, Link } from "react-router-dom";
 import { useLoginUserMutation } from "../../redux/queries/userApi";
 import { useDispatch } from "react-redux";
 import { setUserInfo } from "../../redux/slices/authSlice";
 import { toast } from "react-toastify";
-// import Spinner from "../../components/Spinner";
 import { StoreContext } from "../../StorenameContext";
 import { clsx } from "clsx";
 import { validateLogin } from "../../validation/userSchema";
+
+// ✅ Keep ONLY ONE image (from /public)
+const leftImage = "/login-img.jpg";
 
 function Login() {
   const storeName = useContext(StoreContext);
 
   const [showPassword, setShowPassword] = useState(false);
-  const togglePasswordVisibility = () => setShowPassword((v) => !v);
-
-  const dispatch = useDispatch();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [remember, setRemember] = useState(false);
 
+  // ✅ Tips (rotate on the image)
+  const tips = useMemo(
+    () => [
+      "Tip: Review today’s orders and pending shipments after logging in.",
+      "Tip: Keep product stock updated to avoid overselling.",
+      "Tip: Check abandoned carts to recover lost sales.",
+      "Tip: Monitor daily revenue and conversion rates from the dashboard.",
+      "Tip: Update banners and offers regularly to boost engagement.",
+      "Tip: Respond quickly to customer messages to build trust.",
+      "Tip: Schedule discounts during peak traffic hours for better sales.",
+      "Tip: Regularly back up your store data for safety.",
+    ],
+    [],
+  );
+
+  const [activeTip, setActiveTip] = useState(0);
+  const [tipAnimKey, setTipAnimKey] = useState(0);
+
+  const dispatch = useDispatch();
   const navigate = useNavigate();
   const [loginUser, { isLoading }] = useLoginUserMutation();
+
+  const togglePasswordVisibility = () => setShowPassword((v) => !v);
 
   const handleLogin = async (e: any) => {
     e.preventDefault();
@@ -30,12 +51,8 @@ function Login() {
     if (!result.isValid) return toast.error(Object.values(result.errors)[0]);
 
     try {
-      if (!email || !password) return toast.error("All fields are required");
-
       const res: any = await loginUser(result.data).unwrap();
       dispatch(setUserInfo({ ...res }));
-      setPassword("");
-      setEmail("");
       navigate("/admin");
     } catch (error: any) {
       if (error?.status === "FETCH_ERROR") toast.error("Server is down. Please try again later.");
@@ -50,72 +67,122 @@ function Login() {
     };
   }, []);
 
-  return (
-    <div className="min-h-screen bg-zinc-50 px-4 py-10 flex items-center justify-center">
-      <div className="w-full max-w-md">
-        <div className="rounded-3xl border border-black/10 bg-white/80 backdrop-blur shadow-sm overflow-hidden">
-          {/* Top band (match ForgotPassword) */}
-          <div className="p-6 border-b border-black/10 bg-white">
-            <div className="flex items-start gap-3">
-              <div className="h-11 w-11 rounded-2xl bg-zinc-900 text-white grid place-items-center shrink-0">
-                <Store className="h-5 w-5" />
-              </div>
+  // ✅ Rotate tips only (every 6s)
+  useEffect(() => {
+    if (!tips.length) return;
+    const id = window.setInterval(() => {
+      setActiveTip((t) => (t + 1) % tips.length);
+      setTipAnimKey((k) => k + 1); // trigger animation
+    }, 6000);
+    return () => window.clearInterval(id);
+  }, [tips]);
 
-              <div className="min-w-0">
-                <h1 className="text-xl font-bold text-zinc-900">{storeName}</h1>
-                <p className="text-sm text-zinc-600 mt-1">
-                  Sign in to manage your store dashboard.
-                </p>
+  return (
+    <div className="h-screen w-screen overflow-hidden bg-white">
+      <div className="grid h-full w-full grid-cols-1 md:grid-cols-[1.55fr_1fr]">
+        {/* LEFT: ONE IMAGE + TIP OVERLAY */}
+        <div className="relative hidden md:block overflow-hidden">
+          {/* Image */}
+          <img
+            src={leftImage}
+            alt="Login visual"
+            draggable={false}
+            className="absolute inset-0 h-full w-full object-cover"
+          />
+
+          {/* Gradient overlay for readability */}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/65 via-black/15 to-black/0" />
+
+          {/* Tip on image */}
+          <div className="absolute bottom-10 left-10 right-10">
+            <div
+              key={tipAnimKey}
+              className="max-w-xl rounded-2xl border border-white/10 bg-white/10 backdrop-blur-md px-5 py-4 text-white shadow-[0_10px_40px_rgba(0,0,0,0.35)]
+                         animate-[tipIn_600ms_ease-out]">
+              <div className="text-xs font-semibold uppercase tracking-wide text-white/80">
+                Helpful tip
               </div>
+              <div className="mt-2 text-lg font-semibold leading-snug">{tips[activeTip]}</div>
             </div>
           </div>
 
-          {/* Body */}
-          <div className="p-6">
-            <form onSubmit={handleLogin} className="space-y-4">
+          {/* Keyframes */}
+          <style>
+            {`
+              @keyframes tipIn {
+                0% { opacity: 0; transform: translateY(14px); }
+                100% { opacity: 1; transform: translateY(0); }
+              }
+            `}
+          </style>
+        </div>
+
+        {/* RIGHT: FORM */}
+        <div className="flex h-full items-center justify-center px-8">
+          <div className="w-full max-w-md">
+            {/* Brand */}
+            <div className="mb-6 flex items-center gap-2">
+              <div className="grid h-8 w-8 place-items-center rounded-lg bg-black">
+                <img src="/webschema.jpeg" className="rounded-lg" alt="logo" />
+              </div>
+              <span className="text-sm font-semibold text-zinc-900">{storeName || "Konekta"}</span>
+            </div>
+
+            <h1 className="text-2xl font-semibold text-zinc-900">Login to your account</h1>
+            <p className="mt-2 text-sm text-zinc-500">
+              Welcome back! Enter your details to log in.
+            </p>
+
+            <form onSubmit={handleLogin} className="mt-6 space-y-4">
               {/* Email */}
-              <div className="rounded-2xl border border-black/10 bg-white p-4">
-                <label className="block text-xs font-semibold text-zinc-600">Email</label>
+              <div>
+                <label className="text-xs font-medium text-zinc-600">Email</label>
                 <input
                   type="email"
-                  placeholder="you@example.com"
+                  placeholder="Enter your email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="mt-2 w-full rounded-xl border border-black/10 bg-white px-3 py-3 text-sm outline-none shadow-sm focus:ring-2 focus:ring-blue-500"
-                  autoComplete="email"
+                  className="mt-1 h-11 w-full rounded-sm border border-black/10 px-4 text-sm shadow-sm outline-none focus:border-black focus:ring-2 focus:ring-black/30"
                 />
               </div>
 
               {/* Password */}
-              <div className="rounded-2xl border border-black/10 bg-white p-4">
-                <div className="flex items-center justify-between">
-                  <label className="block text-xs font-semibold text-zinc-600">Password</label>
-
-                  <Link
-                    to="/forget-password"
-                    className="text-xs font-semibold text-zinc-600 hover:text-zinc-900 transition">
-                    Forgot?
-                  </Link>
-                </div>
-
-                <div className="mt-2 relative">
+              <div>
+                <label className="text-xs font-medium text-zinc-600">Password</label>
+                <div className="relative mt-1">
                   <input
                     type={showPassword ? "text" : "password"}
-                    placeholder="••••••••"
+                    placeholder="Enter your password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="w-full rounded-xl border border-black/10 bg-white px-3 pr-10 py-3 text-sm outline-none shadow-sm focus:ring-2 focus:ring-blue-500"
+                    className="h-11 w-full rounded-sm border border-black/10 px-4 pr-12 text-sm shadow-sm outline-none focus:border-black focus:ring-2 focus:ring-black/30"
                     autoComplete="current-password"
                   />
-
                   <button
                     type="button"
                     onClick={togglePasswordVisibility}
-                    className="absolute inset-y-0 right-0 px-3 inline-flex items-center text-zinc-400 hover:text-zinc-700 transition"
+                    className="absolute inset-y-0 right-0 px-4 text-zinc-400 hover:text-zinc-700"
                     aria-label={showPassword ? "Hide password" : "Show password"}>
                     {showPassword ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
                   </button>
                 </div>
+              </div>
+
+              {/* Remember + Forgot */}
+              <div className="flex items-center justify-between text-xs">
+                <label className="flex items-center gap-2 text-zinc-600">
+                  <input
+                    type="checkbox"
+                    checked={remember}
+                    onChange={(e) => setRemember(e.target.checked)}
+                    className="h-4 w-4 rounded border-black/20"
+                  />
+                  Remember login
+                </label>
+
+                <Link to="/forget-password" className="font-medium text-neutral-900">
+                  Forgot password?
+                </Link>
               </div>
 
               {/* Submit */}
@@ -123,16 +190,18 @@ function Login() {
                 disabled={isLoading}
                 type="submit"
                 className={clsx(
-                  "w-full rounded-2xl bg-zinc-900 hover:bg-zinc-800 text-white font-semibold py-3 shadow-lg drop-shadow-[0_0_10px_rgba(24,24,27,0.25)] transition disabled:opacity-60 disabled:cursor-not-allowed inline-flex items-center justify-center gap-2",
+                  "mt-2 h-11 w-full rounded-md py-6 text-white text-lg font-semibold transition",
+                  "bg-neutral-900",
+                  "shadow-[0_12px_30px_rgba(0,0,0,0.25)]",
+                  "disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2",
                 )}>
                 {isLoading ? (
                   <>
-                    {/* keep your Spinner if you like; Loader2 matches ForgotPassword */}
                     <Loader2 className="h-4 w-4 animate-spin" />
-                    <span>Signing in...</span>
+                    Signing in...
                   </>
                 ) : (
-                  "Sign in"
+                  "Login"
                 )}
               </button>
             </form>

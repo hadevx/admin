@@ -1,25 +1,72 @@
+// redux/queries/productApi.ts
 import { api } from "./api";
+
+export type GetProductsArgs = {
+  pageNumber?: number;
+  keyword?: string;
+  limit?: number;
+  category?: string;
+  color?: string | string[];
+  inStock?: boolean;
+  minPrice?: string | number;
+  maxPrice?: string | number;
+  featured: boolean;
+};
 
 export const productApi = api.injectEndpoints({
   endpoints: (builder) => ({
-    getProducts: builder.query({
-      query: ({ pageNumber = 1, keyword = "" }) => ({
-        url: `/api/products?pageNumber=${pageNumber}&keyword=${keyword}`,
-      }),
+    // ✅ GET PRODUCTS (with filters)
+    getProducts: builder.query<any, GetProductsArgs | void>({
+      query: (args) => {
+        const {
+          pageNumber = 1,
+          keyword = "",
+          limit = 30,
+          category = "",
+          color = "",
+          inStock = false,
+          featured = false, // ✅
+          minPrice = "",
+          maxPrice = "",
+        } = args ?? {};
+
+        const params = new URLSearchParams();
+
+        params.set("pageNumber", String(pageNumber));
+        params.set("limit", String(limit));
+
+        if (keyword.trim()) params.set("keyword", keyword.trim());
+        if (category.trim()) params.set("category", category.trim());
+
+        const colorStr = Array.isArray(color) ? color.join(",") : String(color || "").trim();
+        if (colorStr) params.set("color", colorStr);
+
+        if (inStock) params.set("inStock", "true");
+
+        // ✅ featured
+        if (featured) params.set("featured", "true");
+
+        if (minPrice !== "" && minPrice != null) params.set("minPrice", String(minPrice));
+        if (maxPrice !== "" && maxPrice != null) params.set("maxPrice", String(maxPrice));
+
+        return { url: `/api/products?${params.toString()}` };
+      },
       providesTags: ["Product"],
     }),
 
-    getProductById: builder.query({
+    getProductById: builder.query<any, string>({
       query: (productId) => ({
-        url: `/api/products/product/${productId}`,
+        url: `/api/products/${productId}`,
       }),
     }),
-    getProductsByCategory: builder.query({
+
+    getProductsByCategory: builder.query<any, string>({
       query: (category) => ({
         url: `/api/products/category/${category}`,
       }),
     }),
-    updateStock: builder.mutation({
+
+    updateStock: builder.mutation<any, any>({
       query: (orderItems) => ({
         url: "/api/products/update-stock",
         method: "POST",
@@ -27,62 +74,24 @@ export const productApi = api.injectEndpoints({
       }),
       invalidatesTags: ["Product"],
     }),
-    getDeliveryStatus: builder.query({
-      query: () => ({
-        url: `/api/products/delivery`,
-      }),
-    }),
-    createDiscount: builder.mutation({
-      query: (data) => ({
-        url: `/api/products/discount`,
-        method: "POST",
-        body: data,
-      }),
-      invalidatesTags: ["Product"],
-    }),
-    deleteDiscount: builder.mutation({
-      query: (id: string) => ({
-        url: `/api/products/discount/${id}`,
-        method: "DELETE",
-      }),
-      invalidatesTags: ["Product"],
-    }),
-    updateDiscount: builder.mutation({
-      query: (data) => ({
-        url: `/api/products/discount`,
-        method: "PUT",
-        body: data,
-      }),
-      invalidatesTags: ["Product"],
-    }),
-    getDiscountStatus: builder.query({
-      query: () => ({
-        url: `/api/products/discount`,
-      }),
-    }),
 
-    uploadProductImage: builder.mutation({
+    uploadProductImage: builder.mutation<any, FormData>({
       query: (data) => ({
         url: "/api/upload",
         method: "POST",
         body: data,
       }),
     }),
-    uploadCategoryImage: builder.mutation({
-      query: (data) => ({
-        url: "/api/upload/category",
-        method: "POST",
-        body: data,
-      }),
-    }),
-    uploadVariantImage: builder.mutation({
+
+    uploadVariantImage: builder.mutation<any, FormData>({
       query: (data) => ({
         url: "/api/upload/variant",
         method: "POST",
         body: data,
       }),
     }),
-    createProduct: builder.mutation({
+
+    createProduct: builder.mutation<any, any>({
       query: (data) => ({
         url: `/api/products`,
         method: "POST",
@@ -90,15 +99,16 @@ export const productApi = api.injectEndpoints({
       }),
       invalidatesTags: ["Product"],
     }),
-    deleteProduct: builder.mutation({
+
+    deleteProduct: builder.mutation<any, string>({
       query: (productId) => ({
         url: `/api/products/${productId}`,
         method: "DELETE",
       }),
-      // Invalidate the "Product" tag so all queries providing it will refetch
       invalidatesTags: ["Product"],
     }),
-    updateProduct: builder.mutation({
+
+    updateProduct: builder.mutation<any, any>({
       query: (data) => ({
         url: `/api/products/${data._id}`,
         method: "PUT",
@@ -106,7 +116,11 @@ export const productApi = api.injectEndpoints({
       }),
       invalidatesTags: ["Product"],
     }),
-    updateProductVariant: builder.mutation({
+
+    updateProductVariant: builder.mutation<
+      any,
+      { productId: string; variantId: string; color: string; sizes: any[]; images: any[] }
+    >({
       query: ({ productId, variantId, color, sizes, images }) => ({
         url: `/api/products/variant/${productId}`,
         method: "PUT",
@@ -114,7 +128,8 @@ export const productApi = api.injectEndpoints({
       }),
       invalidatesTags: ["Product"],
     }),
-    deleteProductVariant: builder.mutation({
+
+    deleteProductVariant: builder.mutation<any, { productId: string; variantId: string }>({
       query: ({ productId, variantId }) => ({
         url: `/api/products/variant/${productId}`,
         method: "DELETE",
@@ -123,55 +138,18 @@ export const productApi = api.injectEndpoints({
       invalidatesTags: ["Product"],
     }),
 
-    deleteImage: builder.mutation({
+    deleteImage: builder.mutation<any, any>({
       query: (data) => ({
         url: `/api/products/delete-image`,
         method: "POST",
         body: data,
       }),
     }),
-    getLatestProducts: builder.query({
+
+    getLatestProducts: builder.query<any, void>({
       query: () => ({
         url: "/api/products/latest",
       }),
-    }),
-    createCategory: builder.mutation({
-      query: (category) => ({
-        url: "/api/category",
-        method: "POST",
-        body: category,
-      }),
-    }),
-
-    getCategories: builder.query({
-      query: ({ pageNumber = 1, keyword = "" }) => ({
-        url: `/api/category?pageNumber=${pageNumber}&keyword=${keyword}`,
-      }),
-    }),
-    getAllCategories: builder.query({
-      query: () => ({
-        url: `/api/category/all`,
-      }),
-    }),
-    getCategoriesTree: builder.query({
-      query: () => ({
-        url: "/api/category/tree",
-      }),
-    }),
-    deleteCategory: builder.mutation({
-      query: (category) => ({
-        url: "/api/category",
-        method: "DELETE",
-        body: category,
-      }),
-    }),
-    updateCategory: builder.mutation({
-      query: ({ id, ...data }) => ({
-        url: `/api/category/${id}`,
-        method: "PUT",
-        body: data,
-      }),
-      invalidatesTags: ["Category"],
     }),
   }),
 });
@@ -181,24 +159,12 @@ export const {
   useGetProductByIdQuery,
   useGetProductsByCategoryQuery,
   useUpdateStockMutation,
-  useGetDeliveryStatusQuery,
-  useUpdateDiscountMutation,
-  useGetDiscountStatusQuery,
   useUploadProductImageMutation,
   useCreateProductMutation,
   useDeleteProductMutation,
   useUpdateProductMutation,
   useGetLatestProductsQuery,
-  useCreateCategoryMutation,
-  useGetCategoriesQuery,
-  useDeleteCategoryMutation,
-  useGetCategoriesTreeQuery,
-  useCreateDiscountMutation,
-  useDeleteDiscountMutation,
   useDeleteImageMutation,
-  useGetAllCategoriesQuery,
-  useUploadCategoryImageMutation,
-  useUpdateCategoryMutation,
   useUploadVariantImageMutation,
   useUpdateProductVariantMutation,
   useDeleteProductVariantMutation,

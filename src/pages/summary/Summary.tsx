@@ -6,59 +6,128 @@ import { useGetGovernorateQuery } from "@/redux/queries/userApi";
 import { useGetOrderStatsQuery, useGetRevenuStatsQuery } from "../../redux/queries/orderApi";
 import {
   ResponsiveContainer,
-  BarChart,
-  Bar,
+  PieChart,
+  Pie,
+  Cell,
+  Tooltip,
+  Legend,
+  LineChart,
+  Line,
   XAxis,
   YAxis,
   CartesianGrid,
+  BarChart,
+  Bar,
   LabelList,
-  Tooltip,
-  Legend,
 } from "recharts";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Users, ShoppingBag, Wallet, Eye, EyeOff, Filter, Info } from "lucide-react";
+import {
+  Users,
+  ShoppingBag,
+  Wallet,
+  Eye,
+  EyeOff,
+  Filter,
+  Info,
+  Printer,
+  RefreshCw,
+  Download,
+  Table2,
+  RotateCcw,
+  Copy,
+  Sigma,
+  Percent as PercentIcon,
+} from "lucide-react";
 import clsx from "clsx";
-// import { Button } from "@/components/ui/button";
 
 type RootState = {
   language: { lang: "en" | "ar" };
 };
 
 type ActiveChart = "users" | "orders" | "revenue";
+type ChartType = "pie" | "line" | "bar";
 type SortBy = "value_desc" | "value_asc" | "label_asc" | "label_desc";
 type Range = "all" | "top5" | "top10";
 
-const SummaryBarChart = (): JSX.Element => {
-  const { data: usersData, isLoading: loadingUsers } = useGetGovernorateQuery<any>(undefined);
-  const { data: orderStats, isLoading: loadingOrders } = useGetOrderStatsQuery<any>(undefined);
-  const { data: revenuStats, isLoading: loadingRevenue } = useGetRevenuStatsQuery<any>(undefined);
+type Normalization = "raw" | "percent";
+type ViewMode = "chart" | "table";
+
+const SummaryCharts = (): JSX.Element => {
+  const {
+    data: usersData,
+    isLoading: loadingUsers,
+    refetch: refetchUsers,
+  } = useGetGovernorateQuery<any>(undefined);
+
+  const {
+    data: orderStats,
+    isLoading: loadingOrders,
+    refetch: refetchOrders,
+  } = useGetOrderStatsQuery<any>(undefined);
+
+  const {
+    data: revenuStats,
+    isLoading: loadingRevenue,
+    refetch: refetchRevenue,
+  } = useGetRevenuStatsQuery<any>(undefined);
 
   const language = useSelector((state: RootState) => state.language.lang);
   const isRTL = language === "ar";
 
   const [activeChart, setActiveChart] = useState<ActiveChart>("users");
+  const [chartType, setChartType] = useState<ChartType>("pie");
+  const [viewMode, setViewMode] = useState<ViewMode>("chart");
 
-  // ✅ Keep only useful controls
+  // controls
   const [range, setRange] = useState<Range>("all");
   const [sortBy, setSortBy] = useState<SortBy>("value_desc");
-  const [showLabels, setShowLabels] = useState<boolean>(true);
   const [showLegend, setShowLegend] = useState<boolean>(true);
   const [showGrid, setShowGrid] = useState<boolean>(true);
+  const [showLabels, setShowLabels] = useState<boolean>(true);
   const [search, setSearch] = useState<string>("");
 
-  // ✅ last updated
+  // new features
+  const [normalization, setNormalization] = useState<Normalization>("raw"); // raw vs percent
+  const [minSlicePercent, setMinSlicePercent] = useState<number>(4); // hide tiny pie labels / slices
+  const [autoRefresh, setAutoRefresh] = useState<boolean>(false);
+  const [autoRefreshSec, setAutoRefreshSec] = useState<number>(30);
+
+  // last updated
   const [lastUpdatedAt, setLastUpdatedAt] = useState<Date | null>(null);
   const firstLoadRef = useRef(true);
 
+  const isLoading = loadingUsers || loadingOrders || loadingRevenue;
+
   useEffect(() => {
-    const isLoading = loadingUsers || loadingOrders || loadingRevenue;
     if (!isLoading) {
       setLastUpdatedAt(new Date());
       if (firstLoadRef.current) firstLoadRef.current = false;
     }
-  }, [loadingUsers, loadingOrders, loadingRevenue]);
+  }, [isLoading]);
 
-  // ✅ Arabic governorate extraction (clean)
+  // Auto refresh (re-fetch data)
+  useEffect(() => {
+    if (!autoRefresh) return;
+
+    const ms = Math.max(10, Number(autoRefreshSec) || 30) * 1000;
+    const id = window.setInterval(() => {
+      refetchUsers?.();
+      refetchOrders?.();
+      refetchRevenue?.();
+      setLastUpdatedAt(new Date());
+    }, ms);
+
+    return () => window.clearInterval(id);
+  }, [autoRefresh, autoRefreshSec, refetchUsers, refetchOrders, refetchRevenue]);
+
+  const refreshNow = () => {
+    refetchUsers?.();
+    refetchOrders?.();
+    refetchRevenue?.();
+    setLastUpdatedAt(new Date());
+  };
+
+  // Arabic governorate extraction
   const arabicOnly = useMemo(() => {
     return (
       usersData?.governorates?.map((item: any) => {
@@ -68,7 +137,7 @@ const SummaryBarChart = (): JSX.Element => {
     );
   }, [usersData]);
 
-  // ✅ Summary cards (simple)
+  // Summary cards
   const summaryStats = useMemo(
     () => [
       {
@@ -93,7 +162,7 @@ const SummaryBarChart = (): JSX.Element => {
     [usersData, orderStats, revenuStats],
   );
 
-  // ✅ Chart data
+  // Chart data
   const usersChartData = useMemo(
     () =>
       arabicOnly.map((gov: any) => ({
@@ -115,6 +184,7 @@ const SummaryBarChart = (): JSX.Element => {
   const revenueChartData = useMemo(
     () =>
       revenuStats?.monthly?.map((item: any) => ({
+        // keeping your original year behavior
         label: new Date(2025, item._id - 1).toLocaleString(isRTL ? "ar" : "en", { month: "short" }),
         value: item.totalRevenue || 0,
       })) || [],
@@ -128,20 +198,24 @@ const SummaryBarChart = (): JSX.Element => {
         ? ordersChartData
         : revenueChartData;
 
-  // ✅ Chart stats (simple: count + sum)
-  const chartStats = useMemo(() => {
-    const values = rawChartData.map((d: any) => Number(d.value) || 0);
-    const total = values.reduce((a: number, b: number) => a + b, 0);
-    return { total, count: values.length };
-  }, [rawChartData]);
+  const unit =
+    activeChart === "revenue"
+      ? "KD"
+      : activeChart === "orders"
+        ? isRTL
+          ? "طلب"
+          : "orders"
+        : isRTL
+          ? "مستخدم"
+          : "users";
 
-  // ✅ search + sort + topN
-  const chartData = useMemo(() => {
+  // search + sort + topN
+  const filteredSortedData = useMemo(() => {
     let next = [...rawChartData];
 
     if (search.trim()) {
       const q = search.toLowerCase();
-      next = next.filter((d) =>
+      next = next.filter((d: any) =>
         String(d.label || "")
           .toLowerCase()
           .includes(q),
@@ -150,16 +224,16 @@ const SummaryBarChart = (): JSX.Element => {
 
     switch (sortBy) {
       case "value_asc":
-        next.sort((a, b) => (a.value ?? 0) - (b.value ?? 0));
+        next.sort((a: any, b: any) => (a.value ?? 0) - (b.value ?? 0));
         break;
       case "value_desc":
-        next.sort((a, b) => (b.value ?? 0) - (a.value ?? 0));
+        next.sort((a: any, b: any) => (b.value ?? 0) - (a.value ?? 0));
         break;
       case "label_asc":
-        next.sort((a, b) => String(a.label).localeCompare(String(b.label)));
+        next.sort((a: any, b: any) => String(a.label).localeCompare(String(b.label)));
         break;
       case "label_desc":
-        next.sort((a, b) => String(b.label).localeCompare(String(a.label)));
+        next.sort((a: any, b: any) => String(b.label).localeCompare(String(a.label)));
         break;
     }
 
@@ -168,6 +242,37 @@ const SummaryBarChart = (): JSX.Element => {
 
     return next;
   }, [rawChartData, search, sortBy, range]);
+
+  // stats + normalization helpers
+  const rawTotal = useMemo(() => {
+    const values = filteredSortedData.map((d: any) => Number(d.value) || 0);
+    return values.reduce((a: number, b: number) => a + b, 0);
+  }, [filteredSortedData]);
+
+  const totalSafe = rawTotal || 1;
+
+  const chartData = useMemo(() => {
+    // For pie: optionally normalize to percent (nice when comparing categories)
+    if (normalization !== "percent") return filteredSortedData;
+
+    // Only makes sense for users/orders; revenue percent is still allowed but may confuse—keep it consistent anyway.
+    return filteredSortedData.map((d: any) => ({
+      ...d,
+      value: (Number(d.value) || 0) / totalSafe,
+      __raw: Number(d.value) || 0,
+    }));
+  }, [filteredSortedData, normalization, totalSafe]);
+
+  const chartStats = useMemo(() => {
+    const values = filteredSortedData.map((d: any) => Number(d.value) || 0);
+    const total = values.reduce((a: number, b: number) => a + b, 0);
+
+    const max = values.length ? Math.max(...values) : 0;
+    const min = values.length ? Math.min(...values) : 0;
+    const avg = values.length ? total / values.length : 0;
+
+    return { total, count: values.length, max, min, avg };
+  }, [filteredSortedData]);
 
   const chartTitle =
     activeChart === "users"
@@ -195,56 +300,212 @@ const SummaryBarChart = (): JSX.Element => {
           ? "الإيرادات لكل شهر"
           : "Revenue per month";
 
-  const isLoading = loadingUsers || loadingOrders || loadingRevenue;
+  const formatTooltip = (value: any, _name?: any, payload?: any) => {
+    // if normalized percent, show both % + raw
+    if (normalization === "percent") {
+      const pct = Number(value) * 100;
+      const raw = payload?.payload?.__raw;
+      const rawText =
+        typeof raw === "number"
+          ? activeChart === "revenue"
+            ? `${raw.toFixed(3)} KD`
+            : `${Math.round(raw)} ${unit}`
+          : "";
+      return [`${pct.toFixed(1)}% ${rawText ? `• ${rawText}` : ""}`, ""];
+    }
 
-  const unit =
-    activeChart === "revenue"
-      ? "KD"
+    if (activeChart === "revenue") return `${Number(value).toFixed(3)} ${unit}`;
+    return `${value} ${unit}`;
+  };
+
+  const formatValue = (v: any) => {
+    if (normalization === "percent") return `${(Number(v) * 100).toFixed(1)}%`;
+    return activeChart === "revenue" ? Number(v).toFixed(3) : v;
+  };
+
+  // Pie colors
+  const PIE_COLORS = [
+    "#FF6B6B",
+    "#4D96FF",
+    "#6BCB77",
+    "#FFD93D",
+    "#845EC2",
+    "#00C9A7",
+    "#FF9671",
+    "#2C73D2",
+    "#C34A36",
+    "#0081CF",
+    "#F9F871",
+  ];
+
+  const renderPieLabel = (entry: any) => {
+    const valRaw =
+      normalization === "percent" ? (Number(entry?.value) || 0) * 100 : Number(entry?.value) || 0;
+
+    const pct =
+      normalization === "percent" ? valRaw : ((Number(entry?.value) || 0) / totalSafe) * 100;
+
+    if (pct < minSlicePercent) return "";
+    return `${pct.toFixed(0)}%`;
+  };
+
+  const legendLabel = isRTL
+    ? activeChart === "users"
+      ? "المستخدمون"
       : activeChart === "orders"
-        ? isRTL
-          ? "طلب"
-          : "orders"
-        : isRTL
-          ? "مستخدم"
-          : "users";
-
-  const formatTooltip = (value: any) =>
-    activeChart === "revenue" ? `${Number(value).toFixed(3)} ${unit}` : `${value} ${unit}`;
-
-  const formatLabel = (v: any) => (activeChart === "revenue" ? `${Number(v).toFixed(3)}` : v);
+        ? "الطلبات"
+        : "الإيرادات"
+    : activeChart === "users"
+      ? "Users"
+      : activeChart === "orders"
+        ? "Orders"
+        : "Revenue";
 
   const StatChip = ({ label, value }: { label: string; value: string }) => (
-    <div className="rounded-2xl border border-neutral-200 bg-white px-4 py-3">
-      <div className="text-xs text-neutral-500">{label}</div>
-      <div className="mt-1 text-base font-semibold text-neutral-950">{value}</div>
+    <div className="rounded-2xl border border-neutral-200 bg-white px-4 py-3 dark:border-neutral-800 dark:bg-neutral-900">
+      <div className="text-xs text-neutral-500 dark:text-neutral-400">{label}</div>
+      <div className="mt-1 text-base font-semibold text-neutral-950 dark:text-neutral-50">
+        {value}
+      </div>
     </div>
   );
+
+  const ChipBtn = ({
+    active,
+    onClick,
+    children,
+  }: {
+    active?: boolean;
+    onClick: () => void;
+    children: React.ReactNode;
+  }) => (
+    <button
+      type="button"
+      onClick={onClick}
+      className={clsx(
+        "inline-flex items-center gap-2 rounded-full border px-3 py-2 text-xs font-semibold transition",
+        "border-neutral-200  text-neutral-900 ",
+        "dark:border-neutral-800 dark:bg-neutral-900 dark:text-neutral-100 dark:hover:bg-neutral-800/70",
+        active
+          ? "border-neutral-950 bg-neutral-950 text-white dark:border-neutral-50 dark:bg-neutral-50 dark:text-neutral-950"
+          : "",
+      )}>
+      {children}
+    </button>
+  );
+
+  // Export CSV (filteredSortedData, raw numbers)
+  const exportCSV = () => {
+    const rows = filteredSortedData.map((d: any) => ({
+      label: String(d.label ?? ""),
+      value: Number(d.value) || 0,
+    }));
+
+    const header = ["label", "value"];
+    const csv = [
+      header.join(","),
+      ...rows.map((r) => {
+        const safeLabel = `"${String(r.label).replace(/"/g, '""')}"`;
+        return [safeLabel, String(r.value)].join(",");
+      }),
+    ].join("\n");
+
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `summary_${activeChart}_${new Date().toISOString().slice(0, 10)}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  };
+
+  const copySummary = async () => {
+    const title = chartTitle;
+    const totalText =
+      activeChart === "revenue"
+        ? `${chartStats.total.toFixed(3)} KD`
+        : `${Math.round(chartStats.total)} ${unit}`;
+
+    const lines = [
+      `${title}`,
+      `${isRTL ? "المجموع" : "Total"}: ${totalText}`,
+      `${isRTL ? "العناصر" : "Items"}: ${chartStats.count}`,
+      "",
+      ...filteredSortedData.map((d: any) => `- ${d.label}: ${d.value}`),
+    ].join("\n");
+
+    try {
+      await navigator.clipboard.writeText(lines);
+    } catch {
+      // silent (some browsers block)
+    }
+  };
+
+  // money helpers for summary tiles
+  const money = (n?: number) => {
+    if (typeof n !== "number") return "—";
+    return `${n.toFixed(3)} ${language === "ar" ? "دك" : "KD"}`;
+  };
 
   return (
     <Layout>
       {isLoading ? (
         <Loader />
       ) : (
-        <div className={clsx("w-full px-4 py-6 mt-[70px]", "max-w-6xl", isRTL ? "rtl" : "ltr")}>
+        <div
+          className={clsx(
+            "w-full px-4 py-6 mt-[70px] max-w-6xl",
+            isRTL ? "rtl" : "ltr",
+            "text-neutral-950 dark:text-neutral-50",
+          )}>
           {/* Header */}
           <div
             className="mb-6 flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3"
-            dir={language === "ar" ? "rtl" : "ltr"}>
+            dir={isRTL ? "rtl" : "ltr"}>
             <div>
-              <h1 className="text-2xl sm:text-3xl font-semibold tracking-tight text-neutral-950">
+              <h1 className="text-2xl sm:text-3xl font-semibold tracking-tight text-neutral-950 dark:text-neutral-50">
                 {isRTL ? "لوحة الإحصائيات" : "Summary Dashboard"}
               </h1>
-              <p className="mt-1 text-sm text-neutral-600">
-                {isRTL ? "نظرة عامة مع تصفية وتصدير." : "Overview with filters and CSV export."}
+              <p className="mt-1 text-sm text-neutral-600 dark:text-neutral-400">
+                {isRTL
+                  ? "نظرة عامة + ميزات تصفية وتصدير وتحديث تلقائي."
+                  : "Overview + filters, export, and auto refresh."}
               </p>
             </div>
 
-            <div className="flex items-center gap-2 text-sm text-neutral-500">
-              <Info className="h-4 w-4" />
-              <span>
+            <div className="flex flex-wrap items-center gap-2 text-sm text-neutral-500 dark:text-neutral-400">
+              <span className="inline-flex items-center gap-2">
+                <Info className="h-4 w-4" />
                 {isRTL ? "آخر تحديث:" : "Last update:"}{" "}
                 {lastUpdatedAt ? lastUpdatedAt.toLocaleTimeString(isRTL ? "ar" : "en") : "—"}
               </span>
+
+              <button
+                type="button"
+                onClick={refreshNow}
+                className={clsx(
+                  "inline-flex items-center gap-2 rounded-full border px-3 py-2 text-xs font-semibold transition",
+                  "border-neutral-200 bg-white text-neutral-900 hover:bg-neutral-50",
+                  "dark:border-neutral-800 dark:bg-neutral-900 dark:text-neutral-100 dark:hover:bg-neutral-800/70",
+                )}>
+                <RefreshCw className="h-4 w-4" />
+                {isRTL ? "تحديث" : "Refresh"}
+              </button>
+
+              <button
+                type="button"
+                onClick={() => window.print()}
+                className={clsx(
+                  "inline-flex items-center gap-2 rounded-full border px-3 py-2 text-xs font-semibold transition",
+                  "border-neutral-200 bg-white text-neutral-900 hover:bg-neutral-50",
+                  "dark:border-neutral-800 dark:bg-neutral-900 dark:text-neutral-100 dark:hover:bg-neutral-800/70",
+                )}>
+                <Printer className="h-4 w-4" />
+                {isRTL ? "طباعة" : "Print"}
+              </button>
             </div>
           </div>
 
@@ -259,26 +520,33 @@ const SummaryBarChart = (): JSX.Element => {
                   type="button"
                   onClick={() => setActiveChart(s.key as ActiveChart)}
                   className={clsx(
-                    "text-left rounded-3xl border bg-white/80 backdrop-blur shadow-sm transition",
+                    "text-left rounded-3xl border backdrop-blur shadow-sm transition",
+                    "border-neutral-200 bg-white/80 hover:bg-white",
+                    "dark:border-neutral-800 dark:bg-neutral-900/60 dark:hover:bg-neutral-900/80",
                     isActive
-                      ? "border-neutral-950 ring-2 ring-neutral-950/10"
-                      : "border-neutral-200 hover:bg-white",
+                      ? "border-neutral-950 ring-2 ring-neutral-950/10 dark:border-neutral-200 dark:ring-neutral-200/10"
+                      : "",
                   )}>
                   <div className="p-5">
                     <div className="flex items-center justify-between">
-                      <div className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-neutral-200 bg-neutral-50">
-                        <Icon className="h-5 w-5 text-neutral-900" />
+                      <div
+                        className={clsx(
+                          "inline-flex h-11 w-11 items-center justify-center rounded-2xl border",
+                          "border-neutral-200 bg-neutral-50",
+                          "dark:border-neutral-800 dark:bg-neutral-800/70",
+                        )}>
+                        <Icon className="h-5 w-5 text-neutral-900 dark:text-neutral-50" />
                       </div>
-                      <span className="text-xs font-semibold text-neutral-500">
+                      <span className="text-xs font-semibold text-neutral-500 dark:text-neutral-400">
                         {isRTL ? "إجمالي" : "TOTAL"}
                       </span>
                     </div>
 
-                    <div className="mt-3 text-2xl sm:text-3xl font-semibold text-neutral-950">
+                    <div className="mt-3 text-2xl sm:text-3xl font-semibold text-neutral-950 dark:text-neutral-50">
                       {s.value}
                     </div>
-                    <div className="mt-1 text-sm text-neutral-600">
-                      {s.title[language as "en" | "ar"]}
+                    <div className="mt-1 text-sm text-neutral-600 dark:text-neutral-400">
+                      {s.title[language]}
                     </div>
                   </div>
                 </button>
@@ -288,10 +556,49 @@ const SummaryBarChart = (): JSX.Element => {
 
           {/* Controls */}
           <div className="mb-4 grid grid-cols-1 lg:grid-cols-12 gap-3">
-            <div className="lg:col-span-7 rounded-3xl border border-neutral-200 bg-white/80 backdrop-blur shadow-sm p-4">
-              <div className="flex items-center gap-2 mb-3 text-sm font-semibold text-neutral-900">
-                <Filter className="h-4 w-4" />
-                {isRTL ? "تصفية" : "Filters"}
+            <div className="lg:col-span-7 rounded-3xl border backdrop-blur shadow-sm p-4 border-neutral-200 bg-white/80 dark:border-neutral-800 dark:bg-neutral-900/60">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-3">
+                <div className="flex items-center gap-2 text-sm font-semibold text-neutral-900 dark:text-neutral-50">
+                  <Filter className="h-4 w-4" />
+                  {isRTL ? "تصفية" : "Filters"}
+                </div>
+
+                <div className="flex flex-wrap items-center gap-2">
+                  {/* View mode */}
+                  <ChipBtn active={viewMode === "chart"} onClick={() => setViewMode("chart")}>
+                    <Eye className="h-4 w-4" />
+                    {isRTL ? "رسم" : "Chart"}
+                  </ChipBtn>
+                  <ChipBtn active={viewMode === "table"} onClick={() => setViewMode("table")}>
+                    <Table2 className="h-4 w-4" />
+                    {isRTL ? "جدول" : "Table"}
+                  </ChipBtn>
+
+                  <button
+                    type="button"
+                    onClick={copySummary}
+                    className={clsx(
+                      "inline-flex items-center gap-2 rounded-full border px-3 py-2 text-xs font-semibold transition",
+                      "border-neutral-200 bg-white text-neutral-900 hover:bg-neutral-50",
+                      "dark:border-neutral-800 dark:bg-neutral-900 dark:text-neutral-100 dark:hover:bg-neutral-800/70",
+                    )}>
+                    <Copy className="h-4 w-4" />
+                    {isRTL ? "نسخ" : "Copy"}
+                  </button>
+                </div>
+              </div>
+
+              {/* Chart type */}
+              <div className="flex flex-wrap items-center gap-2 mb-3">
+                <ChipBtn active={chartType === "pie"} onClick={() => setChartType("pie")}>
+                  {isRTL ? "دائري" : "Pie"}
+                </ChipBtn>
+                <ChipBtn active={chartType === "line"} onClick={() => setChartType("line")}>
+                  {isRTL ? "خطي" : "Line"}
+                </ChipBtn>
+                <ChipBtn active={chartType === "bar"} onClick={() => setChartType("bar")}>
+                  {isRTL ? "أعمدة" : "Bar"}
+                </ChipBtn>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
@@ -299,13 +606,21 @@ const SummaryBarChart = (): JSX.Element => {
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                   placeholder={isRTL ? "بحث..." : "Search..."}
-                  className="rounded-2xl border border-neutral-200 bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-neutral-950/10"
+                  className={clsx(
+                    "rounded-2xl border px-3 py-2 text-sm outline-none transition",
+                    "border-neutral-200 bg-white text-neutral-900 focus:ring-2 focus:ring-neutral-950/10",
+                    "dark:border-neutral-800 dark:bg-neutral-950 dark:text-neutral-100 dark:placeholder:text-neutral-500 dark:focus:ring-neutral-200/10",
+                  )}
                 />
 
                 <select
                   value={range}
                   onChange={(e) => setRange(e.target.value as Range)}
-                  className="rounded-2xl border border-neutral-200 bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-neutral-950/10">
+                  className={clsx(
+                    "rounded-2xl border px-3 py-2 text-sm outline-none transition",
+                    "border-neutral-200 bg-white text-neutral-900 focus:ring-2 focus:ring-neutral-950/10",
+                    "dark:border-neutral-800 dark:bg-neutral-950 dark:text-neutral-100 dark:focus:ring-neutral-200/10",
+                  )}>
                   <option value="all">{isRTL ? "الكل" : "All"}</option>
                   <option value="top5">{isRTL ? "أفضل 5" : "Top 5"}</option>
                   <option value="top10">{isRTL ? "أفضل 10" : "Top 10"}</option>
@@ -314,7 +629,11 @@ const SummaryBarChart = (): JSX.Element => {
                 <select
                   value={sortBy}
                   onChange={(e) => setSortBy(e.target.value as SortBy)}
-                  className="rounded-2xl border border-neutral-200 bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-neutral-950/10">
+                  className={clsx(
+                    "rounded-2xl border px-3 py-2 text-sm outline-none transition",
+                    "border-neutral-200 bg-white text-neutral-900 focus:ring-2 focus:ring-neutral-950/10",
+                    "dark:border-neutral-800 dark:bg-neutral-950 dark:text-neutral-100 dark:focus:ring-neutral-200/10",
+                  )}>
                   <option value="value_desc">{isRTL ? "قيمة: تنازلي" : "Value: desc"}</option>
                   <option value="value_asc">{isRTL ? "قيمة: تصاعدي" : "Value: asc"}</option>
                   <option value="label_asc">{isRTL ? "اسم: أ-ي" : "Label: A-Z"}</option>
@@ -323,34 +642,25 @@ const SummaryBarChart = (): JSX.Element => {
               </div>
 
               <div className="mt-3 flex flex-wrap items-center gap-2">
-                <button
-                  type="button"
-                  onClick={() => setShowLabels((v) => !v)}
-                  className="inline-flex items-center gap-2 rounded-full border border-neutral-200 bg-white px-3 py-2 text-xs font-semibold text-neutral-900 hover:bg-neutral-50 transition">
-                  {showLabels ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
-                  {isRTL ? "القيم" : "Values"}
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => setShowLegend((v) => !v)}
-                  className="inline-flex items-center gap-2 rounded-full border border-neutral-200 bg-white px-3 py-2 text-xs font-semibold text-neutral-900 hover:bg-neutral-50 transition">
+                <ChipBtn active={showLegend} onClick={() => setShowLegend((v) => !v)}>
                   {showLegend ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
                   {isRTL ? "الوسيلة" : "Legend"}
-                </button>
+                </ChipBtn>
 
-                <button
-                  type="button"
-                  onClick={() => setShowGrid((v) => !v)}
-                  className="inline-flex items-center gap-2 rounded-full border border-neutral-200 bg-white px-3 py-2 text-xs font-semibold text-neutral-900 hover:bg-neutral-50 transition">
+                <ChipBtn active={showGrid} onClick={() => setShowGrid((v) => !v)}>
                   {showGrid ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
                   {isRTL ? "الشبكة" : "Grid"}
-                </button>
+                </ChipBtn>
+
+                <ChipBtn active={showLabels} onClick={() => setShowLabels((v) => !v)}>
+                  {showLabels ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
+                  {isRTL ? "القيم" : "Values"}
+                </ChipBtn>
               </div>
             </div>
 
-            <div className="lg:col-span-5 rounded-3xl border border-neutral-200 bg-white/80 backdrop-blur shadow-sm p-4">
-              <div className="flex items-center gap-2 mb-3 text-sm font-semibold text-neutral-900">
+            <div className="lg:col-span-5 rounded-3xl border backdrop-blur shadow-sm p-4 border-neutral-200 bg-white/80 dark:border-neutral-800 dark:bg-neutral-900/60">
+              <div className="flex items-center gap-2 mb-3 text-sm font-semibold text-neutral-900 dark:text-neutral-50">
                 <Info className="h-4 w-4" />
                 {isRTL ? "ملخص" : "Summary"}
               </div>
@@ -362,74 +672,215 @@ const SummaryBarChart = (): JSX.Element => {
                   value={
                     activeChart === "revenue"
                       ? `${chartStats.total.toFixed(3)} KD`
-                      : `${Math.round(chartStats.total)}`
+                      : `${Math.round(chartStats.total)} ${unit}`
                   }
                 />
+                <StatChip
+                  label={isRTL ? "الأعلى" : "Max"}
+                  value={
+                    activeChart === "revenue"
+                      ? money(chartStats.max)
+                      : `${Math.round(chartStats.max)} ${unit}`
+                  }
+                />
+                <StatChip
+                  label={isRTL ? "المتوسط" : "Avg"}
+                  value={
+                    activeChart === "revenue"
+                      ? money(chartStats.avg)
+                      : `${Math.round(chartStats.avg)} ${unit}`
+                  }
+                />
+              </div>
+
+              <div className="mt-3 text-xs text-neutral-500 dark:text-neutral-400">
+                {normalization === "percent"
+                  ? isRTL
+                    ? "عرض القيم كنِسَب (مع إظهار القيمة الأصلية في التولتيب)."
+                    : "Values are shown as percentages (raw value is kept in tooltip)."
+                  : isRTL
+                    ? "عرض القيم كأرقام فعلية."
+                    : "Values are shown as raw numbers."}
               </div>
             </div>
           </div>
 
-          {/* Chart */}
-          <Card className="w-full rounded-3xl border-neutral-200 bg-white/80 backdrop-blur shadow-sm overflow-hidden">
+          {/* Chart / Table */}
+          <Card className="w-full rounded-3xl overflow-hidden border border-neutral-200 bg-white/80 backdrop-blur shadow-sm dark:border-neutral-800 dark:bg-neutral-900/60">
             <CardHeader>
-              <CardTitle className="text-lg sm:text-xl">{chartTitle}</CardTitle>
-              <CardDescription className="text-sm">{chartDesc}</CardDescription>
+              <CardTitle className="text-lg sm:text-xl text-neutral-950 dark:text-neutral-50">
+                {chartTitle}
+              </CardTitle>
+              <CardDescription className="text-sm text-neutral-600 dark:text-neutral-400">
+                {chartDesc}
+              </CardDescription>
             </CardHeader>
 
             <CardContent className="pt-2">
-              <div className="h-[360px] sm:h-[420px]">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={chartData} margin={{ top: 18, right: 18, left: 10, bottom: 8 }}>
-                    {showGrid ? <CartesianGrid vertical={false} strokeDasharray="3 3" /> : null}
-
-                    <XAxis
-                      dataKey="label"
-                      tickLine={false}
-                      axisLine={false}
-                      tickFormatter={(v) =>
-                        String(v)?.length > 14 ? String(v).slice(0, 14) + "…" : v
-                      }
-                    />
-                    <YAxis tickLine={false} axisLine={false} width={40} />
-
-                    <Tooltip formatter={(value: any) => formatTooltip(value)} />
-
-                    {showLegend ? (
-                      <Legend
-                        formatter={() =>
-                          isRTL
-                            ? activeChart === "users"
-                              ? "المستخدمون"
-                              : activeChart === "orders"
-                                ? "الطلبات"
-                                : "الإيرادات"
-                            : activeChart === "users"
-                              ? "Users"
-                              : activeChart === "orders"
-                                ? "Orders"
-                                : "Revenue"
-                        }
-                      />
-                    ) : null}
-
-                    <Bar dataKey="value" fill="#0a0a0a" radius={10}>
-                      {showLabels ? (
-                        <LabelList
-                          dataKey="value"
-                          position="top"
-                          formatter={(v: any) => formatLabel(v)}
-                        />
+              {viewMode === "table" ? (
+                <div className="overflow-x-auto rounded-2xl border border-neutral-200 bg-white dark:border-neutral-800 dark:bg-neutral-950">
+                  <table className="min-w-full text-sm">
+                    <thead className="text-left bg-neutral-50 dark:bg-neutral-900/50">
+                      <tr>
+                        <th className="px-4 py-3 font-semibold text-neutral-700 dark:text-neutral-200">
+                          {isRTL ? "الاسم" : "Label"}
+                        </th>
+                        <th className="px-4 py-3 font-semibold text-neutral-700 dark:text-neutral-200">
+                          {isRTL ? "القيمة" : "Value"}
+                        </th>
+                        <th className="px-4 py-3 font-semibold text-neutral-700 dark:text-neutral-200">
+                          {isRTL ? "النسبة" : "Percent"}
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {filteredSortedData.map((d: any, idx: number) => {
+                        const v = Number(d.value) || 0;
+                        const pct = (v / totalSafe) * 100;
+                        return (
+                          <tr
+                            key={`${d.label}_${idx}`}
+                            className="border-t border-neutral-200 dark:border-neutral-800">
+                            <td className="px-4 py-3 text-neutral-900 dark:text-neutral-100">
+                              {String(d.label)}
+                            </td>
+                            <td className="px-4 py-3 text-neutral-900 dark:text-neutral-100">
+                              {activeChart === "revenue" ? v.toFixed(3) : Math.round(v)}{" "}
+                              {activeChart === "revenue" ? "KD" : unit}
+                            </td>
+                            <td className="px-4 py-3 text-neutral-700 dark:text-neutral-300">
+                              {pct.toFixed(1)}%
+                            </td>
+                          </tr>
+                        );
+                      })}
+                      {!filteredSortedData.length ? (
+                        <tr>
+                          <td
+                            colSpan={3}
+                            className="px-4 py-6 text-center text-neutral-500 dark:text-neutral-400">
+                            {isRTL ? "لا توجد بيانات" : "No data"}
+                          </td>
+                        </tr>
                       ) : null}
-                    </Bar>
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
+                    </tbody>
+                  </table>
+                </div>
+              ) : (
+                <div className="h-[360px] sm:h-[420px]">
+                  <ResponsiveContainer width="100%" height="100%">
+                    {chartType === "pie" ? (
+                      <PieChart>
+                        <Tooltip formatter={formatTooltip as any} />
+                        {showLegend ? <Legend /> : null}
+
+                        <Pie
+                          data={chartData}
+                          dataKey="value"
+                          nameKey="label"
+                          cx="50%"
+                          cy="50%"
+                          outerRadius="78%"
+                          innerRadius="52%"
+                          paddingAngle={2}
+                          labelLine={false}
+                          label={showLabels ? renderPieLabel : false}>
+                          {chartData.map((_: any, idx: number) => (
+                            <Cell key={`cell-${idx}`} fill={PIE_COLORS[idx % PIE_COLORS.length]} />
+                          ))}
+                        </Pie>
+
+                        {/* Center label */}
+                        <text x="50%" y="50%" textAnchor="middle" dominantBaseline="middle">
+                          <tspan
+                            className="fill-neutral-900 dark:fill-neutral-50"
+                            fontSize="14"
+                            fontWeight="700">
+                            {legendLabel}
+                          </tspan>
+                          <tspan
+                            x="50%"
+                            dy="18"
+                            className="fill-neutral-500 dark:fill-neutral-400"
+                            fontSize="12">
+                            {activeChart === "revenue"
+                              ? `${chartStats.total.toFixed(3)} KD`
+                              : `${Math.round(chartStats.total)} ${unit}`}
+                          </tspan>
+                        </text>
+                      </PieChart>
+                    ) : chartType === "line" ? (
+                      <LineChart
+                        data={chartData}
+                        margin={{ top: 18, right: 18, left: 10, bottom: 8 }}>
+                        {showGrid ? <CartesianGrid vertical={false} strokeDasharray="3 3" /> : null}
+                        <XAxis
+                          dataKey="label"
+                          tickLine={false}
+                          axisLine={false}
+                          tickFormatter={(v) =>
+                            String(v)?.length > 14 ? String(v).slice(0, 14) + "…" : v
+                          }
+                        />
+                        <YAxis tickLine={false} axisLine={false} width={44} />
+                        <Tooltip formatter={formatTooltip as any} />
+                        {showLegend ? <Legend formatter={() => legendLabel} /> : null}
+
+                        {/* keep your stroke but also look OK on dark bg */}
+                        <Line
+                          type="monotone"
+                          dataKey="value"
+                          stroke="#0a0a0a"
+                          strokeWidth={3}
+                          dot={{ r: 3 }}
+                          activeDot={{ r: 5 }}
+                        />
+                      </LineChart>
+                    ) : (
+                      <BarChart
+                        data={chartData}
+                        margin={{ top: 18, right: 18, left: 10, bottom: 8 }}>
+                        {showGrid ? <CartesianGrid vertical={false} strokeDasharray="3 3" /> : null}
+                        <XAxis
+                          dataKey="label"
+                          tickLine={false}
+                          axisLine={false}
+                          tickFormatter={(v) =>
+                            String(v)?.length > 14 ? String(v).slice(0, 14) + "…" : v
+                          }
+                        />
+                        <YAxis tickLine={false} axisLine={false} width={44} />
+                        <Tooltip formatter={formatTooltip as any} />
+                        {showLegend ? <Legend formatter={() => legendLabel} /> : null}
+
+                        <Bar dataKey="value" fill="#0a0a0a" radius={10}>
+                          {showLabels ? (
+                            <LabelList
+                              dataKey="value"
+                              position="top"
+                              formatter={(v: any) => formatValue(v)}
+                            />
+                          ) : null}
+                        </Bar>
+                      </BarChart>
+                    )}
+                  </ResponsiveContainer>
+                </div>
+              )}
             </CardContent>
           </Card>
+
+          {/* Small hint row */}
+          <div className="mt-3 text-xs text-neutral-500 dark:text-neutral-400 flex flex-wrap items-center gap-2">
+            <Info className="h-4 w-4" />
+            {isRTL
+              ? "ميزات إضافية: جدول، تصدير CSV، نسخ الملخص، تحديث تلقائي، إخفاء نسب صغيرة في الدائري."
+              : "Extra features: table view, CSV export, copy summary, auto refresh, hide tiny pie % labels."}
+          </div>
         </div>
       )}
     </Layout>
   );
 };
 
-export default SummaryBarChart;
+export default SummaryCharts;

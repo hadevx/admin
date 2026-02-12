@@ -1,58 +1,30 @@
-import React, { useEffect, useMemo, useRef, useState, type JSX } from "react";
+import { useEffect, useMemo, useRef, useState, type JSX } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import Layout from "../../Layout";
 import { toast } from "react-toastify";
 import Loader from "../../components/Loader";
-import {
-  PencilLine,
-  Loader2Icon,
-  Star,
-  StarOff,
-  ImagePlus,
-  Trash2,
-  Tag,
-  Plus,
-  Palette,
-  Ruler,
-  Package,
-  X,
-} from "lucide-react";
+import { PencilLine, Loader2Icon, Star, StarOff, Trash2, Tag, Plus } from "lucide-react";
 import Lottie from "lottie-react";
 import upload from "./uploading.json";
-
+import { texts } from "./translation";
 import {
   useGetProductByIdQuery,
   useDeleteProductMutation,
   useUpdateProductMutation,
   useGetProductsQuery,
   useUploadProductImageMutation,
-  useGetCategoriesTreeQuery,
   useUploadVariantImageMutation,
 } from "../../redux/queries/productApi";
 
+import { useGetCategoriesTreeQuery } from "../../redux/queries/categoryApi";
 import { Separator } from "@/components/ui/separator";
-import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-  DialogDescription,
-} from "@/components/ui/dialog";
-import { useSelector } from "react-redux";
-
-import {
-  Carousel,
-  CarouselContent,
-  CarouselItem,
-  CarouselNext,
-  CarouselPrevious,
-} from "@/components/ui/carousel";
-import VariantItem from "./VariantItem";
-import { Switch } from "@/components/ui/switch";
-import { PERCENTAGE } from "./constants";
 import clsx from "clsx";
+import DeleteProductModal from "@/components/DeleteProductModal";
+import DiscountModal from "@/components/DiscountModal";
+import AddVariantModal from "@/components/AddVariantModal";
+import VariantItem from "./VariantItem";
+import { PERCENTAGE } from "./constants";
+import { useSelector } from "react-redux";
 
 /** Types (minimal, safe) */
 type RootState = { language: { lang: "ar" | "en" } };
@@ -90,138 +62,67 @@ type Product = {
 
 type VariantSizeInput = { size: string; stock: number | ""; price?: number | "" };
 
+/** =========================
+ *  Category helpers (flatten -> regular select)
+ *  ========================= */
+type FlatCat = { id: string; path: string; level: number; name: string };
+
+function flattenCategories(tree: CategoryNode[] = []): FlatCat[] {
+  const out: FlatCat[] = [];
+  const walk = (nodes: CategoryNode[], level: number, parents: string[]) => {
+    for (const n of nodes) {
+      const nextParents = [...parents, n.name];
+      out.push({ id: n._id, name: n.name, level, path: nextParents.join(" / ") });
+      if (n.children?.length) walk(n.children, level + 1, nextParents);
+    }
+  };
+  walk(tree, 0, []);
+  return out;
+}
+
+/** ✅ Settings-style switch */
+function SettingsStyleSwitch({
+  checked,
+  onChange,
+}: {
+  checked: boolean;
+  onChange: (v: boolean) => void;
+}) {
+  return (
+    <label className="relative inline-flex items-center cursor-pointer select-none">
+      <input
+        type="checkbox"
+        className="sr-only"
+        checked={checked}
+        onChange={(e) => onChange(e.target.checked)}
+      />
+      <span
+        className={clsx(
+          "w-12 h-7 rounded-full transition border",
+          checked
+            ? "bg-emerald-600 border-emerald-600"
+            : "bg-zinc-200 border-zinc-200 dark:bg-neutral-800 dark:border-neutral-700",
+        )}
+      />
+      <span
+        className={clsx(
+          "absolute top-0.5 left-0.5 h-6 w-6 rounded-full bg-white shadow transition dark:bg-neutral-50",
+          checked ? "translate-x-5" : "translate-x-0",
+        )}
+      />
+    </label>
+  );
+}
+
 function ProductDetails(): JSX.Element {
   const language = useSelector((state: RootState) => state.language.lang);
   const dir = language === "ar" ? "rtl" : "ltr";
   const isRTL = language === "ar";
 
-  const t = useMemo(() => {
-    return isRTL
-      ? {
-          title: "تفاصيل المنتج",
-          delete: "حذف المنتج",
-          createDiscount: "انشاء خصم",
-          edit: "تعديل",
-          cancel: "إلغاء",
-          update: "تحديث",
-          saving: "جاري الحفظ...",
-          uploading: "جاري الرفع...",
-          updating: "جاري التحديث...",
-          updated: "تم تحديث المنتج بنجاح",
-          deleted: "تم حذف المنتج بنجاح",
-          deleteConfirmTitle: "حذف المنتج",
-          deleteConfirmDesc: "هل أنت متأكد أنك تريد حذف هذا المنتج؟",
-          priceMustBePositive: "السعر يجب أن يكون رقمًا موجبًا",
-          uploadNewImages: "رفع صور/ه جديدة",
-          selectedFiles: "الملفات المحددة:",
-          name: "الاسم",
-          category: "الفئة",
-          price: "السعر",
-          stock: "المخزون",
-          featured: "منتج مميز",
-          yes: "نعم",
-          no: "لا",
-          description: "الوصف",
-          chooseCategory: "اختر الفئة",
-          discountTitle: "خصم المنتج",
-          enableDiscount: "تفعيل الخصم",
-          discountPercentage: "نسبة الخصم",
-          choosePercentage: "اختر نسبة",
-          discountedPrice: "السعر بعد الخصم:",
-          close: "إغلاق",
-          save: "حفظ",
-          imageUploadFailed: "فشل رفع الصورة",
-          updateError: "خطأ في تحديث المنتج",
-          deleteBtn: "حذف",
-          badgeEditing: "وضع التعديل",
-          badgeReadonly: "عرض فقط",
-          keepImagesHint: "عند اختيار صور جديدة سيتم استبدال جميع الصور الحالية.",
-          preview: "معاينة",
+  const t = useMemo(() => texts[language], [language]);
 
-          variants: "المتغيرات",
-          addVariant: "إضافة متغير",
-          addVariantTitle: "إضافة خيار جديد",
-          addVariantDesc: "أضف لوناً ومقاسات مع المخزون. يمكن إضافة صور خاصة بالخيار (اختياري).",
-          color: "اللون",
-          enterColor: "مثال: Black / White / Red",
-          sizes: "المقاسات",
-          addSize: "إضافة مقاس",
-          size: "المقاس",
-          qty: "الكمية",
-          variantImages: "صور الخيار (اختياري)",
-          saveVariant: "حفظ الخيار",
-          remove: "حذف",
-          required: "مطلوب",
-          invalidSizes: "أضف مقاس واحد على الأقل مع مخزون صحيح",
-          colorRequired: "الرجاء إدخال اللون",
-          variantAdded: "تم إضافة الخيار بنجاح",
-          variantFailed: "فشل إضافة الخيار",
-          colorExists: "هذا اللون موجود بالفعل",
-        }
-      : {
-          title: "Product Details",
-          delete: "Delete Product",
-          createDiscount: "Create Discount",
-          edit: "Edit",
-          cancel: "Cancel",
-          update: "Update",
-          saving: "Saving...",
-          uploading: "Uploading...",
-          updating: "Updating...",
-          updated: "Product updated successfully",
-          deleted: "Product deleted successfully",
-          deleteConfirmTitle: "Delete Product",
-          deleteConfirmDesc: "Are you sure you want to delete this product?",
-          priceMustBePositive: "Price must be positive",
-          uploadNewImages: "Upload new image/s",
-          selectedFiles: "Selected files:",
-          name: "Name",
-          category: "Category",
-          price: "Price",
-          stock: "Stock",
-          featured: "Featured Product",
-          yes: "Yes",
-          no: "No",
-          description: "Description",
-          chooseCategory: "Choose a category",
-          discountTitle: "Product Discount",
-          enableDiscount: "Enable Discount",
-          discountPercentage: "Discount Percentage",
-          choosePercentage: "Choose percentage",
-          discountedPrice: "Discounted Price:",
-          close: "Close",
-          save: "Save",
-          imageUploadFailed: "Image upload failed",
-          updateError: "Error updating product",
-          deleteBtn: "Delete",
-          badgeEditing: "Editing",
-          badgeReadonly: "Read-only",
-          keepImagesHint: "Selecting new images will replace all existing ones.",
-          preview: "Preview",
-
-          variants: "Variants",
-          addVariant: "Add Variant",
-          addVariantTitle: "Add New Variant",
-          addVariantDesc: "Add a color + sizes with stock. Variant images are optional.",
-          color: "Color",
-          enterColor: "e.g. Black / White / Red",
-          sizes: "Sizes",
-          addSize: "Add size",
-          size: "Size",
-          qty: "Stock",
-          variantImages: "Variant Images (optional)",
-          saveVariant: "Save Variant",
-          remove: "Remove",
-          required: "Required",
-          invalidSizes: "Add at least 1 size with valid stock",
-          colorRequired: "Please enter a color",
-          variantAdded: "Variant added successfully",
-          variantFailed: "Failed to add variant",
-          colorExists: "This color already exists",
-        };
-  }, [isRTL]);
-
-  const { id: productId } = useParams();
+  const { id } = useParams();
+  const productId = id as string;
   const navigate = useNavigate();
 
   const { data: product, refetch, isLoading: loadingProduct } = useGetProductByIdQuery(productId);
@@ -234,42 +135,46 @@ function ProductDetails(): JSX.Element {
   const [uploadProductImage, { isLoading: loadingUploadImage }] = useUploadProductImageMutation();
   const [uploadVariantImage, { isLoading: loadingUploadVariant }] = useUploadVariantImageMutation();
 
-  // UI / modals
   const [clickEditProduct, setClickEditProduct] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isDiscountModalOpen, setIsDiscountModalOpen] = useState(false);
 
-  // ✅ Add Variant modal state
   const [isAddVariantOpen, setIsAddVariantOpen] = useState(false);
   const [variantColor, setVariantColor] = useState("");
   const [variantSizes, setVariantSizes] = useState<VariantSizeInput[]>([{ size: "", stock: "" }]);
   const [variantFiles, setVariantFiles] = useState<File[]>([]);
 
-  // fields
   const [newName, setNewName] = useState("");
-  const [newPrice, setNewPrice] = useState<number | "">("");
+
+  /**
+   * ✅ IMPORTANT: keep price as STRING while editing
+   * so user can type "4.", "4.5", "4.500" without being coerced.
+   */
+  const [newPrice, setNewPrice] = useState<string>("");
   const [newCategory, setNewCategory] = useState("");
   const [newCountInStock, setNewCountInStock] = useState<number | "">("");
   const [newDescription, setNewDescription] = useState("");
   const [featured, setFeatured] = useState(false);
 
-  // images
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
 
-  // discount
   const [hasDiscount, setHasDiscount] = useState(false);
   const [discountBy, setDiscountBy] = useState<number>(0);
   const [discountedPrice, setDiscountedPrice] = useState<number>(0);
 
   const initializedRef = useRef(false);
 
-  // init from product (once)
+  useEffect(() => {
+    initializedRef.current = false;
+  }, [productId]);
+
   useEffect(() => {
     if (!product || initializedRef.current) return;
     const p = product as Product;
 
     setNewName(p.name ?? "");
-    setNewPrice(typeof p.price === "number" ? p.price : "");
+    // ✅ preserve 3 decimals in the input
+    setNewPrice(typeof p.price === "number" ? p.price.toFixed(3) : "");
     setNewCategory((p as any)?.category?._id || (p as any)?.category || "");
     setNewCountInStock(typeof p.countInStock === "number" ? p.countInStock : "");
     setNewDescription(p.description ?? "");
@@ -281,9 +186,19 @@ function ProductDetails(): JSX.Element {
     initializedRef.current = true;
   }, [product]);
 
-  // calculate discounted price
+  // ✅ parse price string safely (allows "4", "4.", "4.5", "4.500")
+  const parsedPrice = useMemo(() => {
+    const s = (newPrice || "").trim();
+    if (!s) return null;
+    // allow only digits + one dot
+    const ok = /^\d+(\.\d+)?$/.test(s);
+    if (!ok) return null;
+    const n = Number(s);
+    return Number.isFinite(n) ? n : null;
+  }, [newPrice]);
+
   useEffect(() => {
-    const priceNum = typeof newPrice === "number" ? newPrice : 0;
+    const priceNum = parsedPrice ?? 0;
     if (!priceNum) {
       setDiscountedPrice(0);
       return;
@@ -294,7 +209,7 @@ function ProductDetails(): JSX.Element {
     } else {
       setDiscountedPrice(priceNum);
     }
-  }, [discountBy, hasDiscount, newPrice]);
+  }, [discountBy, hasDiscount, parsedPrice]);
 
   const busy = loadingUploadImage || loadingUpdateProduct || loadingUploadVariant;
 
@@ -310,12 +225,9 @@ function ProductDetails(): JSX.Element {
   };
 
   const uploadManyImages = async (files: File[], uploader: any): Promise<ProductImage[] | null> => {
-    // uploader is either uploadProductImage or uploadVariantImage
     const uploaded: ProductImage[] = [];
     if (!files?.length) return uploaded;
 
-    // if your backend supports multiple files at once, you can batch here
-    // but to stay compatible with either, we can send a single request with "images" array:
     try {
       const formData = new FormData();
       files.forEach((f) => formData.append("images", f));
@@ -345,8 +257,14 @@ function ProductDetails(): JSX.Element {
 
   const handleUpdateProduct = async () => {
     const p = product as Product;
-    const priceNum = typeof newPrice === "number" ? newPrice : p.price;
 
+    // ✅ validate fractional price
+    const priceNum = parsedPrice ?? p.price;
+
+    if (parsedPrice === null && newPrice.trim() !== "") {
+      toast.error(isRTL ? "صيغة السعر غير صحيحة" : "Invalid price format");
+      return;
+    }
     if (typeof priceNum === "number" && priceNum <= 0) {
       toast.error(t.priceMustBePositive);
       return;
@@ -354,7 +272,6 @@ function ProductDetails(): JSX.Element {
 
     let uploadedImages: ProductImage[] = Array.isArray(p?.image) ? [...p.image] : [];
 
-    // If user selected new images -> replace all
     if (selectedFiles.length > 0) {
       const res = await uploadManyImages(selectedFiles, uploadProductImage);
       if (!res) return;
@@ -372,7 +289,6 @@ function ProductDetails(): JSX.Element {
       price: priceNum,
       image: uploadedImages,
       category: newCategory || (p as any)?.category?._id || (p as any)?.category,
-      // if product has variants -> stock should come from variants
       countInStock:
         currentVariants.length > 0
           ? (stockFromVariants ?? p?.countInStock ?? 0)
@@ -381,21 +297,20 @@ function ProductDetails(): JSX.Element {
             : (p?.countInStock ?? 0),
       description: (newDescription || p.description || "").trim(),
       featured,
-
       hasDiscount,
       discountBy,
       discountedPrice,
-
-      // keep existing variants untouched on normal update
       variants: currentVariants,
     };
 
     try {
       await updateProduct(updatedProduct).unwrap();
       toast.success(t.updated);
+
       setClickEditProduct(false);
       setIsDiscountModalOpen(false);
       setSelectedFiles([]);
+
       refetch();
       refetchProducts();
     } catch (err: any) {
@@ -403,30 +318,36 @@ function ProductDetails(): JSX.Element {
     }
   };
 
-  const renderCategoryOptions = (nodes: CategoryNode[], level = 0): React.ReactNode =>
-    nodes.map((node) => (
-      <React.Fragment key={node._id}>
-        <option value={node._id}>{`${"—".repeat(level)} ${node.name}`}</option>
-        {node.children?.length ? renderCategoryOptions(node.children, level + 1) : null}
-      </React.Fragment>
-    ));
+  const cancelEdit = () => {
+    const p = product as Product | undefined;
+    if (!p) return;
 
-  const formatPrice = (v: number) => `${v.toFixed(3)} KD`;
+    setClickEditProduct(false);
+    setSelectedFiles([]);
 
-  // ✅ Variant helpers
+    setNewName(p.name ?? "");
+    setNewPrice(typeof p.price === "number" ? p.price.toFixed(3) : "");
+    setNewCategory((p as any)?.category?._id || (p as any)?.category || "");
+    setNewCountInStock(typeof p.countInStock === "number" ? p.countInStock : "");
+    setNewDescription(p.description ?? "");
+    setFeatured(!!p.featured);
+
+    setHasDiscount(!!p.hasDiscount);
+    setDiscountBy(typeof p.discountBy === "number" ? p.discountBy : 0);
+  };
+
+  const formatPrice = (v: number) => `KD ${v.toFixed(3)} `;
+
+  const flatCats = useMemo(
+    () => flattenCategories(((categoryTree as any) || []) as CategoryNode[]),
+    [categoryTree],
+  );
+
   const resetVariantForm = () => {
     setVariantColor("");
     setVariantSizes([{ size: "", stock: "" }]);
     setVariantFiles([]);
   };
-
-  const addSizeRow = () => setVariantSizes((prev) => [...prev, { size: "", stock: "" }]);
-
-  const removeSizeRow = (idx: number) =>
-    setVariantSizes((prev) => prev.filter((_, i) => i !== idx));
-
-  const updateSizeRow = (idx: number, patch: Partial<VariantSizeInput>) =>
-    setVariantSizes((prev) => prev.map((row, i) => (i === idx ? { ...row, ...patch } : row)));
 
   const buildVariantPayload = async (): Promise<ProductVariant | null> => {
     const color = variantColor.trim();
@@ -450,7 +371,6 @@ function ProductDetails(): JSX.Element {
       return null;
     }
 
-    // upload variant images if provided
     let uploadedVariantImages: ProductImage[] = [];
     if (variantFiles.length > 0) {
       const res = await uploadManyImages(variantFiles, uploadVariantImage);
@@ -474,7 +394,6 @@ function ProductDetails(): JSX.Element {
 
     const existing: ProductVariant[] = Array.isArray(p.variants) ? [...p.variants] : [];
 
-    // prevent duplicate color
     const duplicate = existing.some(
       (v) => String(v?.color || "").toLowerCase() === payload.color.toLowerCase(),
     );
@@ -490,18 +409,16 @@ function ProductDetails(): JSX.Element {
       await updateProduct({
         _id: p._id,
         name: (newName || p.name || "").trim(),
-        price: typeof newPrice === "number" ? newPrice : p.price,
+        price: parsedPrice ?? p.price,
         image: Array.isArray(p.image) ? p.image : [],
         category: newCategory || (p as any)?.category?._id || (p as any)?.category,
         description: (newDescription || p.description || "").trim(),
         featured,
-
         hasDiscount,
         discountBy,
         discountedPrice,
-
         variants: nextVariants,
-        countInStock: totalStock, // ✅ keep stock synced with variants
+        countInStock: totalStock,
       }).unwrap();
 
       toast.success(t.variantAdded);
@@ -529,135 +446,105 @@ function ProductDetails(): JSX.Element {
       <div
         dir={dir}
         className={clsx(
-          "px-4 w-full max-w-6xl py-6 mb-10 mt-10 min-h-screen font-custom",
+          "px-4 w-full max-w-6xl py-6 my-10 min-h-screen font-custom",
           isRTL ? "rtl" : "ltr",
+          "text-neutral-900 dark:text-neutral-100",
         )}>
         {/* Header */}
-        <div
-          className={clsx(
-            "flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6",
-            isRTL ? "sm:flex-row-reverse" : "",
-          )}>
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
           <div className="flex items-center gap-3">
-            <h1 className="text-2xl font-bold text-neutral-950">{t.title}</h1>
+            <h1 className="text-2xl font-bold text-neutral-950 dark:text-neutral-50">{t.title}</h1>
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
-            {/* ✅ Add Variant button */}
-            <button
-              onClick={() => setIsAddVariantOpen(true)}
-              className="select-none inline-flex items-center gap-2 rounded-2xl border border-neutral-200 bg-white px-3 py-2 font-semibold text-neutral-900 hover:bg-neutral-50 transition"
-              type="button">
-              <Plus className="h-4 w-4" />
-              {t.addVariant}
-            </button>
+            {clickEditProduct ? (
+              <>
+                <button
+                  onClick={cancelEdit}
+                  type="button"
+                  className="inline-flex items-center gap-2 rounded-md border border-neutral-200 bg-white px-3 py-2 text-sm font-semibold text-neutral-900 hover:bg-neutral-50 transition dark:border-neutral-800 dark:bg-neutral-950 dark:text-neutral-100 dark:hover:bg-neutral-900/60">
+                  {t.cancel}
+                </button>
 
-            <button
-              onClick={() => setIsDeleteModalOpen(true)}
-              className="select-none inline-flex items-center gap-2 bg-gradient-to-t from-rose-500 to-rose-400 hover:opacity-90 
-             text-white px-3 py-2 rounded-2xl font-bold 
-             drop-shadow-[0_4px_8px_rgba(244,63,94,0.5)] hover:drop-shadow-[0_6px_12px_rgba(251,113,133,0.5)] 
-             transition-all"
-              type="button">
-              <Trash2 className="h-4 w-4" />
-              {t.delete}
-            </button>
+                <button
+                  onClick={handleUpdateProduct}
+                  disabled={busy}
+                  type="button"
+                  className={clsx(
+                    "inline-flex items-center gap-2 rounded-md px-4 py-2 text-sm font-semibold transition",
+                    "bg-neutral-950 text-white hover:bg-neutral-900 dark:bg-neutral-50 dark:text-neutral-950 dark:hover:bg-neutral-200",
+                    busy ? "opacity-60 cursor-not-allowed" : "",
+                  )}>
+                  {busy && <Loader2Icon className="h-4 w-4 animate-spin" />}
+                  {loadingUploadImage ? t.uploading : loadingUpdateProduct ? t.updating : t.update}
+                </button>
+              </>
+            ) : (
+              <>
+                <button
+                  onClick={() => setIsAddVariantOpen(true)}
+                  type="button"
+                  className="inline-flex items-center gap-2 rounded-md border border-neutral-200 bg-white px-3 py-2 text-sm font-semibold text-neutral-900 hover:bg-neutral-50 transition dark:border-neutral-800 dark:bg-neutral-950 dark:text-neutral-100 dark:hover:bg-neutral-900/60">
+                  <Plus className="h-4 w-4" />
+                  {t.addVariant}
+                </button>
 
-            <button
-              onClick={() => setIsDiscountModalOpen(true)}
-              className="select-none inline-flex items-center gap-2 bg-neutral-950 hover:bg-neutral-900 text-white px-3 py-2 rounded-2xl font-bold shadow-md"
-              type="button">
-              <Tag className="h-4 w-4" />
-              {t.createDiscount}
-            </button>
+                <button
+                  onClick={() => setIsDeleteModalOpen(true)}
+                  type="button"
+                  className="inline-flex items-center gap-2 rounded-md bg-rose-500 px-3 py-2 text-sm font-semibold text-white hover:bg-rose-600 transition dark:bg-rose-600 dark:hover:bg-rose-700">
+                  <Trash2 className="h-4 w-4" />
+                  {t.delete}
+                </button>
 
-            <button
-              onClick={() => setClickEditProduct((v) => !v)}
-              className="inline-flex items-center gap-2 rounded-2xl border border-neutral-200 bg-white px-3 py-2 font-semibold text-neutral-900 hover:bg-neutral-50 transition"
-              type="button">
-              {clickEditProduct ? (
-                <span>{t.cancel}</span>
-              ) : (
-                <>
+                <button
+                  onClick={() => setIsDiscountModalOpen(true)}
+                  type="button"
+                  className="inline-flex items-center gap-2 rounded-md bg-neutral-950 px-3 py-2 text-sm font-semibold text-white hover:bg-neutral-900 transition dark:bg-neutral-50 dark:text-neutral-950 dark:hover:bg-neutral-200">
+                  <Tag className="h-4 w-4" />
+                  {t.createDiscount}
+                </button>
+
+                <button
+                  onClick={() => setClickEditProduct(true)}
+                  type="button"
+                  className="inline-flex items-center gap-2 rounded-md border border-neutral-200 bg-white px-3 py-2 text-sm font-semibold text-neutral-900 hover:bg-neutral-50 transition dark:border-neutral-800 dark:bg-neutral-950 dark:text-neutral-100 dark:hover:bg-neutral-900/60">
                   <PencilLine className="h-4 w-4" />
                   <span>{t.edit}</span>
-                </>
-              )}
-            </button>
-
-            {clickEditProduct ? (
-              <button
-                onClick={handleUpdateProduct}
-                disabled={busy}
-                className={clsx(
-                  "inline-flex items-center gap-2 rounded-2xl px-4 py-2 font-semibold text-white transition",
-                  busy
-                    ? "bg-neutral-400 cursor-not-allowed"
-                    : "bg-neutral-950 hover:bg-neutral-900",
-                )}
-                type="button">
-                {busy ? <Loader2Icon className="h-4 w-4 animate-spin" /> : null}
-                {loadingUploadImage ? t.uploading : loadingUpdateProduct ? t.updating : t.update}
-              </button>
-            ) : null}
+                </button>
+              </>
+            )}
           </div>
         </div>
 
-        <Separator className="my-4 bg-black/10" />
+        <Separator className="my-4 bg-black/10 dark:bg-white/10" />
 
         {/* Main content */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
           {/* Images card */}
-          <div className="lg:col-span-5 rounded-3xl border border-neutral-200 bg-white/80 backdrop-blur shadow-sm overflow-hidden">
-            <div className="p-5 flex items-center justify-between gap-3">
-              <div className="min-w-0">
-                <p className="text-sm font-semibold text-neutral-900">{p?.name}</p>
-                <p className="text-xs text-neutral-500">
-                  {clickEditProduct ? t.keepImagesHint : " "}
-                </p>
-              </div>
-
-              <div className="inline-flex items-center gap-2">
-                <span className="inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-xs font-semibold border-neutral-200 bg-white text-neutral-900">
-                  <ImagePlus className="h-3.5 w-3.5" />
-                  {p?.image?.length || 0}
-                </span>
-              </div>
-            </div>
-
-            <div className="px-5 pb-5">
+          <div className="lg:col-span-5 rounded-3xl border border-neutral-200 bg-white/80 backdrop-blur shadow-sm overflow-hidden dark:border-neutral-800 dark:bg-neutral-950/70">
+            <div className="px-5 py-5">
               {!clickEditProduct ? (
-                p?.image?.length && p.image.length > 1 ? (
-                  <Carousel className="w-full">
-                    <CarouselContent>
-                      {p.image.map((img, index) => (
-                        <CarouselItem key={index}>
-                          <img
-                            src={img.url}
-                            alt={`Product ${index + 1}`}
-                            loading="lazy"
-                            className="w-full h-[360px] sm:h-[420px] object-cover rounded-2xl"
-                          />
-                        </CarouselItem>
-                      ))}
-                    </CarouselContent>
-                    <CarouselPrevious className="absolute top-1/2 left-2 -translate-y-1/2 bg-black/50 text-white rounded-full p-2 hover:bg-black/60" />
-                    <CarouselNext className="absolute top-1/2 right-2 -translate-y-1/2 bg-black/50 text-white rounded-full p-2 hover:bg-black/60" />
-                  </Carousel>
-                ) : (
+                p?.image?.length ? (
                   <img
-                    src={p?.image?.[0]?.url}
+                    src={p.image[0].url}
                     alt="Product"
                     className="w-full h-[360px] sm:h-[420px] object-cover rounded-2xl"
                   />
+                ) : (
+                  <div className="h-[360px] sm:h-[420px] rounded-2xl border border-neutral-200 bg-neutral-50 grid place-items-center text-neutral-500 dark:border-neutral-800 dark:bg-neutral-900/40 dark:text-neutral-400">
+                    {isRTL ? "لا توجد صور" : "No images"}
+                  </div>
                 )
               ) : (
                 <div className="space-y-3">
-                  <label className="cursor-pointer h-[360px] sm:h-[420px] flex flex-col items-center justify-center w-full p-4 bg-neutral-50 border-2 border-dashed border-neutral-300 rounded-2xl hover:bg-neutral-100 hover:border-neutral-400 transition">
+                  <label className="cursor-pointer h-[360px] sm:h-[420px] flex flex-col items-center justify-center w-full p-4 bg-neutral-50 border-2 border-dashed border-neutral-300 rounded-2xl hover:bg-neutral-100 hover:border-neutral-400 transition dark:bg-neutral-900/40 dark:border-neutral-700 dark:hover:bg-neutral-900/70 dark:hover:border-neutral-600">
                     <div className="w-44 h-44">
                       <Lottie animationData={upload} loop />
                     </div>
-                    <span className="text-neutral-700 font-semibold">{t.uploadNewImages}</span>
+                    <span className="text-neutral-700 font-semibold dark:text-neutral-200">
+                      {t.uploadNewImages}
+                    </span>
 
                     <input
                       type="file"
@@ -670,9 +557,11 @@ function ProductDetails(): JSX.Element {
                   </label>
 
                   {selectedFiles.length > 0 ? (
-                    <div className="rounded-2xl border border-neutral-200 bg-white p-4">
-                      <p className="text-sm font-semibold text-neutral-900">{t.selectedFiles}</p>
-                      <ul className="mt-2 list-disc pl-5 text-sm text-neutral-700 space-y-1">
+                    <div className="rounded-2xl border border-neutral-200 bg-white p-4 dark:border-neutral-800 dark:bg-neutral-950">
+                      <p className="text-sm font-semibold text-neutral-900 dark:text-neutral-100">
+                        {t.selectedFiles}
+                      </p>
+                      <ul className="mt-2 list-disc pl-5 text-sm text-neutral-700 dark:text-neutral-300 space-y-1">
                         {selectedFiles.map((file, idx) => (
                           <li key={idx} className="break-all">
                             {file.name}
@@ -687,77 +576,85 @@ function ProductDetails(): JSX.Element {
           </div>
 
           {/* Details card */}
-          <div className="lg:col-span-7 rounded-3xl border border-neutral-200 bg-white/80 backdrop-blur shadow-sm">
+          <div className="lg:col-span-7 rounded-3xl border border-neutral-200 bg-white/80 backdrop-blur shadow-sm dark:border-neutral-800 dark:bg-neutral-950/70">
             <div className="p-5">
               <div className="flex items-center justify-between gap-3 flex-wrap">
-                <h2 className="text-lg font-semibold text-neutral-950">{p?.name}</h2>
+                <h2 className="text-lg font-semibold text-neutral-950 dark:text-neutral-50">
+                  {p?.name}
+                </h2>
 
-                <div className="inline-flex items-center gap-2">
-                  <span
-                    className={clsx(
-                      "inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-xs font-semibold",
-                      p?.featured
-                        ? "border-amber-200 bg-amber-50 text-amber-800"
-                        : "border-neutral-200 bg-white text-neutral-700",
-                    )}>
-                    {p?.featured ? (
-                      <Star className="h-3.5 w-3.5" />
-                    ) : (
-                      <StarOff className="h-3.5 w-3.5" />
-                    )}
-                    {t.featured}: {p?.featured ? t.yes : t.no}
-                  </span>
-                </div>
+                <span
+                  className={clsx(
+                    "inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-xs font-semibold",
+                    p?.featured
+                      ? "border-teal-200 bg-teal-50 text-teal-800 dark:border-teal-900/60 dark:bg-teal-950/30 dark:text-teal-200"
+                      : "border-neutral-200 bg-white text-neutral-700 dark:border-neutral-800 dark:bg-neutral-950 dark:text-neutral-300",
+                  )}>
+                  {p?.featured ? (
+                    <Star className="h-3.5 w-3.5" />
+                  ) : (
+                    <StarOff className="h-3.5 w-3.5" />
+                  )}
+                  {t.featured}: {p?.featured ? t.yes : t.no}
+                </span>
               </div>
 
-              <Separator className="my-4 bg-black/10" />
+              <Separator className="my-4 bg-black/10 dark:bg-white/10" />
 
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 {/* Name */}
-                <div className="rounded-2xl border border-neutral-200 bg-white p-4">
-                  <div className="text-xs text-neutral-500">{t.name}</div>
+                <div className="rounded-2xl border border-neutral-200 bg-white p-4 dark:border-neutral-800 dark:bg-neutral-950">
+                  <div className="text-xs text-neutral-500 dark:text-neutral-400">{t.name}</div>
                   {!clickEditProduct ? (
-                    <div className="mt-1 font-semibold text-neutral-950 break-words">{p?.name}</div>
+                    <div className="mt-1 font-semibold text-neutral-950 dark:text-neutral-100 break-words">
+                      {p?.name}
+                    </div>
                   ) : (
                     <input
                       value={newName}
                       onChange={(e) => setNewName(e.target.value)}
-                      className="mt-2 w-full rounded-xl border border-neutral-200 bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-neutral-950/10"
+                      className="mt-2 w-full rounded-xl border border-neutral-200 bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-neutral-950/10 dark:border-neutral-800 dark:bg-neutral-950 dark:text-neutral-100 dark:placeholder:text-neutral-500 dark:focus:ring-white/10"
                     />
                   )}
                 </div>
 
-                {/* Category */}
-                <div className="rounded-2xl border border-neutral-200 bg-white p-4">
-                  <div className="text-xs text-neutral-500">{t.category}</div>
+                {/* Category (regular select) */}
+                <div className="rounded-2xl border border-neutral-200 bg-white p-4 dark:border-neutral-800 dark:bg-neutral-950">
+                  <div className="text-xs text-neutral-500 dark:text-neutral-400">{t.category}</div>
+
                   {!clickEditProduct ? (
-                    <div className="mt-1 font-semibold text-neutral-950 break-words">
+                    <div className="mt-1 font-semibold text-neutral-950 dark:text-neutral-100 break-words">
                       {(p as any)?.category?.name || "—"}
                     </div>
                   ) : (
                     <select
                       value={newCategory}
                       onChange={(e) => setNewCategory(e.target.value)}
-                      className="mt-2 w-full rounded-xl border border-neutral-200 bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500/30">
-                      <option value="" disabled>
-                        -- {t.chooseCategory} --
-                      </option>
-                      {categoryTree ? renderCategoryOptions(categoryTree as CategoryNode[]) : null}
+                      className={clsx(
+                        "mt-2 w-full rounded-xl border border-neutral-200 bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-neutral-950/10 dark:border-neutral-800 dark:bg-neutral-950 dark:text-neutral-100 dark:focus:ring-white/10",
+                        isRTL ? "text-right" : "text-left",
+                      )}>
+                      <option value="">{`-- ${t.chooseCategory} --`}</option>
+                      {flatCats.map((c) => (
+                        <option key={c.id} value={c.id}>
+                          {c.path}
+                        </option>
+                      ))}
                     </select>
                   )}
                 </div>
 
-                {/* Price */}
-                <div className="rounded-2xl border border-neutral-200 bg-white p-4">
-                  <div className="text-xs text-neutral-500">{t.price}</div>
+                {/* ✅ Price (fractional allowed) */}
+                <div className="rounded-2xl border border-neutral-200 bg-white p-4 dark:border-neutral-800 dark:bg-neutral-950">
+                  <div className="text-xs text-neutral-500 dark:text-neutral-400">{t.price}</div>
                   {!clickEditProduct ? (
-                    <div className="mt-1 font-semibold text-neutral-950">
+                    <div className="mt-1 font-semibold text-neutral-950 dark:text-neutral-100">
                       {p?.hasDiscount ? (
                         <div className="flex flex-col">
-                          <span className="line-through text-neutral-500 text-sm">
+                          <span className="line-through text-neutral-500 dark:text-neutral-400 text-sm">
                             {formatPrice(p.price)}
                           </span>
-                          <span className="text-emerald-600 text-lg">
+                          <span className="text-emerald-600 dark:text-emerald-300 text-lg">
                             {formatPrice(p.discountedPrice ?? p.price)}
                           </span>
                         </div>
@@ -768,20 +665,28 @@ function ProductDetails(): JSX.Element {
                   ) : (
                     <input
                       value={newPrice}
-                      onChange={(e) =>
-                        setNewPrice(e.target.value === "" ? "" : Number(e.target.value))
-                      }
+                      onChange={(e) => {
+                        const v = e.target.value;
+                        // allow empty or digits + optional one dot + up to 3 decimals
+                        if (v === "" || /^\d*(\.\d{0,3})?$/.test(v)) setNewPrice(v);
+                      }}
                       inputMode="decimal"
-                      className="mt-2 w-full rounded-xl border border-neutral-200 bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-neutral-950/10"
+                      placeholder="4.500"
+                      className="mt-2 w-full rounded-xl border border-neutral-200 bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-neutral-950/10 dark:border-neutral-800 dark:bg-neutral-950 dark:text-neutral-100 dark:placeholder:text-neutral-500 dark:focus:ring-white/10"
                     />
                   )}
+                  {clickEditProduct && newPrice.trim() !== "" && parsedPrice === null ? (
+                    <p className="mt-2 text-xs font-semibold text-rose-600 dark:text-rose-300">
+                      {isRTL ? "صيغة السعر غير صحيحة" : "Invalid price format"}
+                    </p>
+                  ) : null}
                 </div>
 
                 {/* Stock */}
-                <div className="rounded-2xl border border-neutral-200 bg-white p-4">
-                  <div className="text-xs text-neutral-500">{t.stock}</div>
+                <div className="rounded-2xl border border-neutral-200 bg-white p-4 dark:border-neutral-800 dark:bg-neutral-950">
+                  <div className="text-xs text-neutral-500 dark:text-neutral-400">{t.stock}</div>
                   {!clickEditProduct ? (
-                    <div className="mt-1 font-semibold text-neutral-950">
+                    <div className="mt-1 font-semibold text-neutral-950 dark:text-neutral-100">
                       {p?.countInStock ?? 0}
                     </div>
                   ) : (
@@ -792,7 +697,7 @@ function ProductDetails(): JSX.Element {
                       }
                       disabled={!!(p?.variants && p.variants.length > 0)}
                       className={clsx(
-                        "mt-2 w-full rounded-xl border border-neutral-200 bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-neutral-950/10",
+                        "mt-2 w-full rounded-xl border border-neutral-200 bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-neutral-950/10 dark:border-neutral-800 dark:bg-neutral-950 dark:text-neutral-100 dark:focus:ring-white/10",
                         p?.variants?.length ? "opacity-60 cursor-not-allowed" : "",
                       )}
                     />
@@ -800,21 +705,16 @@ function ProductDetails(): JSX.Element {
                 </div>
 
                 {/* Featured */}
-                <div className="rounded-2xl border border-neutral-200 bg-white p-4">
-                  <div className="text-xs text-neutral-500">{t.featured}</div>
+                <div className="rounded-2xl border border-neutral-200 bg-white p-4 dark:border-neutral-800 dark:bg-neutral-950">
+                  <div className="text-xs text-neutral-500 dark:text-neutral-400">{t.featured}</div>
                   {!clickEditProduct ? (
-                    <div className="mt-1 font-semibold text-neutral-950">
+                    <div className="mt-1 font-semibold text-neutral-950 dark:text-neutral-100">
                       {p?.featured ? t.yes : t.no}
                     </div>
                   ) : (
                     <div className="mt-2 flex items-center gap-3">
-                      <Switch
-                        id="featured"
-                        className="scale-125"
-                        checked={featured}
-                        onCheckedChange={setFeatured}
-                      />
-                      <span className="text-sm font-semibold text-neutral-700">
+                      <SettingsStyleSwitch checked={featured} onChange={setFeatured} />
+                      <span className="text-sm font-semibold text-neutral-700 dark:text-neutral-300">
                         {featured ? t.yes : t.no}
                       </span>
                     </div>
@@ -822,9 +722,11 @@ function ProductDetails(): JSX.Element {
                 </div>
 
                 {/* Discount quick view */}
-                <div className="rounded-2xl border border-neutral-200 bg-white p-4">
-                  <div className="text-xs text-neutral-500">{isRTL ? "الخصم" : "Discount"}</div>
-                  <div className="mt-1 font-semibold text-neutral-950">
+                <div className="rounded-2xl border border-neutral-200 bg-white p-4 dark:border-neutral-800 dark:bg-neutral-950">
+                  <div className="text-xs text-neutral-500 dark:text-neutral-400">
+                    {isRTL ? "الخصم" : "Discount"}
+                  </div>
+                  <div className="mt-1 font-semibold text-neutral-950 dark:text-neutral-100">
                     {p?.hasDiscount
                       ? `${Math.round((p.discountBy ?? 0) * 100)}%`
                       : isRTL
@@ -834,23 +736,25 @@ function ProductDetails(): JSX.Element {
                   <button
                     type="button"
                     onClick={() => setIsDiscountModalOpen(true)}
-                    className="mt-2 text-xs font-semibold text-neutral-900 underline">
+                    className="mt-2 text-xs font-semibold text-neutral-900 dark:text-neutral-100 underline decoration-neutral-400 dark:decoration-neutral-600">
                     {isRTL ? "تعديل الخصم" : "Edit discount"}
                   </button>
                 </div>
 
                 {/* Description */}
-                <div className="sm:col-span-3 rounded-2xl border border-neutral-200 bg-white p-4">
-                  <div className="text-xs text-neutral-500">{t.description}</div>
+                <div className="sm:col-span-3 rounded-2xl border border-neutral-200 bg-white p-4 dark:border-neutral-800 dark:bg-neutral-950">
+                  <div className="text-xs text-neutral-500 dark:text-neutral-400">
+                    {t.description}
+                  </div>
                   {!clickEditProduct ? (
-                    <div className="mt-1 font-semibold text-neutral-950 whitespace-pre-line break-words">
+                    <div className="mt-1 font-semibold text-neutral-950 dark:text-neutral-100 whitespace-pre-line break-words">
                       {p?.description || "—"}
                     </div>
                   ) : (
                     <textarea
                       value={newDescription}
                       onChange={(e) => setNewDescription(e.target.value)}
-                      className="mt-2 w-full h-28 rounded-xl border border-neutral-200 bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-neutral-950/10"
+                      className="mt-2 w-full h-28 rounded-xl border border-neutral-200 bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-neutral-950/10 dark:border-neutral-800 dark:bg-neutral-950 dark:text-neutral-100 dark:placeholder:text-neutral-500 dark:focus:ring-white/10"
                     />
                   )}
                 </div>
@@ -859,279 +763,67 @@ function ProductDetails(): JSX.Element {
           </div>
         </div>
 
-        {/* Variants list */}
-        {p?.variants?.length
-          ? p.variants.map((v: any) => (
-              <VariantItem
-                key={v._id || v.color}
-                variant={v}
-                productId={p._id}
-                language={language}
-              />
-            ))
-          : null}
+        {/* Variants section */}
+        {p?.variants?.length ? (
+          <div className="mt-6">
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-lg font-bold text-neutral-950 dark:text-neutral-50">
+                {t.variants}
+              </h3>
+              <span className="text-sm text-neutral-500 dark:text-neutral-400">
+                {p.variants.length}
+              </span>
+            </div>
 
-        {/* Delete Modal */}
-        <Dialog open={isDeleteModalOpen} onOpenChange={setIsDeleteModalOpen}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>{t.deleteConfirmTitle}</DialogTitle>
-              <DialogDescription>{t.deleteConfirmDesc}</DialogDescription>
-            </DialogHeader>
+            <div className="grid grid-cols-2 md:grid-cols-2 xl:grid-cols-2 gap-4">
+              {p.variants.map((v: any) => (
+                <VariantItem
+                  key={v._id || v.color}
+                  variant={v}
+                  productId={p._id}
+                  language={language}
+                />
+              ))}
+            </div>
+          </div>
+        ) : null}
 
-            <DialogFooter className="mt-4 flex justify-end gap-2">
-              <Button variant="outline" onClick={() => setIsDeleteModalOpen(false)}>
-                {t.cancel}
-              </Button>
-              <Button
-                disabled={loadingDeleteProduct}
-                variant="destructive"
-                className="bg-gradient-to-t from-rose-500 hover:opacity-90 to-rose-400"
-                onClick={handleDeleteProduct}>
-                {loadingDeleteProduct ? <Loader2Icon className="animate-spin" /> : t.deleteBtn}
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+        {/* Delete Product Modal */}
+        <DeleteProductModal
+          isDeleteModalOpen={isDeleteModalOpen}
+          setIsDeleteModalOpen={setIsDeleteModalOpen}
+          loadingDeleteProduct={loadingDeleteProduct}
+          handleDeleteProduct={handleDeleteProduct}
+        />
 
         {/* Discount Modal */}
-        <Dialog open={isDiscountModalOpen} onOpenChange={setIsDiscountModalOpen}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>{t.discountTitle}</DialogTitle>
-              <DialogDescription>
-                {isRTL
-                  ? "تطبيق خصم على المنتج وحساب السعر النهائي تلقائيًا."
-                  : "Enable a discount and auto-calculate the final price."}
-              </DialogDescription>
-            </DialogHeader>
+        <DiscountModal
+          isDiscountModalOpen={isDiscountModalOpen}
+          setIsDiscountModalOpen={setIsDiscountModalOpen}
+          hasDiscount={hasDiscount}
+          setHasDiscount={setHasDiscount}
+          discountBy={discountBy}
+          setDiscountBy={setDiscountBy}
+          discountedPrice={discountedPrice}
+          busy={busy}
+          handleUpdateProduct={handleUpdateProduct}
+          PERCENTAGE={PERCENTAGE}
+        />
 
-            <div className="space-y-4">
-              <div className="flex items-center gap-3">
-                <Switch
-                  checked={hasDiscount}
-                  onCheckedChange={setHasDiscount}
-                  className="scale-125"
-                />
-                <span className="font-semibold text-neutral-900">{t.enableDiscount}</span>
-              </div>
-
-              {hasDiscount ? (
-                <>
-                  <div>
-                    <label className="text-sm font-semibold text-neutral-700">
-                      {t.discountPercentage}
-                    </label>
-                    <select
-                      value={discountBy}
-                      onChange={(e) => setDiscountBy(Number(e.target.value))}
-                      className="mt-2 w-full rounded-xl border border-neutral-200 bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500/30">
-                      <option value={0} disabled>
-                        -- {t.choosePercentage} --
-                      </option>
-                      {PERCENTAGE.map((p) => (
-                        <option key={p} value={p}>
-                          {Math.round(p * 100)}%
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-
-                  <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-4">
-                    <p className="text-sm font-semibold text-neutral-900">
-                      {t.discountedPrice}{" "}
-                      <span className="text-emerald-700">{discountedPrice.toFixed(3)} KD</span>
-                    </p>
-                  </div>
-                </>
-              ) : (
-                <div className="rounded-2xl border border-neutral-200 bg-white p-4 text-sm text-neutral-700">
-                  {isRTL ? "الخصم غير مفعّل." : "Discount is disabled."}
-                </div>
-              )}
-            </div>
-
-            <DialogFooter className="mt-2">
-              <Button variant="outline" onClick={() => setIsDiscountModalOpen(false)}>
-                {t.cancel}
-              </Button>
-              <Button
-                disabled={busy}
-                onClick={handleUpdateProduct}
-                className="bg-neutral-950 text-white hover:bg-neutral-900">
-                {busy ? (
-                  <>
-                    <Loader2Icon className="h-4 w-4 animate-spin mr-2" />
-                    {t.saving}
-                  </>
-                ) : (
-                  t.save
-                )}
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-
-        {/* ✅ Add Variant Modal */}
-        <Dialog
-          open={isAddVariantOpen}
-          onOpenChange={(open) => {
-            setIsAddVariantOpen(open);
-            if (!open) resetVariantForm();
-          }}>
-          <DialogContent className="sm:max-w-lg">
-            <DialogHeader>
-              <DialogTitle>{t.addVariantTitle}</DialogTitle>
-              <DialogDescription>{t.addVariantDesc}</DialogDescription>
-            </DialogHeader>
-
-            <div className="space-y-4">
-              {/* Color */}
-              <div className="rounded-2xl border border-neutral-200 bg-white p-4">
-                <div className="flex items-center gap-2 mb-2">
-                  <Palette className="h-4 w-4 text-neutral-700" />
-                  <label className="text-sm font-semibold text-neutral-900">
-                    {t.color} <span className="text-rose-500">*</span>
-                  </label>
-                </div>
-                <input
-                  value={variantColor}
-                  onChange={(e) => setVariantColor(e.target.value)}
-                  placeholder={t.enterColor}
-                  className="w-full rounded-xl border border-neutral-200 bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-neutral-950/10"
-                />
-                {/* quick preview dot */}
-                <div className="mt-2 flex items-center gap-2 text-xs text-neutral-500">
-                  <span
-                    className="h-3 w-3 rounded-full border border-neutral-200"
-                    style={{ backgroundColor: variantColor.trim().toLowerCase() || "transparent" }}
-                  />
-                  <span>{isRTL ? "معاينة اللون" : "Color preview"}</span>
-                </div>
-              </div>
-
-              {/* Sizes */}
-              <div className="rounded-2xl border border-neutral-200 bg-white p-4">
-                <div className="flex items-center justify-between gap-3 mb-3">
-                  <div className="flex items-center gap-2">
-                    <Ruler className="h-4 w-4 text-neutral-700" />
-                    <p className="text-sm font-semibold text-neutral-900">{t.sizes}</p>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={addSizeRow}
-                    className="inline-flex items-center gap-2 rounded-xl border border-neutral-200 bg-white px-3 py-2 text-xs font-semibold text-neutral-900 hover:bg-neutral-50 transition">
-                    <Plus className="h-4 w-4" />
-                    {t.addSize}
-                  </button>
-                </div>
-
-                <div className="space-y-2">
-                  {variantSizes.map((row, idx) => (
-                    <div key={idx} className="grid grid-cols-12 gap-2 items-center">
-                      <div className="col-span-5">
-                        <input
-                          value={row.size}
-                          onChange={(e) => updateSizeRow(idx, { size: e.target.value })}
-                          placeholder={t.size}
-                          className="w-full rounded-xl border border-neutral-200 bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-neutral-950/10"
-                        />
-                      </div>
-
-                      <div className="col-span-5">
-                        <div className="relative">
-                          <Package className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-neutral-400" />
-                          <input
-                            value={row.stock}
-                            onChange={(e) =>
-                              updateSizeRow(idx, {
-                                stock: e.target.value === "" ? "" : Number(e.target.value),
-                              })
-                            }
-                            inputMode="numeric"
-                            placeholder={t.qty}
-                            className="w-full rounded-xl border border-neutral-200 bg-white pl-10 pr-3 py-2 text-sm outline-none focus:ring-2 focus:ring-neutral-950/10"
-                          />
-                        </div>
-                      </div>
-
-                      <div className="col-span-2 flex justify-end">
-                        <button
-                          type="button"
-                          onClick={() => removeSizeRow(idx)}
-                          disabled={variantSizes.length === 1}
-                          className={clsx(
-                            "h-10 w-10 rounded-xl border border-neutral-200 bg-white grid place-items-center hover:bg-neutral-50 transition",
-                            variantSizes.length === 1 && "opacity-50 cursor-not-allowed",
-                          )}
-                          aria-label="Remove size">
-                          <X className="h-4 w-4 text-neutral-600" />
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Variant Images */}
-              <div className="rounded-2xl border border-neutral-200 bg-white p-4">
-                <div className="flex items-center gap-2 mb-2">
-                  <ImagePlus className="h-4 w-4 text-neutral-700" />
-                  <label className="text-sm font-semibold text-neutral-900">
-                    {t.variantImages}
-                  </label>
-                </div>
-
-                <input
-                  type="file"
-                  multiple
-                  accept="image/*"
-                  onChange={(e) =>
-                    setVariantFiles(e.target.files ? Array.from(e.target.files) : [])
-                  }
-                  className="block w-full text-sm text-neutral-700 file:mr-4 file:rounded-xl file:border-0
-                             file:bg-neutral-950 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-white
-                             hover:file:bg-neutral-900"
-                />
-
-                {variantFiles.length > 0 ? (
-                  <div className="mt-3 text-xs text-neutral-600">
-                    {variantFiles.length} {isRTL ? "ملف/ملفات" : "file(s)"}:{" "}
-                    <span className="font-semibold">
-                      {variantFiles.map((f) => f.name).join(", ")}
-                    </span>
-                  </div>
-                ) : null}
-              </div>
-            </div>
-
-            <DialogFooter className="mt-2">
-              <Button
-                variant="outline"
-                onClick={() => {
-                  setIsAddVariantOpen(false);
-                  resetVariantForm();
-                }}>
-                {t.cancel}
-              </Button>
-
-              <Button
-                onClick={handleAddVariant}
-                disabled={busy}
-                className={clsx(
-                  "bg-neutral-950 text-white hover:bg-neutral-900",
-                  busy && "opacity-60",
-                )}>
-                {busy ? (
-                  <Loader2Icon className="h-4 w-4 animate-spin mr-2" />
-                ) : (
-                  <Plus className="h-4 w-4 mr-2" />
-                )}
-                {t.saveVariant}
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+        {/* Add Variant Modal */}
+        <AddVariantModal
+          isAddVariantOpen={isAddVariantOpen}
+          setIsAddVariantOpen={setIsAddVariantOpen}
+          variantColor={variantColor}
+          setVariantColor={setVariantColor}
+          variantSizes={variantSizes}
+          setVariantSizes={setVariantSizes}
+          variantFiles={variantFiles}
+          setVariantFiles={setVariantFiles}
+          resetVariantForm={resetVariantForm}
+          handleAddVariant={handleAddVariant}
+          busy={busy}
+        />
       </div>
     </Layout>
   );

@@ -48,7 +48,7 @@ const variantConfig: Record<
 function Badge({ variant = "primary", children, icon = true, className }: BadgeProps) {
   const config = variantConfig[variant];
 
-  const defaultClasses = `flex items-center justify-center gap-1 px-2 py-2 rounded-lg font-semibold text-sm relative ${
+  const defaultClasses = `flex items-center justify-center gap-1 px-2 py-1 rounded-lg font-semibold text-sm relative ${
     config.textColor
   } ${config.bgColor} ${config.borderColor ? `border ${config.borderColor}` : "shadow-md"}`;
 

@@ -1,6 +1,6 @@
 import { Routes, Route, Navigate } from "react-router-dom";
 import { useSelector } from "react-redux";
-import Order from "./pages/orders/Order";
+import Orderlist from "./pages/orders/Orderlist";
 import UsersList from "./pages/users/UsersList";
 import OrderDetails from "./pages/orders/OrderDetails";
 import UserDetails from "./pages/users/UserDetails";
@@ -16,11 +16,21 @@ import ProductDetails from "./pages/products/ProductDetails";
 import ForgotPassword from "./pages/auth/ForgetPassword";
 import ResetPassword from "./pages/auth/ResetPassword";
 import Summary from "./pages/summary/Summary";
-import Unauthorized from "./components/Unauthorized";
+import Coupons from "./pages/coupons/Coupons";
+import Forbidden from "./components/Forbidden";
+import type { RootState } from "./redux/store";
+import { useEffect } from "react";
 
 function App() {
   const { adminUserInfo } = useSelector((state: any) => state.auth);
-
+  const { theme } = useSelector((state: RootState) => state.theme);
+  useEffect(() => {
+    if (theme === "dark") {
+      document.documentElement.classList.add("dark");
+    } else {
+      document.documentElement.classList.remove("dark");
+    }
+  }, [theme]);
   return (
     <Routes>
       {/* Root route redirects based on login status */}
@@ -33,24 +43,25 @@ function App() {
 
       {/* Auth */}
       <Route path="/login" element={adminUserInfo ? <Navigate to="/" replace /> : <Login />} />
-      <Route path="/unauthorized" element={<Unauthorized />} />
       <Route path="/forget-password" element={<ForgotPassword />} />
       <Route path="/reset-password/:token" element={<ResetPassword />} />
+      <Route path="/forbidden" element={<Forbidden />} />
 
       {/* Protected routes */}
       <Route path="/summary" element={<PrivateRoute element={<Summary />} />} />
-      <Route path="/orders" element={<PrivateRoute element={<Order />} />} />
+      <Route path="/orders" element={<PrivateRoute element={<Orderlist />} />} />
       <Route path="/orders/:orderId" element={<PrivateRoute element={<OrderDetails />} />} />
 
-      <Route path="/userlist" element={<PrivateRoute element={<UsersList />} />} />
-      <Route path="/userlist/:userID" element={<PrivateRoute element={<UserDetails />} />} />
+      <Route path="/users" element={<PrivateRoute element={<UsersList />} />} />
+      <Route path="/users/:userID" element={<PrivateRoute element={<UserDetails />} />} />
 
       <Route path="/delivery" element={<PrivateRoute element={<Delivery />} />} />
 
-      <Route path="/productlist" element={<PrivateRoute element={<ProductList />} />} />
-      <Route path="/productlist/:id" element={<PrivateRoute element={<ProductDetails />} />} />
+      <Route path="/products" element={<PrivateRoute element={<ProductList />} />} />
+      <Route path="/products/:id" element={<PrivateRoute element={<ProductDetails />} />} />
 
       <Route path="/discounts" element={<PrivateRoute element={<Discounts />} />} />
+      <Route path="/coupons" element={<PrivateRoute element={<Coupons />} />} />
       <Route path="/categories" element={<PrivateRoute element={<Categories />} />} />
       <Route path="/settings" element={<PrivateRoute element={<Settings />} />} />
     </Routes>

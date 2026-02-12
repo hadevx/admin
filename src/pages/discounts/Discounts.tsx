@@ -1,11 +1,11 @@
 import Layout from "../../Layout";
 import { useMemo, useState, type ChangeEvent, type JSX } from "react";
+import { useGetAllCategoriesQuery } from "../../redux/queries/categoryApi";
 import {
+  useGetDiscountStatusQuery,
   useCreateDiscountMutation,
   useDeleteDiscountMutation,
-  useGetAllCategoriesQuery,
-  useGetDiscountStatusQuery,
-} from "../../redux/queries/productApi";
+} from "../../redux/queries/discountApi";
 import { toast } from "react-toastify";
 import { Separator } from "../../components/ui/separator";
 import {
@@ -22,7 +22,7 @@ import { Link } from "react-router-dom";
 import Loader from "../../components/Loader";
 import Coupon from "../../components/Coupon";
 import { useSelector } from "react-redux";
-
+import clsx from "clsx";
 type RootState = {
   language: { lang: "en" | "ar" };
 };
@@ -201,13 +201,17 @@ function Discounts(): JSX.Element {
   const handleOriginalPriceChange = (e: ChangeEvent<HTMLInputElement>): void =>
     setOriginalPrice(e.target.value);
 
-  // Styles
-  const bentoCard = "rounded-3xl border border-black/10 bg-white/80 backdrop-blur shadow-sm";
-  const tile = "rounded-2xl border border-black/10 bg-white p-4";
+  // Styles (+ dark mode)
+  const bentoCard =
+    "rounded-3xl border border-black/10 bg-white/80 backdrop-blur shadow-sm dark:border-white/10 dark:bg-zinc-950/80";
+  const tile =
+    "rounded-2xl border border-black/10 bg-white p-4 dark:border-white/10 dark:bg-zinc-950";
   const chipBase =
     "select-none inline-flex items-center gap-2 rounded-2xl border px-3 py-2 text-sm font-semibold transition";
-  const chipOn = "bg-zinc-900 text-white border-zinc-900";
-  const chipOff = "bg-white text-zinc-900 border-black/10 hover:bg-zinc-50";
+  const chipOn =
+    "bg-zinc-900 text-white border-zinc-900 dark:bg-white dark:text-zinc-900 dark:border-white";
+  const chipOff =
+    "bg-white text-zinc-900 border-black/10 hover:bg-zinc-50 dark:bg-zinc-950 dark:text-white dark:border-white/10 dark:hover:bg-white/5";
 
   return (
     <Layout>
@@ -216,19 +220,19 @@ function Discounts(): JSX.Element {
       ) : (
         <div
           dir={language === "ar" ? "rtl" : "ltr"}
-          className="px-4 w-full max-w-4xl  min-h-screen mt-[70px] lg:mt-[50px] lg:py-6 pb-6">
+          className="px-4 w-full max-w-4xl min-h-screen mt-[70px] lg:mt-[50px] lg:py-6 pb-6 text-zinc-900 dark:text-white">
           {/* Header */}
           <div className="flex items-start justify-between gap-3">
             <div>
               <div className="flex items-center gap-2">
-                <div className="h-11 w-11 rounded-2xl bg-zinc-900 text-white grid place-items-center">
+                <div className="h-11 w-11 rounded-2xl bg-zinc-900 text-white grid place-items-center dark:bg-white dark:text-zinc-900">
                   <Ticket className="h-5 w-5" />
                 </div>
                 <div>
-                  <h1 className="text-xl lg:text-2xl font-extrabold text-zinc-900">
+                  <h1 className="text-xl lg:text-2xl font-extrabold text-zinc-900 dark:text-white">
                     {t.setDiscounts}
                   </h1>
-                  <p className="text-sm text-zinc-600">{t.subtitle}</p>
+                  <p className="text-sm text-zinc-600 dark:text-zinc-400">{t.subtitle}</p>
                 </div>
               </div>
             </div>
@@ -236,7 +240,11 @@ function Discounts(): JSX.Element {
             <button
               onClick={handleCreateDiscount}
               disabled={loadingCreate}
-              className="bg-zinc-900 drop-shadow-[0_0_10px_rgba(24,24,27,0.35)] hover:bg-zinc-800 text-white text-sm px-4 py-2.5 rounded-2xl font-semibold shadow-sm flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed">
+              className={clsx(
+                "inline-flex items-center gap-2 rounded-md px-3 py-2 text-sm font-semibold transition",
+                "bg-neutral-950 text-white hover:bg-neutral-900",
+                "dark:bg-white dark:text-zinc-900 dark:hover:bg-zinc-200",
+              )}>
               {loadingCreate ? (
                 <Loader2Icon className="h-4 w-4 animate-spin" />
               ) : (
@@ -246,33 +254,40 @@ function Discounts(): JSX.Element {
             </button>
           </div>
 
-          <Separator className="my-5 bg-black/10" />
+          <Separator className="my-5 bg-black/10 dark:bg-white/10" />
 
           {/* Bento grid */}
-          <div className="grid grid-cols-1  gap-4">
+          <div className="grid grid-cols-1 gap-4">
             {/* Create discount (wide) */}
             <section className={`${bentoCard} lg:col-span-12 p-5`}>
               <div className="flex items-center gap-2">
-                <Sparkles className="h-4 w-4 text-zinc-900" />
-                <h2 className="text-base font-bold text-zinc-900">
+                <Sparkles className="h-4 w-4 text-zinc-900 dark:text-white" />
+                <h2 className="text-base font-bold text-zinc-900 dark:text-white">
                   {language === "ar" ? "إنشاء خصم للفئات" : "Create category discount"}
                 </h2>
               </div>
 
-              <Separator className="my-4 bg-black/10" />
+              <Separator className="my-4 bg-black/10 dark:bg-white/10" />
 
               <div className="grid grid-cols-1 md:grid-cols-12 gap-3">
                 {/* Discount selector */}
                 <div className={`${tile} md:col-span-5`}>
                   <div className="flex items-center gap-2 mb-2">
-                    <Percent className="h-4 w-4 text-zinc-700" />
-                    <label className="text-sm font-semibold text-zinc-800">{t.discountBy}</label>
+                    <Percent className="h-4 w-4 text-zinc-700 dark:text-zinc-300" />
+                    <label className="text-sm font-semibold text-zinc-800 dark:text-zinc-200">
+                      {t.discountBy}
+                    </label>
                   </div>
 
                   <select
                     onChange={handleDiscountChange}
                     value={discount}
-                    className="w-full text-base cursor-pointer px-4 py-2.5 border border-black/10 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition bg-white">
+                    className={clsx(
+                      "w-full text-base cursor-pointer px-4 py-2.5 border rounded-xl shadow-sm transition",
+                      "focus:outline-none focus:ring-2 focus:ring-blue-500",
+                      "border-black/10 bg-white text-zinc-900",
+                      "dark:border-white/10 dark:bg-zinc-950 dark:text-white",
+                    )}>
                     {discountOptions.map((value) => (
                       <option key={value} value={value}>
                         {value === 0 ? t.none : `${value * 100}%`}
@@ -280,7 +295,7 @@ function Discounts(): JSX.Element {
                     ))}
                   </select>
 
-                  <div className="mt-3 text-xs text-zinc-500">
+                  <div className="mt-3 text-xs text-zinc-500 dark:text-zinc-400">
                     {language === "ar"
                       ? "اختر نسبة الخصم قبل تحديد الفئات."
                       : "Pick a rate, then select categories."}
@@ -291,12 +306,12 @@ function Discounts(): JSX.Element {
                 <div className={`${tile} md:col-span-7`}>
                   <div className="flex items-center justify-between gap-2">
                     <div className="flex items-center gap-2">
-                      <Calculator className="h-4 w-4 text-zinc-700" />
-                      <div className="text-sm font-semibold text-zinc-800">
+                      <Calculator className="h-4 w-4 text-zinc-700 dark:text-zinc-300" />
+                      <div className="text-sm font-semibold text-zinc-800 dark:text-zinc-200">
                         {t.calculateDiscount}
                       </div>
                     </div>
-                    <div className="text-xs text-zinc-500">
+                    <div className="text-xs text-zinc-500 dark:text-zinc-400">
                       {discount === 0 ? t.none : `${discount * 100}%`}
                     </div>
                   </div>
@@ -312,13 +327,18 @@ function Discounts(): JSX.Element {
                       onKeyDown={(e) => {
                         if (e.key === "-" || e.key === "+") e.preventDefault();
                       }}
-                      className="w-full text-base px-4 py-2.5 border border-black/10 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition bg-white"
+                      className={clsx(
+                        "w-full text-base px-4 py-2.5 border rounded-xl shadow-sm transition",
+                        "focus:outline-none focus:ring-2 focus:ring-blue-500",
+                        "border-black/10 bg-white text-zinc-900 placeholder:text-zinc-400",
+                        "dark:border-white/10 dark:bg-zinc-950 dark:text-white dark:placeholder:text-zinc-500",
+                      )}
                     />
                   </div>
 
-                  <div className="mt-3 rounded-2xl border border-black/10 bg-zinc-50 px-4 py-3">
-                    <div className="text-xs text-zinc-500">{t.priceAfter}</div>
-                    <div className="text-lg font-extrabold text-zinc-900">
+                  <div className="mt-3 rounded-2xl border px-4 py-3 border-black/10 bg-zinc-50 dark:border-white/10 dark:bg-white/5">
+                    <div className="text-xs text-zinc-500 dark:text-zinc-400">{t.priceAfter}</div>
+                    <div className="text-lg font-extrabold text-zinc-900 dark:text-white">
                       {originalPrice && discount ? (
                         <>
                           {calculateDiscountedPrice()} {t.currency}
@@ -334,9 +354,11 @@ function Discounts(): JSX.Element {
                 <div className={`${tile} md:col-span-12`}>
                   <div className="flex items-center justify-between gap-3 flex-wrap">
                     <div className="flex items-center gap-2">
-                      <Tags className="h-4 w-4 text-zinc-700" />
-                      <div className="text-sm font-semibold text-zinc-800">{t.categories}</div>
-                      <div className="text-xs text-zinc-500">
+                      <Tags className="h-4 w-4 text-zinc-700 dark:text-zinc-300" />
+                      <div className="text-sm font-semibold text-zinc-800 dark:text-zinc-200">
+                        {t.categories}
+                      </div>
+                      <div className="text-xs text-zinc-500 dark:text-zinc-400">
                         • {t.selected}: {selectedCategories.length}
                       </div>
                     </div>
@@ -345,24 +367,32 @@ function Discounts(): JSX.Element {
                       <button
                         type="button"
                         onClick={handleSelectAll}
-                        className="rounded-2xl border border-black/10 bg-white px-3 py-2 text-xs font-semibold text-zinc-900 hover:bg-zinc-50 transition">
+                        className={clsx(
+                          "rounded-2xl border px-3 py-2 text-xs font-semibold transition",
+                          "border-black/10 bg-white text-zinc-900 hover:bg-zinc-50",
+                          "dark:border-white/10 dark:bg-zinc-950 dark:text-white dark:hover:bg-white/5",
+                        )}>
                         {t.selectAll}
                       </button>
                       <button
                         type="button"
                         onClick={handleClear}
-                        className="rounded-2xl border border-black/10 bg-white px-3 py-2 text-xs font-semibold text-zinc-900 hover:bg-zinc-50 transition">
+                        className={clsx(
+                          "rounded-2xl border px-3 py-2 text-xs font-semibold transition",
+                          "border-black/10 bg-white text-zinc-900 hover:bg-zinc-50",
+                          "dark:border-white/10 dark:bg-zinc-950 dark:text-white dark:hover:bg-white/5",
+                        )}>
                         {t.clear}
                       </button>
                     </div>
                   </div>
 
-                  <Separator className="my-3 bg-black/10" />
+                  <Separator className="my-3 bg-black/10 dark:bg-white/10" />
 
                   {categories?.length === 0 ? (
-                    <p className="py-3 text-sm text-zinc-700">
+                    <p className="py-3 text-sm text-zinc-700 dark:text-zinc-300">
                       {t.noCategories}{" "}
-                      <Link to="/categories" className="underline text-blue-600">
+                      <Link to="/categories" className="underline text-blue-600 dark:text-blue-300">
                         {t.createCategory}
                       </Link>
                     </p>
@@ -393,15 +423,15 @@ function Discounts(): JSX.Element {
               </div>
             </section>
 
-            {/* Full-width list (optional, keeps your existing grid for coupons if you want) */}
+            {/* Discounts list */}
             {discountStatus && discountStatus.length > 0 ? (
               <section className="lg:col-span-12">
                 <div className="mt-2 flex items-center justify-between">
-                  <h3 className="text-sm font-semibold text-zinc-900">
+                  <h3 className="text-sm font-semibold text-zinc-900 dark:text-white">
                     {language === "ar" ? "الخصومات الحاليه" : "Current Discounts"}
                   </h3>
                 </div>
-                <Separator className="my-3 bg-black/10" />
+                <Separator className="my-3 bg-black/10 dark:bg-white/10" />
 
                 <div className="grid sm:grid-cols-2 md:grid-cols-2 gap-2">
                   {discountStatus.map((d) => (
@@ -415,7 +445,11 @@ function Discounts(): JSX.Element {
                       <button
                         onClick={() => handleDeleteDiscount(d._id)}
                         disabled={loadingDelete && deletingDiscountId === d._id}
-                        className="bg-zinc-900 text-white rounded-full p-2 hover:bg-zinc-800 transition disabled:opacity-60">
+                        className={clsx(
+                          "rounded-full p-2 transition disabled:opacity-60",
+                          "bg-zinc-900 text-white hover:bg-zinc-800",
+                          "dark:bg-white dark:text-zinc-900 dark:hover:bg-zinc-200",
+                        )}>
                         {loadingDelete && deletingDiscountId === d._id ? (
                           <Loader2Icon className="h-4 w-4 animate-spin" />
                         ) : (

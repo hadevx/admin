@@ -10,7 +10,6 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  // DialogFooter,
   DialogDescription,
 } from "@/components/ui/dialog";
 import {
@@ -19,7 +18,6 @@ import {
   Image as ImageIcon,
   Plus,
   X,
-  Palette,
   Ruler,
   Boxes,
   Loader2Icon,
@@ -35,7 +33,6 @@ type Variant = {
   color: string;
   sizes: VariantSize[];
   images: VariantImage[];
-  // local-only
   selectedFiles?: File[];
 };
 
@@ -158,7 +155,6 @@ const VariantItem = ({ variant, productId, language }: Props) => {
     try {
       await deleteProductVariant({ productId, variantId: localVariant._id }).unwrap();
       toast.success(t.deleted);
-      // hide item after deletion
       setLocalVariant(null as any);
     } catch (error: any) {
       toast.error(error?.data?.message || t.deleteFailed);
@@ -245,9 +241,8 @@ const VariantItem = ({ variant, productId, language }: Props) => {
           <button
             type="button"
             onClick={() => setIsOpen(true)}
-            className="inline-flex items-center gap-2 rounded-2xl border border-neutral-200 bg-white px-3 py-2 text-xs font-semibold text-neutral-900 hover:bg-neutral-50 transition">
+            className="inline-flex items-center gap-2 rounded-md border border-neutral-200 bg-white px-3 py-2 text-xs font-semibold text-neutral-900 hover:bg-neutral-50 transition">
             <PencilLine className="h-4 w-4" />
-            {t.edit}
           </button>
 
           <button
@@ -255,7 +250,7 @@ const VariantItem = ({ variant, productId, language }: Props) => {
             onClick={handleDeleteVariant}
             disabled={deleting}
             className={clsx(
-              "inline-flex items-center gap-2 rounded-2xl px-3 py-2 text-xs font-semibold transition",
+              "inline-flex items-center gap-2 rounded-md px-3 py-2 text-xs font-semibold transition",
               deleting
                 ? "bg-rose-200 text-rose-900 cursor-not-allowed"
                 : "bg-rose-50 text-rose-700 border border-rose-200 hover:bg-rose-100",
@@ -265,52 +260,37 @@ const VariantItem = ({ variant, productId, language }: Props) => {
             ) : (
               <Trash2 className="h-4 w-4" />
             )}
-            {t.delete}
           </button>
         </div>
       </div>
 
       {/* Bento grid view */}
       <div className="px-4 sm:px-5 pb-5 grid grid-cols-1 lg:grid-cols-12 gap-4">
-        {/* Images + color */}
-        <div className={clsx(tile, "p-4 lg:col-span-5")}>
-          <div className="flex items-center justify-between gap-3">
-            <div className="flex items-center gap-2">
-              <div className="h-9 w-9 rounded-2xl border border-neutral-200 bg-neutral-50 grid place-items-center">
-                <Palette className="h-4 w-4 text-neutral-900" />
-              </div>
-              <div>
-                <div className="text-xs text-neutral-500">{t.colorImages}</div>
-                <div className="text-sm font-semibold text-neutral-950">
-                  {localVariant.color || t.empty}
-                </div>
-              </div>
-            </div>
-            <span className="text-xs font-semibold text-neutral-500">
-              {localVariant.images?.length ? `${localVariant.images.length}` : t.noImages}
-            </span>
-          </div>
-
-          <div className="mt-3 flex flex-wrap gap-2">
+        {/* IMAGES ONLY (one side) */}
+        <div className={clsx(tile, "p-2 lg:col-span-5")}>
+          {/* Bigger images */}
+          <div className=" ">
             {localVariant.images?.length ? (
               localVariant.images.map((img, i) => (
-                <div key={i} className="relative h-14 w-14">
+                <div
+                  key={i}
+                  className="relative w-full overflow-hidden rounded-2xl border border-neutral-200 bg-neutral-50 aspect-[5/4] ">
                   <img
                     src={img.url}
                     alt={`variant-${i}`}
-                    className="h-full w-full object-cover rounded-xl border border-neutral-200"
+                    className="absolute inset-0 h-full w-full object-cover"
                   />
                 </div>
               ))
             ) : (
-              <div className="h-14 w-14 flex items-center justify-center bg-neutral-50 rounded-xl border border-neutral-200">
-                <ImageIcon className="w-5 h-5 text-neutral-400" />
+              <div className="w-full flex items-center justify-center bg-neutral-50 rounded-2xl border border-neutral-200 aspect-[5/4] lg:aspect-[16/10]">
+                <ImageIcon className="w-6 h-6 text-neutral-400" />
               </div>
             )}
           </div>
         </div>
 
-        {/* Sizes / Stock */}
+        {/* SIZES / STOCK ONLY (other side) - color removed from here */}
         <div className={clsx(tile, "p-4 lg:col-span-7")}>
           <div className="flex items-center justify-between gap-3">
             <div className="flex items-center gap-2">
@@ -338,8 +318,8 @@ const VariantItem = ({ variant, productId, language }: Props) => {
             <table className="w-full text-sm">
               <thead className="bg-neutral-50 text-neutral-600">
                 <tr>
-                  <th className="px-3 py-2 text-left font-semibold">{t.size}</th>
-                  <th className="px-3 py-2 text-left font-semibold">{t.stock}</th>
+                  <th className="px-3 py-2 text-right font-semibold">{t.size}</th>
+                  <th className="px-3 py-2 text-right font-semibold">{t.stock}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-neutral-200 bg-white">
@@ -358,7 +338,7 @@ const VariantItem = ({ variant, productId, language }: Props) => {
       {/* Edit Modal */}
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
         <DialogContent className="w-[calc(100vw-1rem)] sm:w-[calc(100vw-2rem)] max-w-2xl p-0 overflow-hidden max-h-[90vh] flex flex-col rounded-3xl">
-          {/* ================= HEADER ================= */}
+          {/* Header */}
           <div className="px-4 sm:px-6 py-4 border-b bg-white shrink-0">
             <DialogHeader>
               <DialogTitle className="text-lg sm:text-xl font-bold">{t.editVariant}</DialogTitle>
@@ -368,9 +348,9 @@ const VariantItem = ({ variant, productId, language }: Props) => {
             </DialogHeader>
           </div>
 
-          {/* ================= BODY ================= */}
+          {/* Body */}
           <div className="flex-1 min-h-0 overflow-y-auto px-4 sm:px-6 py-6 bg-neutral-50 space-y-4">
-            {/* ================= COLOR ================= */}
+            {/* Color */}
             <div className={clsx(tile, "p-4")}>
               <div className="flex items-center justify-between mb-3">
                 <div>
@@ -387,7 +367,6 @@ const VariantItem = ({ variant, productId, language }: Props) => {
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-12 gap-2">
-                {/* Type color */}
                 <div className="sm:col-span-7">
                   <input
                     value={localVariant.color}
@@ -397,7 +376,6 @@ const VariantItem = ({ variant, productId, language }: Props) => {
                   />
                 </div>
 
-                {/* Select color */}
                 <div className="sm:col-span-5">
                   <select
                     value=""
@@ -416,7 +394,7 @@ const VariantItem = ({ variant, productId, language }: Props) => {
               </div>
             </div>
 
-            {/* ================= SIZES ================= */}
+            {/* Sizes */}
             <div className={clsx(tile, "p-4")}>
               <div className="flex items-center justify-between mb-3">
                 <div>
@@ -452,7 +430,6 @@ const VariantItem = ({ variant, productId, language }: Props) => {
                   return (
                     <div key={idx} className="rounded-xl border bg-white p-3 space-y-2">
                       <div className="grid grid-cols-1 sm:grid-cols-12 gap-2">
-                        {/* Type size */}
                         <div className="sm:col-span-5">
                           <input
                             value={row.size}
@@ -462,7 +439,6 @@ const VariantItem = ({ variant, productId, language }: Props) => {
                           />
                         </div>
 
-                        {/* Select size */}
                         <div className="sm:col-span-4">
                           <select
                             value=""
@@ -477,7 +453,6 @@ const VariantItem = ({ variant, productId, language }: Props) => {
                           </select>
                         </div>
 
-                        {/* Stock */}
                         <div className="sm:col-span-2">
                           <input
                             type="number"
@@ -488,7 +463,6 @@ const VariantItem = ({ variant, productId, language }: Props) => {
                           />
                         </div>
 
-                        {/* Remove */}
                         <div className="sm:col-span-1 flex justify-end">
                           <button
                             type="button"
@@ -507,23 +481,30 @@ const VariantItem = ({ variant, productId, language }: Props) => {
               </div>
             </div>
 
-            {/* ================= IMAGES ================= */}
+            {/* Images */}
             <div className={clsx(tile, "p-4")}>
               <p className="text-sm font-semibold mb-2">{t.images}</p>
 
-              <div className="flex flex-wrap gap-2 mb-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
                 {localVariant.images.length ? (
                   localVariant.images.map((img, i) => (
-                    <div key={i} className="relative w-16 h-16">
-                      <img src={img.url} className="w-full h-full rounded-xl object-cover border" />
+                    <div
+                      key={i}
+                      className="relative w-full overflow-hidden rounded-2xl border bg-white aspect-[5/4]">
+                      <img
+                        src={img.url}
+                        className="absolute inset-0 w-full h-full object-cover"
+                        alt={`img-${i}`}
+                      />
                       <button
+                        type="button"
                         onClick={() =>
                           setLocalVariant({
                             ...localVariant,
                             images: localVariant.images.filter((_, x) => x !== i),
                           })
                         }
-                        className="absolute -top-2 -right-2 bg-rose-500 text-white rounded-full p-1">
+                        className="absolute top-2 right-2 bg-rose-500 text-white rounded-full p-1 shadow">
                         <X size={12} />
                       </button>
                     </div>
@@ -547,7 +528,7 @@ const VariantItem = ({ variant, productId, language }: Props) => {
             </div>
           </div>
 
-          {/* ================= FOOTER ================= */}
+          {/* Footer */}
           <div className="px-4 sm:px-6 py-4 border-t bg-white shrink-0 flex justify-end gap-3">
             <button
               onClick={() => setIsOpen(false)}

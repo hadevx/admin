@@ -46,6 +46,20 @@ const userApi = api.injectEndpoints({
         body: data,
       }),
     }),
+    toggleBlockUser: builder.mutation({
+      query: (data: any) => ({
+        url: `/api/users/${data.userId}/block`,
+        method: "PUT",
+        body: data,
+      }),
+    }),
+    toggleVIPUser: builder.mutation({
+      query: (data: any) => ({
+        url: `/api/users/${data.userId}/vip`,
+        method: "PUT",
+        body: data,
+      }),
+    }),
     getGovernorate: builder.query({
       query: () => ({
         url: `/api/users/governorates`,
@@ -63,4 +77,6 @@ export const {
   useDeleteUserMutation,
   useUpdateUserMutation,
   useGetGovernorateQuery,
+  useToggleBlockUserMutation,
+  useToggleVIPUserMutation,
 } = userApi;
