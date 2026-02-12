@@ -24,7 +24,6 @@ import { toast } from "react-toastify";
 import { Separator } from "./ui/separator";
 import { useEffect, useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import ThemeToggle from "./ThemeToggle";
 
 function SideMenu() {
   const [logoutApiCall, { isLoading: loadingLogout }] = useLogoutMutation();
