@@ -31,12 +31,8 @@ import {
   Info,
   Printer,
   RefreshCw,
-  Download,
   Table2,
-  RotateCcw,
   Copy,
-  Sigma,
-  Percent as PercentIcon,
 } from "lucide-react";
 import clsx from "clsx";
 
@@ -86,11 +82,9 @@ const SummaryCharts = (): JSX.Element => {
   const [showLabels, setShowLabels] = useState<boolean>(true);
   const [search, setSearch] = useState<string>("");
 
-  // new features
-  const [normalization, setNormalization] = useState<Normalization>("raw"); // raw vs percent
-  const [minSlicePercent, setMinSlicePercent] = useState<number>(4); // hide tiny pie labels / slices
-  const [autoRefresh, setAutoRefresh] = useState<boolean>(false);
-  const [autoRefreshSec, setAutoRefreshSec] = useState<number>(30);
+  // features used in UI/logic
+  const [normalization, setNormalization] = useState<Normalization>("raw");
+  const [minSlicePercent, setMinSlicePercent] = useState<number>(4);
 
   // last updated
   const [lastUpdatedAt, setLastUpdatedAt] = useState<Date | null>(null);
@@ -104,21 +98,6 @@ const SummaryCharts = (): JSX.Element => {
       if (firstLoadRef.current) firstLoadRef.current = false;
     }
   }, [isLoading]);
-
-  // Auto refresh (re-fetch data)
-  useEffect(() => {
-    if (!autoRefresh) return;
-
-    const ms = Math.max(10, Number(autoRefreshSec) || 30) * 1000;
-    const id = window.setInterval(() => {
-      refetchUsers?.();
-      refetchOrders?.();
-      refetchRevenue?.();
-      setLastUpdatedAt(new Date());
-    }, ms);
-
-    return () => window.clearInterval(id);
-  }, [autoRefresh, autoRefreshSec, refetchUsers, refetchOrders, refetchRevenue]);
 
   const refreshNow = () => {
     refetchUsers?.();
@@ -184,7 +163,6 @@ const SummaryCharts = (): JSX.Element => {
   const revenueChartData = useMemo(
     () =>
       revenuStats?.monthly?.map((item: any) => ({
-        // keeping your original year behavior
         label: new Date(2025, item._id - 1).toLocaleString(isRTL ? "ar" : "en", { month: "short" }),
         value: item.totalRevenue || 0,
       })) || [],
@@ -252,10 +230,8 @@ const SummaryCharts = (): JSX.Element => {
   const totalSafe = rawTotal || 1;
 
   const chartData = useMemo(() => {
-    // For pie: optionally normalize to percent (nice when comparing categories)
     if (normalization !== "percent") return filteredSortedData;
 
-    // Only makes sense for users/orders; revenue percent is still allowed but may confuse—keep it consistent anyway.
     return filteredSortedData.map((d: any) => ({
       ...d,
       value: (Number(d.value) || 0) / totalSafe,
@@ -300,8 +276,12 @@ const SummaryCharts = (): JSX.Element => {
           ? "الإيرادات لكل شهر"
           : "Revenue per month";
 
+  const money = (n?: number) => {
+    if (typeof n !== "number") return "—";
+    return `${n.toFixed(3)} ${language === "ar" ? "دك" : "KD"}`;
+  };
+
   const formatTooltip = (value: any, _name?: any, payload?: any) => {
-    // if normalized percent, show both % + raw
     if (normalization === "percent") {
       const pct = Number(value) * 100;
       const raw = payload?.payload?.__raw;
@@ -384,7 +364,7 @@ const SummaryCharts = (): JSX.Element => {
       onClick={onClick}
       className={clsx(
         "inline-flex items-center gap-2 rounded-full border px-3 py-2 text-xs font-semibold transition",
-        "border-neutral-200  text-neutral-900 ",
+        "border-neutral-200 text-neutral-900",
         "dark:border-neutral-800 dark:bg-neutral-900 dark:text-neutral-100 dark:hover:bg-neutral-800/70",
         active
           ? "border-neutral-950 bg-neutral-950 text-white dark:border-neutral-50 dark:bg-neutral-50 dark:text-neutral-950"
@@ -394,43 +374,14 @@ const SummaryCharts = (): JSX.Element => {
     </button>
   );
 
-  // Export CSV (filteredSortedData, raw numbers)
-  const exportCSV = () => {
-    const rows = filteredSortedData.map((d: any) => ({
-      label: String(d.label ?? ""),
-      value: Number(d.value) || 0,
-    }));
-
-    const header = ["label", "value"];
-    const csv = [
-      header.join(","),
-      ...rows.map((r) => {
-        const safeLabel = `"${String(r.label).replace(/"/g, '""')}"`;
-        return [safeLabel, String(r.value)].join(",");
-      }),
-    ].join("\n");
-
-    const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
-    const url = URL.createObjectURL(blob);
-
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `summary_${activeChart}_${new Date().toISOString().slice(0, 10)}.csv`;
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    URL.revokeObjectURL(url);
-  };
-
   const copySummary = async () => {
-    const title = chartTitle;
     const totalText =
       activeChart === "revenue"
         ? `${chartStats.total.toFixed(3)} KD`
         : `${Math.round(chartStats.total)} ${unit}`;
 
     const lines = [
-      `${title}`,
+      `${chartTitle}`,
       `${isRTL ? "المجموع" : "Total"}: ${totalText}`,
       `${isRTL ? "العناصر" : "Items"}: ${chartStats.count}`,
       "",
@@ -442,12 +393,6 @@ const SummaryCharts = (): JSX.Element => {
     } catch {
       // silent (some browsers block)
     }
-  };
-
-  // money helpers for summary tiles
-  const money = (n?: number) => {
-    if (typeof n !== "number") return "—";
-    return `${n.toFixed(3)} ${language === "ar" ? "دك" : "KD"}`;
   };
 
   return (
@@ -470,9 +415,7 @@ const SummaryCharts = (): JSX.Element => {
                 {isRTL ? "لوحة الإحصائيات" : "Summary Dashboard"}
               </h1>
               <p className="mt-1 text-sm text-neutral-600 dark:text-neutral-400">
-                {isRTL
-                  ? "نظرة عامة + ميزات تصفية وتصدير وتحديث تلقائي."
-                  : "Overview + filters, export, and auto refresh."}
+                {isRTL ? "نظرة عامة + ميزات تصفية." : "Overview + filters."}
               </p>
             </div>
 
@@ -564,7 +507,6 @@ const SummaryCharts = (): JSX.Element => {
                 </div>
 
                 <div className="flex flex-wrap items-center gap-2">
-                  {/* View mode */}
                   <ChipBtn active={viewMode === "chart"} onClick={() => setViewMode("chart")}>
                     <Eye className="h-4 w-4" />
                     {isRTL ? "رسم" : "Chart"}
@@ -656,9 +598,23 @@ const SummaryCharts = (): JSX.Element => {
                   {showLabels ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
                   {isRTL ? "القيم" : "Values"}
                 </ChipBtn>
+
+                {/* Kept as state & used for chart behavior; no extra imports */}
+                <ChipBtn
+                  active={normalization === "percent"}
+                  onClick={() => setNormalization((v) => (v === "raw" ? "percent" : "raw"))}>
+                  {isRTL ? "نِسَب" : "Percent"}
+                </ChipBtn>
+
+                <ChipBtn
+                  active={minSlicePercent > 0}
+                  onClick={() => setMinSlicePercent((v) => (v === 0 ? 4 : 0))}>
+                  {isRTL ? "إخفاء الصغير" : "Hide tiny"}
+                </ChipBtn>
               </div>
             </div>
 
+            {/* Summary box */}
             <div className="lg:col-span-5 rounded-3xl border backdrop-blur shadow-sm p-4 border-neutral-200 bg-white/80 dark:border-neutral-800 dark:bg-neutral-900/60">
               <div className="flex items-center gap-2 mb-3 text-sm font-semibold text-neutral-900 dark:text-neutral-50">
                 <Info className="h-4 w-4" />
@@ -667,6 +623,7 @@ const SummaryCharts = (): JSX.Element => {
 
               <div className="grid grid-cols-2 gap-3">
                 <StatChip label={isRTL ? "عدد العناصر" : "Items"} value={`${chartStats.count}`} />
+
                 <StatChip
                   label={isRTL ? "المجموع" : "Sum"}
                   value={
@@ -675,6 +632,7 @@ const SummaryCharts = (): JSX.Element => {
                       : `${Math.round(chartStats.total)} ${unit}`
                   }
                 />
+
                 <StatChip
                   label={isRTL ? "الأعلى" : "Max"}
                   value={
@@ -683,6 +641,7 @@ const SummaryCharts = (): JSX.Element => {
                       : `${Math.round(chartStats.max)} ${unit}`
                   }
                 />
+
                 <StatChip
                   label={isRTL ? "المتوسط" : "Avg"}
                   value={
@@ -754,6 +713,7 @@ const SummaryCharts = (): JSX.Element => {
                           </tr>
                         );
                       })}
+
                       {!filteredSortedData.length ? (
                         <tr>
                           <td
@@ -826,7 +786,6 @@ const SummaryCharts = (): JSX.Element => {
                         <Tooltip formatter={formatTooltip as any} />
                         {showLegend ? <Legend formatter={() => legendLabel} /> : null}
 
-                        {/* keep your stroke but also look OK on dark bg */}
                         <Line
                           type="monotone"
                           dataKey="value"
@@ -870,12 +829,11 @@ const SummaryCharts = (): JSX.Element => {
             </CardContent>
           </Card>
 
-          {/* Small hint row */}
           <div className="mt-3 text-xs text-neutral-500 dark:text-neutral-400 flex flex-wrap items-center gap-2">
             <Info className="h-4 w-4" />
             {isRTL
-              ? "ميزات إضافية: جدول، تصدير CSV، نسخ الملخص، تحديث تلقائي، إخفاء نسب صغيرة في الدائري."
-              : "Extra features: table view, CSV export, copy summary, auto refresh, hide tiny pie % labels."}
+              ? "ميزات إضافية: جدول، نسخ الملخص، تغيير النِسَب، إخفاء نسب صغيرة في الدائري."
+              : "Extra features: table view, copy summary, percent mode, hide tiny pie % labels."}
           </div>
         </div>
       )}
