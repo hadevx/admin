@@ -218,7 +218,7 @@ function ProductDetails(): JSX.Element {
       await deleteProduct(productId as string);
       toast.success(t.deleted);
       refetchProducts();
-      navigate("/productlist");
+      navigate("/products");
     } catch (e: any) {
       toast.error(e?.data?.message || "Delete failed");
     }

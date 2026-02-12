@@ -242,7 +242,7 @@ function Customers() {
                       <button
                         key={user._id}
                         type="button"
-                        onClick={() => navigate(`/userlist/${user._id}`)}
+                        onClick={() => navigate(`/users/${user._id}`)}
                         className="w-full text-left rounded-xl border bg-white dark:bg-zinc-950 dark:border-white/10 p-4 active:scale-[0.99] transition">
                         <div className="flex items-start justify-between gap-3">
                           {/* ✅ Left: avatar + name/email */}

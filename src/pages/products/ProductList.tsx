@@ -556,7 +556,7 @@ function ProductList() {
                       return (
                         <button
                           key={product?._id}
-                          onClick={() => navigate(`/productlist/${product?._id}`)}
+                          onClick={() => navigate(`/products/${product?._id}`)}
                           className="w-full text-left rounded-2xl border bg-white p-3 shadow-sm hover:bg-gray-50 transition dark:bg-neutral-950 dark:border-neutral-800 dark:hover:bg-neutral-900/60">
                           <div className="flex gap-3 items-stretch">
                             <div className="shrink-0">

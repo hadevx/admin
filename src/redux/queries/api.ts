@@ -2,8 +2,8 @@ import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 import type { BaseQueryFn, FetchArgs, FetchBaseQueryError } from "@reduxjs/toolkit/query";
 
 const rawBaseQuery = fetchBaseQuery({
-  // baseUrl: "http://localhost:4001",
-  baseUrl: "https://backend.webschema.online",
+  baseUrl: "http://localhost:4001",
+  // baseUrl: "https://backend.webschema.online",
   credentials: "include",
 });
 
