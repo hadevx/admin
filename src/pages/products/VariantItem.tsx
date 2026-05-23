@@ -276,7 +276,7 @@ const VariantItem = ({ variant, productId, language }: Props) => {
                   key={i}
                   className="relative w-full overflow-hidden rounded-2xl border border-neutral-200 bg-neutral-50 aspect-[5/4] ">
                   <img
-                    src={img.url}
+                    src={img.url || "/placeholder.svg"}
                     alt={`variant-${i}`}
                     className="absolute inset-0 h-full w-full object-cover"
                   />

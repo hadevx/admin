@@ -527,7 +527,7 @@ function ProductDetails(): JSX.Element {
               {!clickEditProduct ? (
                 p?.image?.length ? (
                   <img
-                    src={p.image[0].url}
+                    src={p.image[0].url || "/placeholder.svg"}
                     alt="Product"
                     className="w-full h-[360px] sm:h-[420px] object-cover rounded-2xl"
                   />

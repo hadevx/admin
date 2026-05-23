@@ -486,7 +486,7 @@ function ProductList() {
                             <div className="flex items-center gap-2 max-w-64">
                               <img
                                 className="w-16 h-16 object-cover rounded-md bg-gray-50 border shrink-0 dark:bg-neutral-900/50 dark:border-neutral-800"
-                                src={product?.image?.[0]?.url}
+                                src={product?.image?.[0]?.url || "/placeholder.svg"}
                                 alt="thumbnail"
                                 loading="lazy"
                               />
