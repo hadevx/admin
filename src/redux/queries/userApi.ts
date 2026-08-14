@@ -11,7 +11,9 @@ const userApi = api.injectEndpoints({
     }),
     getUsers: builder.query({
       query: ({ pageNumber = 1, keyword = "" }) => ({
-        url: `/api/users?pageNumber=${pageNumber}&keyword=${keyword}`,
+        // encodeURIComponent: an unescaped "&" or "#" in the search box used to
+        // truncate the query string and silently return unfiltered results.
+        url: `/api/users?pageNumber=${pageNumber}&keyword=${encodeURIComponent(keyword)}`,
       }),
       providesTags: ["User"],
     }),
@@ -20,11 +22,13 @@ const userApi = api.injectEndpoints({
       query: (userId: any) => ({
         url: `/api/users/address/${userId}`,
       }),
+      providesTags: ["User"],
     }),
     getUserDetails: builder.query({
       query: (userId: any) => ({
         url: `/api/users/${userId}`,
       }),
+      providesTags: ["User"],
     }),
     logout: builder.mutation({
       query: () => ({
@@ -45,13 +49,17 @@ const userApi = api.injectEndpoints({
         method: "PUT",
         body: data,
       }),
+      invalidatesTags: ["User"],
     }),
+    // `blockReason` is optional and only meaningful when this call blocks the
+    // user; the server clears it on unblock.
     toggleBlockUser: builder.mutation({
       query: (data: any) => ({
         url: `/api/users/${data.userId}/block`,
         method: "PUT",
-        body: data,
+        body: { blockReason: data.blockReason ?? "" },
       }),
+      invalidatesTags: ["User"],
     }),
     toggleVIPUser: builder.mutation({
       query: (data: any) => ({
@@ -59,11 +67,13 @@ const userApi = api.injectEndpoints({
         method: "PUT",
         body: data,
       }),
+      invalidatesTags: ["User"],
     }),
     getGovernorate: builder.query({
       query: () => ({
         url: `/api/users/governorates`,
       }),
+      providesTags: ["User"],
     }),
   }),
 });

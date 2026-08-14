@@ -64,6 +64,7 @@ function UserDetails() {
 
   const [isModalOpen, setIsModalOpen] = useState(false); // delete modal
   const [isBlockModalOpen, setIsBlockModalOpen] = useState(false); // block/unblock modal
+  const [blockReason, setBlockReason] = useState("");
   const [isVipModalOpen, setIsVipModalOpen] = useState(false); // vip toggle modal
   const [showMap, setShowMap] = useState(false);
 
@@ -98,6 +99,15 @@ function UserDetails() {
       unblockedOk: ar ? "تم إلغاء حظر المستخدم" : "User unblocked",
       blockErr: ar ? "فشل تحديث حالة الحظر" : "Failed to update block status",
       blockedBadge: ar ? "محظور" : "Blocked",
+
+      // optional block reason
+      optional: ar ? "اختياري" : "Optional",
+      blockReasonLabel: ar ? "سبب الحظر" : "Reason for blocking",
+      blockReasonPh: ar ? "مثال: نشاط مشبوه" : "e.g. repeated fraudulent orders",
+      blockReasonHint: ar
+        ? "يمكنك تركه فارغًا. سيظهر السبب في صفحة المستخدم."
+        : "You can leave this blank. The reason shows on the user's page.",
+      blockReasonTitle: ar ? "سبب الحظر" : "Reason for blocking",
 
       // VIP
       vip: ar ? "VIP" : "VIP",
@@ -176,7 +186,11 @@ function UserDetails() {
         return;
       }
 
-      const res: any = await toggleBlockUser({ userId: userID }).unwrap();
+      // Only meaningful when blocking; the server clears it on unblock.
+      const res: any = await toggleBlockUser({
+        userId: userID,
+        blockReason: user?.isBlocked ? "" : blockReason.trim(),
+      }).unwrap();
 
       const nextBlocked =
         typeof res?.isBlocked === "boolean"
@@ -188,6 +202,7 @@ function UserDetails() {
       toast.success(nextBlocked ? t.blockedOk : t.unblockedOk);
 
       setIsBlockModalOpen(false);
+      setBlockReason("");
       refetchUser();
       refetchUsers();
     } catch (error: any) {
@@ -357,13 +372,13 @@ function UserDetails() {
         tileClassName,
       )}>
       <div className="flex items-start gap-3">
-        <div className="mt-0.5 text-zinc-500 dark:text-zinc-400">{icon}</div>
+        <div className="mt-0.5 text-muted-foreground">{icon}</div>
         <div className="min-w-0">
-          <p className="text-xs font-semibold text-zinc-500 dark:text-zinc-400">{label}</p>
+          <p className="text-xs font-semibold text-muted-foreground">{label}</p>
           <p
             className={clsx(
               "mt-1 text-sm font-bold break-words",
-              value ? "text-zinc-900 dark:text-white" : "text-zinc-400 dark:text-zinc-500",
+              value ? "text-foreground" : "text-muted-foreground",
               valueClassName,
             )}>
             {value || "—"}
@@ -399,19 +414,14 @@ function UserDetails() {
       {loading ? (
         <Loader />
       ) : (
-        <div
-          dir={t.dir}
-          className={clsx(
-            "w-full lg:max-w-4xl min-h-screen px-4 pb-10 mt-[70px] lg:mt-[50px]",
-            "text-zinc-900 dark:text-white",
-          )}>
+        <div className="me-auto w-full max-w-5xl animate-fade-up">
           {/* Top bar */}
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div className="min-w-0">
-              <h1 className="text-xl font-bold text-zinc-900 dark:text-white">{t.pageTitle}</h1>
+              <h1 className="text-xl font-extrabold tracking-tight sm:text-2xl">{t.pageTitle}</h1>
             </div>
 
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
               {/* VIP Toggle */}
               {!user?.isAdmin && (
                 <Button
@@ -419,7 +429,7 @@ function UserDetails() {
                   onClick={() => setIsVipModalOpen(true)}
                   variant="outline"
                   className={clsx(
-                    "border-black/10 dark:border-white/10 dark:bg-transparent",
+                    "border-border dark:bg-transparent",
                     user?.isVIP
                       ? "text-amber-700 hover:text-amber-800 dark:text-amber-200 dark:hover:text-amber-100"
                       : "text-zinc-700 hover:text-zinc-900 dark:text-zinc-200 dark:hover:text-white",
@@ -440,7 +450,7 @@ function UserDetails() {
                   onClick={() => setIsBlockModalOpen(true)}
                   variant="outline"
                   className={clsx(
-                    "border-black/10 dark:border-white/10 dark:bg-transparent",
+                    "border-border dark:bg-transparent",
                     user?.isBlocked
                       ? "text-emerald-700 hover:text-emerald-800 dark:text-emerald-200 dark:hover:text-emerald-100"
                       : "text-rose-700 hover:text-rose-800 dark:text-rose-200 dark:hover:text-rose-100",
@@ -467,7 +477,27 @@ function UserDetails() {
             </div>
           </div>
 
-          <Separator className="my-5 bg-black/10 dark:bg-white/10" />
+          <Separator className="my-5 bg-border" />
+
+          {/* Why this user is blocked — only when a reason was recorded */}
+          {user?.isBlocked && user?.blockReason ? (
+            <div className="mb-4 rounded-2xl border border-rose-200 bg-rose-50 p-4 dark:border-rose-500/25 dark:bg-rose-500/10">
+              <div className="flex items-center gap-2 text-rose-700 dark:text-rose-300">
+                <Ban className="size-4 shrink-0" />
+                <span className="text-sm font-bold">{t.blockReasonTitle}</span>
+              </div>
+              <p className="mt-1.5 whitespace-pre-wrap break-words text-sm text-foreground">
+                {user.blockReason}
+              </p>
+              {user?.blockedAt ? (
+                <p className="mt-1 text-xs text-muted-foreground">
+                  {new Date(user.blockedAt).toLocaleString(
+                    language === "ar" ? "ar-KW" : "en-US",
+                  )}
+                </p>
+              ) : null}
+            </div>
+          ) : null}
 
           <div className="grid grid-cols-1 lg:grid-cols-1 gap-4">
             <div className="lg:col-span-1 space-y-4">
@@ -476,13 +506,13 @@ function UserDetails() {
                 <div className="flex items-start gap-4">
                   <div className="min-w-0 flex-1">
                     <div className="flex items-start justify-start gap-3">
-                      <div className="h-12 w-12 rounded-lg bg-zinc-900 text-white grid place-items-center font-bold dark:bg-white dark:text-zinc-900">
+                      <div className="grid size-12 place-items-center rounded-xl bg-emphasis font-bold text-emphasis-foreground">
                         {initials}
                       </div>
 
                       <div className="min-w-0 flex-1">
                         <div className="flex flex-wrap items-center gap-2">
-                          <h2 className="text-base font-bold text-zinc-900 dark:text-white truncate">
+                          <h2 className="text-base font-bold text-foreground truncate">
                             {user?.name || "—"}
                           </h2>
 
@@ -498,7 +528,7 @@ function UserDetails() {
                           ) : null}
                         </div>
 
-                        <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400 truncate">
+                        <p className="mt-1 text-sm text-muted-foreground truncate">
                           {user?.email || "—"}
                         </p>
                       </div>
@@ -537,7 +567,7 @@ function UserDetails() {
                               "h-4 w-4",
                               user?.isVIP
                                 ? "text-amber-600 dark:text-amber-300"
-                                : "text-zinc-400 dark:text-zinc-500",
+                                : "text-muted-foreground",
                             )}
                           />
                         }
@@ -565,11 +595,11 @@ function UserDetails() {
               {/* Address card */}
               <div className="rounded-2xl border bg-white p-5 shadow-sm border-black/10 dark:bg-zinc-950 dark:border-white/10">
                 <div className="flex items-center justify-between">
-                  <h2 className="text-base font-bold text-zinc-900 dark:text-white">{t.address}</h2>
-                  <MapPin className="h-4 w-4 text-zinc-400 dark:text-zinc-500" />
+                  <h2 className="text-base font-bold text-foreground">{t.address}</h2>
+                  <MapPin className="h-4 w-4 text-muted-foreground" />
                 </div>
 
-                <Separator className="my-4 bg-black/10 dark:bg-white/10" />
+                <Separator className="my-4 bg-border" />
 
                 {userAddress ? (
                   <>
@@ -585,10 +615,10 @@ function UserDetails() {
                       <div className="mt-5">
                         <div className="flex flex-wrap items-center gap-2 justify-between">
                           <div className="min-w-0">
-                            <p className="text-sm font-bold text-zinc-900 dark:text-white">
+                            <p className="text-sm font-bold text-foreground">
                               {t.map}
                             </p>
-                            <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">
+                            <p className="text-xs text-muted-foreground mt-0.5">
                               {t.mapHint}
                             </p>
                           </div>
@@ -598,7 +628,7 @@ function UserDetails() {
                               type="button"
                               variant="outline"
                               onClick={() => setShowMap((v) => !v)}
-                              className="border-black/10 dark:border-white/10 dark:bg-transparent">
+                              className="border-border dark:bg-transparent">
                               <MapPin className="h-4 w-4 me-2" />
                               {showMap ? t.hideMap : t.showMap}
                             </Button>
@@ -626,7 +656,7 @@ function UserDetails() {
                               />
                             </div>
 
-                            <p className="mt-2 text-[11px] text-zinc-500 dark:text-zinc-400 break-words">
+                            <p className="mt-2 text-[11px] text-muted-foreground break-words">
                               <span className="font-semibold">
                                 {isRTL ? "العنوان:" : "Address:"}
                               </span>{" "}
@@ -638,7 +668,7 @@ function UserDetails() {
                     ) : null}
                   </>
                 ) : (
-                  <p className="text-sm text-zinc-500 dark:text-zinc-400">{t.noAddress}</p>
+                  <p className="text-sm text-muted-foreground">{t.noAddress}</p>
                 )}
               </div>
             </div>
@@ -647,15 +677,15 @@ function UserDetails() {
             <div>
               <div className="rounded-2xl border bg-white p-5 shadow-sm border-black/10 dark:bg-zinc-950 dark:border-white/10">
                 <div className="flex items-center justify-between gap-3">
-                  <h2 className="text-base font-bold text-zinc-900 dark:text-white">
+                  <h2 className="text-base font-bold text-foreground">
                     {t.orders}
-                    <span className="ms-2 text-sm font-semibold text-zinc-500 dark:text-zinc-400">
+                    <span className="ms-2 text-sm font-semibold text-muted-foreground">
                       {userOrders?.length ? `(${userOrders.length})` : ""}
                     </span>
                   </h2>
                 </div>
 
-                <Separator className="my-4 bg-black/10 dark:bg-white/10" />
+                <Separator className="my-4 bg-border" />
 
                 {userOrders?.length > 0 ? (
                   <div className="space-y-4">
@@ -666,10 +696,10 @@ function UserDetails() {
                         className="group block rounded-2xl border border-black/10 bg-white p-5 hover:bg-zinc-50 hover:border-black/20 hover:shadow-sm transition-all dark:bg-zinc-950 dark:border-white/10 dark:hover:bg-white/5">
                         <div className="flex flex-wrap items-start justify-between gap-3">
                           <div className="min-w-0">
-                            <p className="text-sm font-bold text-zinc-900 dark:text-white">
+                            <p className="text-sm font-bold text-foreground">
                               #{String(order._id || "").slice(-6)}
                             </p>
-                            <p className="mt-0.5 text-xs text-zinc-500 dark:text-zinc-400">
+                            <p className="mt-0.5 text-xs text-muted-foreground">
                               {order?.createdAt ? order.createdAt.substring(0, 10) : "—"}
                             </p>
                           </div>
@@ -677,7 +707,7 @@ function UserDetails() {
                           <StatusBadge order={order} />
                         </div>
 
-                        <Separator className="my-4 bg-black/10 dark:bg-white/10" />
+                        <Separator className="my-4 bg-border" />
 
                         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-sm">
                           <OrderInfo label={t.payment} value={order?.paymentMethod || "—"} />
@@ -697,7 +727,7 @@ function UserDetails() {
                           <OrderInfo label={t.status} value={statusTextForCell(order)} />
                         </div>
 
-                        <div className="mt-4 text-xs text-zinc-500 dark:text-zinc-400 opacity-0 group-hover:opacity-100 transition">
+                        <div className="mt-4 text-xs text-muted-foreground opacity-0 group-hover:opacity-100 transition">
                           {isRTL ? "عرض تفاصيل الطلب ←" : "View order details →"}
                         </div>
                       </Link>
@@ -705,7 +735,7 @@ function UserDetails() {
                   </div>
                 ) : (
                   <div className="rounded-xl border border-dashed border-black/10 p-8 text-center dark:border-white/10">
-                    <p className="text-sm text-zinc-500 dark:text-zinc-400">{t.noOrders}</p>
+                    <p className="text-sm text-muted-foreground">{t.noOrders}</p>
                   </div>
                 )}
               </div>
@@ -716,9 +746,9 @@ function UserDetails() {
 
       {/* VIP Modal */}
       <Dialog open={isVipModalOpen} onOpenChange={setIsVipModalOpen}>
-        <DialogContent className="rounded-2xl border border-black/10 bg-white dark:bg-zinc-950 dark:border-white/10">
+        <DialogContent className="rounded-2xl border border-black/10 bg-card dark:border-white/10">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2 text-zinc-900 dark:text-white">
+            <DialogTitle className="flex items-center gap-2 text-foreground">
               <span className="h-9 w-9 rounded-xl bg-amber-100 border border-amber-200 grid place-items-center dark:bg-amber-500/10 dark:border-amber-500/30">
                 <Crown className="h-4 w-4 text-amber-700 dark:text-amber-200" />
               </span>
@@ -734,7 +764,7 @@ function UserDetails() {
             <Button
               variant="outline"
               onClick={() => setIsVipModalOpen(false)}
-              className="border-black/10 dark:border-white/10 dark:bg-transparent">
+              className="border-border dark:bg-transparent">
               {t.cancel}
             </Button>
 
@@ -757,9 +787,9 @@ function UserDetails() {
 
       {/* Block Modal */}
       <Dialog open={isBlockModalOpen} onOpenChange={setIsBlockModalOpen}>
-        <DialogContent className="rounded-2xl border border-black/10 bg-white dark:bg-zinc-950 dark:border-white/10">
+        <DialogContent className="rounded-2xl border border-black/10 bg-card dark:border-white/10">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2 text-zinc-900 dark:text-white">
+            <DialogTitle className="flex items-center gap-2 text-foreground">
               <span
                 className={clsx(
                   "h-9 w-9 rounded-xl border grid place-items-center",
@@ -777,15 +807,44 @@ function UserDetails() {
             </DialogTitle>
           </DialogHeader>
 
-          <p className="text-sm text-zinc-600 dark:text-zinc-300">
+          <p className="text-sm text-muted-foreground">
             {user?.isBlocked ? t.blockBodyUnblock : t.blockBodyBlock}
           </p>
+
+          {/* Reason applies to blocking only — unblocking clears it server-side */}
+          {!user?.isBlocked ? (
+            <div className="mt-3">
+              <div className="mb-1.5 flex items-baseline justify-between gap-2">
+                <label htmlFor="block-reason" className="ws-label mb-0">
+                  {t.blockReasonLabel}
+                </label>
+                <span className="ws-pill ws-pill-neutral text-[10px]">{t.optional}</span>
+              </div>
+
+              <textarea
+                id="block-reason"
+                value={blockReason}
+                onChange={(e) => setBlockReason(e.target.value.slice(0, 500))}
+                rows={3}
+                maxLength={500}
+                placeholder={t.blockReasonPh}
+                className="ws-input resize-none"
+              />
+
+              <div className="mt-1 flex items-baseline justify-between gap-2">
+                <p className="text-xs text-muted-foreground">{t.blockReasonHint}</p>
+                <span className="shrink-0 text-[11px] tabular-nums text-muted-foreground">
+                  {blockReason.length}/500
+                </span>
+              </div>
+            </div>
+          ) : null}
 
           <DialogFooter className="mt-4 flex justify-end gap-2">
             <Button
               variant="outline"
               onClick={() => setIsBlockModalOpen(false)}
-              className="border-black/10 dark:border-white/10 dark:bg-transparent">
+              className="border-border dark:bg-transparent">
               {t.cancel}
             </Button>
 
@@ -808,9 +867,9 @@ function UserDetails() {
 
       {/* Delete Modal */}
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-        <DialogContent className="rounded-2xl border border-black/10 bg-white dark:bg-zinc-950 dark:border-white/10">
+        <DialogContent className="rounded-2xl border border-black/10 bg-card dark:border-white/10">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2 text-zinc-900 dark:text-white">
+            <DialogTitle className="flex items-center gap-2 text-foreground">
               <span className="h-9 w-9 rounded-xl bg-rose-100 border border-rose-200 grid place-items-center dark:bg-rose-500/10 dark:border-rose-500/30">
                 <Trash2 className="h-4 w-4 text-rose-700 dark:text-rose-200" />
               </span>
@@ -824,7 +883,7 @@ function UserDetails() {
             <Button
               variant="outline"
               onClick={() => setIsModalOpen(false)}
-              className="border-black/10 dark:border-white/10 dark:bg-transparent">
+              className="border-border dark:bg-transparent">
               {t.cancel}
             </Button>
             <Button
@@ -845,11 +904,11 @@ function UserDetails() {
 function InfoRow({ label, value }: { label: string; value?: any }) {
   return (
     <div className="flex flex-col">
-      <span className="text-xs text-zinc-500 dark:text-zinc-400">{label}</span>
+      <span className="text-xs text-muted-foreground">{label}</span>
       <span
         className={clsx(
           "mt-1 font-semibold",
-          value ? "text-zinc-800 dark:text-zinc-200" : "text-zinc-400 dark:text-zinc-500",
+          value ? "text-foreground" : "text-muted-foreground",
         )}>
         {value || "—"}
       </span>
@@ -868,12 +927,12 @@ function OrderInfo({
 }) {
   return (
     <div className="flex flex-col gap-1">
-      <span className="text-xs text-zinc-500 dark:text-zinc-400">{label}</span>
+      <span className="text-xs text-muted-foreground">{label}</span>
       <span
         className={clsx(
           highlight
             ? "text-zinc-900 text-base dark:text-white"
-            : "text-zinc-800 dark:text-zinc-200",
+            : "text-foreground",
           "font-semibold",
         )}>
         {value}

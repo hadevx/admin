@@ -5,6 +5,24 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="icon" type="image/x-icon" href="/favicon.ico" />
     <title>Admin Dashboard</title>
+    <script>
+      // Apply the saved mode and skin before first paint. Without this the page
+      // renders in the default light/ivory palette for a frame and then snaps
+      // to the user's choice once React mounts.
+      (function () {
+        try {
+          var d = document.documentElement;
+          if (localStorage.getItem("theme") === "dark") d.classList.add("dark");
+          var skin = localStorage.getItem("admin:skin");
+          d.dataset.skin =
+            ["ivory", "graphite", "ocean", "forest", "bronze", "pink"].indexOf(skin) > -1
+              ? skin
+              : "ivory";
+        } catch (e) {
+          /* private mode / storage disabled — fall back to the defaults */
+        }
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>

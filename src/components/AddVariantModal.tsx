@@ -91,14 +91,14 @@ const AddVariantModal = ({
       }}>
       <DialogContent
         dir={isRTL ? "rtl" : "ltr"}
-        className="sm:max-w-lg rounded-3xl border border-neutral-200 bg-white p-0 shadow-xl overflow-hidden">
+        className="sm:max-w-lg ws-card p-0 shadow-xl overflow-hidden">
         {/* header strip */}
-        <div className="px-5 py-4 border-b border-neutral-200 bg-neutral-50">
+        <div className="px-5 py-4 border-b border-border bg-muted">
           <DialogHeader className="space-y-1">
-            <DialogTitle className="text-base font-bold text-neutral-950">
+            <DialogTitle className="text-base font-bold text-foreground">
               {t.addVariantTitle}
             </DialogTitle>
-            <DialogDescription className="text-sm text-neutral-600 leading-relaxed">
+            <DialogDescription className="text-sm text-muted-foreground leading-relaxed">
               {t.addVariantDesc}
             </DialogDescription>
           </DialogHeader>
@@ -107,17 +107,17 @@ const AddVariantModal = ({
         {/* body */}
         <div className="px-5 py-4 space-y-4">
           {/* Color */}
-          <div className="rounded-2xl border border-neutral-200 bg-white p-4">
+          <div className="rounded-2xl border border-border bg-card p-4">
             <div className="flex items-center gap-2 mb-2">
-              <div className="h-9 w-9 rounded-2xl bg-neutral-950 flex items-center justify-center shrink-0">
+              <div className="grid size-9 shrink-0 place-items-center rounded-2xl bg-emphasis text-emphasis-foreground">
                 <Palette className="h-4 w-4 text-white" />
               </div>
 
               <div className="min-w-0">
-                <p className="text-sm font-semibold text-neutral-950">
+                <p className="text-sm font-semibold text-foreground">
                   {t.color} <span className="text-rose-500">*</span>
                 </p>
-                <p className="text-xs text-neutral-500 mt-0.5">{t.enterColor}</p>
+                <p className="text-xs text-muted-foreground mt-0.5">{t.enterColor}</p>
               </div>
             </div>
 
@@ -129,8 +129,8 @@ const AddVariantModal = ({
                   onChange={(e) => setVariantColor(e.target.value)}
                   placeholder={t.enterColor}
                   className={clsx(
-                    "w-full rounded-xl border border-neutral-200 bg-white px-3 py-2 text-sm outline-none",
-                    "focus:ring-2 focus:ring-neutral-950/10",
+                    "w-full rounded-xl border border-border bg-card px-3 py-2 text-sm outline-none",
+                    "focus:ring-4 focus:ring-foreground/10",
                     isRTL ? "text-right" : "text-left",
                   )}
                 />
@@ -141,8 +141,8 @@ const AddVariantModal = ({
                   value={variantColor}
                   onChange={(e) => setVariantColor(e.target.value)}
                   className={clsx(
-                    "w-full rounded-xl border border-neutral-200 bg-white px-3 py-2 text-sm outline-none",
-                    "focus:ring-2 focus:ring-neutral-950/10",
+                    "w-full rounded-xl border border-border bg-card px-3 py-2 text-sm outline-none",
+                    "focus:ring-4 focus:ring-foreground/10",
                     isRTL ? "text-right" : "text-left",
                   )}>
                   <option value="">{isRTL ? "اختر لون" : "Select color"}</option>
@@ -155,9 +155,9 @@ const AddVariantModal = ({
               </div>
             </div>
 
-            <div className="mt-3 flex items-center gap-2 text-xs text-neutral-500">
+            <div className="mt-3 flex items-center gap-2 text-xs text-muted-foreground">
               <span
-                className="h-3.5 w-3.5 rounded-full border border-neutral-200"
+                className="h-3.5 w-3.5 rounded-full border border-border"
                 style={{
                   backgroundColor: variantColor.trim().toLowerCase() || "transparent",
                 }}
@@ -167,16 +167,16 @@ const AddVariantModal = ({
           </div>
 
           {/* Sizes */}
-          <div className="rounded-2xl border border-neutral-200 bg-white p-4">
+          <div className="rounded-2xl border border-border bg-card p-4">
             <div className="flex items-center justify-between gap-3 mb-3">
               <div className="flex items-center gap-2">
-                <div className="h-9 w-9 rounded-2xl bg-neutral-950 flex items-center justify-center shrink-0">
+                <div className="grid size-9 shrink-0 place-items-center rounded-2xl bg-emphasis text-emphasis-foreground">
                   <Ruler className="h-4 w-4 text-white" />
                 </div>
 
                 <div>
-                  <p className="text-sm font-semibold text-neutral-950">{t.sizes}</p>
-                  <p className="text-xs text-neutral-500 mt-0.5">
+                  <p className="text-sm font-semibold text-foreground">{t.sizes}</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">
                     {isRTL ? "أضف المقاسات مع المخزون لكل مقاس." : "Add sizes with stock per size."}
                   </p>
                 </div>
@@ -185,7 +185,7 @@ const AddVariantModal = ({
               <button
                 type="button"
                 onClick={addSizeRow}
-                className="inline-flex items-center gap-2 rounded-xl border border-neutral-200 bg-white px-3 py-2 text-xs font-semibold text-neutral-900 hover:bg-neutral-50 transition">
+                className="inline-flex items-center gap-2 rounded-xl border border-border bg-card px-3 py-2 text-xs font-semibold text-foreground hover:bg-muted transition">
                 <Plus className="h-4 w-4" />
                 {t.addSize}
               </button>
@@ -195,7 +195,7 @@ const AddVariantModal = ({
               {variantSizes.map((row, idx) => (
                 <div
                   key={idx}
-                  className="grid grid-cols-12 gap-2 items-center rounded-2xl border border-neutral-200 bg-neutral-50/60 p-2">
+                  className="grid grid-cols-12 gap-2 items-center rounded-2xl border border-border bg-muted/60 p-2">
                   {/* ✅ Size input */}
                   <div className="col-span-4">
                     <input
@@ -203,8 +203,8 @@ const AddVariantModal = ({
                       onChange={(e) => updateSizeRow(idx, { size: e.target.value })}
                       placeholder={t.size}
                       className={clsx(
-                        "w-full rounded-xl border border-neutral-200 bg-white px-3 py-2 text-sm outline-none",
-                        "focus:ring-2 focus:ring-neutral-950/10",
+                        "w-full rounded-xl border border-border bg-card px-3 py-2 text-sm outline-none",
+                        "focus:ring-4 focus:ring-foreground/10",
                         isRTL ? "text-right" : "text-left",
                       )}
                     />
@@ -216,8 +216,8 @@ const AddVariantModal = ({
                       value={row.size}
                       onChange={(e) => updateSizeRow(idx, { size: e.target.value })}
                       className={clsx(
-                        "w-full rounded-xl border border-neutral-200 bg-white px-3 py-2 text-sm outline-none",
-                        "focus:ring-2 focus:ring-neutral-950/10",
+                        "w-full rounded-xl border border-border bg-card px-3 py-2 text-sm outline-none",
+                        "focus:ring-4 focus:ring-foreground/10",
                         isRTL ? "text-right" : "text-left",
                       )}>
                       <option value="">{isRTL ? "اختر مقاس" : "Select size"}</option>
@@ -234,7 +234,7 @@ const AddVariantModal = ({
                     <div className="relative">
                       <Package
                         className={clsx(
-                          "absolute top-1/2 -translate-y-1/2 h-4 w-4 text-neutral-400",
+                          "absolute top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground",
                           isRTL ? "right-3" : "left-3",
                         )}
                       />
@@ -248,8 +248,8 @@ const AddVariantModal = ({
                         inputMode="numeric"
                         placeholder={t.qty}
                         className={clsx(
-                          "w-full rounded-xl border border-neutral-200 bg-white py-2 text-sm outline-none",
-                          "focus:ring-2 focus:ring-neutral-950/10",
+                          "w-full rounded-xl border border-border bg-card py-2 text-sm outline-none",
+                          "focus:ring-4 focus:ring-foreground/10",
                           isRTL ? "pr-10 pl-3 text-right" : "pl-10 pr-3 text-left",
                         )}
                       />
@@ -263,11 +263,11 @@ const AddVariantModal = ({
                       onClick={() => removeSizeRow(idx)}
                       disabled={variantSizes.length === 1}
                       className={clsx(
-                        "h-10 w-10 rounded-xl border border-neutral-200 bg-white grid place-items-center hover:bg-neutral-50 transition",
+                        "h-10 w-10 rounded-xl border border-border bg-card grid place-items-center hover:bg-muted transition",
                         variantSizes.length === 1 && "opacity-50 cursor-not-allowed",
                       )}
                       aria-label="Remove size">
-                      <X className="h-4 w-4 text-neutral-600" />
+                      <X className="h-4 w-4 text-muted-foreground" />
                     </button>
                   </div>
                 </div>
@@ -276,15 +276,15 @@ const AddVariantModal = ({
           </div>
 
           {/* Variant Images */}
-          <div className="rounded-2xl border border-neutral-200 bg-white p-4">
+          <div className="rounded-2xl border border-border bg-card p-4">
             <div className="flex items-center gap-2 mb-2">
-              <div className="h-9 w-9 rounded-2xl bg-neutral-950 flex items-center justify-center shrink-0">
+              <div className="grid size-9 shrink-0 place-items-center rounded-2xl bg-emphasis text-emphasis-foreground">
                 <ImagePlus className="h-4 w-4 text-white" />
               </div>
 
               <div>
-                <p className="text-sm font-semibold text-neutral-950">{t.variantImages}</p>
-                <p className="text-xs text-neutral-500 mt-0.5">
+                <p className="text-sm font-semibold text-foreground">{t.variantImages}</p>
+                <p className="text-xs text-muted-foreground mt-0.5">
                   {isRTL
                     ? "اختياري — صور خاصة بهذا الخيار."
                     : "Optional — images for this variant."}
@@ -298,19 +298,19 @@ const AddVariantModal = ({
               accept="image/*"
               onChange={(e) => setVariantFiles(e.target.files ? Array.from(e.target.files) : [])}
               className={clsx(
-                "block w-full text-sm text-neutral-700",
+                "block w-full text-sm text-muted-foreground",
                 "file:mr-4 file:rounded-xl file:border-0",
-                "file:bg-neutral-950 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-white",
-                "hover:file:bg-neutral-900",
+                "file:bg-emphasis file:px-4 file:py-2 file:text-sm file:font-semibold file:text-emphasis-foreground",
+                "hover:file:bg-emphasis-hover",
               )}
             />
 
             {variantFiles.length > 0 ? (
-              <div className="mt-3 rounded-2xl border border-neutral-200 bg-neutral-50 p-3">
-                <p className="text-xs font-semibold text-neutral-900">
+              <div className="mt-3 rounded-2xl border border-border bg-muted p-3">
+                <p className="text-xs font-semibold text-foreground">
                   {fileLabel(variantFiles.length)}
                 </p>
-                <p className="mt-1 text-xs text-neutral-600 break-words">
+                <p className="mt-1 text-xs text-muted-foreground break-words">
                   <span className="font-semibold">
                     {variantFiles.map((f) => f.name).join(", ")}
                   </span>
@@ -321,7 +321,7 @@ const AddVariantModal = ({
         </div>
 
         {/* footer */}
-        <DialogFooter className="px-5 py-4 border-t border-neutral-200 bg-white flex flex-col-reverse sm:flex-row sm:justify-end gap-2">
+        <DialogFooter className="px-5 py-4 border-t border-border bg-card flex flex-col-reverse sm:flex-row sm:justify-end gap-2">
           <button
             type="button"
             onClick={() => {
@@ -329,7 +329,7 @@ const AddVariantModal = ({
               resetVariantForm();
             }}
             disabled={busy}
-            className="inline-flex items-center justify-center rounded-xl border border-neutral-200 bg-white px-4 py-2 text-sm font-semibold text-neutral-900 hover:bg-neutral-50 transition disabled:opacity-60 disabled:cursor-not-allowed">
+            className="inline-flex items-center justify-center rounded-xl border border-border bg-card px-4 py-2 text-sm font-semibold text-foreground hover:bg-muted transition disabled:opacity-60 disabled:cursor-not-allowed">
             {t.cancel}
           </button>
 
@@ -337,7 +337,7 @@ const AddVariantModal = ({
             type="button"
             onClick={handleAddVariant}
             disabled={busy}
-            className="inline-flex items-center justify-center gap-2 rounded-xl bg-neutral-950 px-4 py-2 text-sm font-semibold text-white hover:bg-neutral-900 transition disabled:opacity-60 disabled:cursor-not-allowed">
+            className="inline-flex items-center justify-center gap-2 rounded-xl bg-emphasis px-4 py-2 text-sm font-semibold text-emphasis-foreground hover:bg-emphasis-hover transition disabled:opacity-60 disabled:cursor-not-allowed">
             {busy ? <Loader2Icon className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
             {t.saveVariant}
           </button>

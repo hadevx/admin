@@ -155,9 +155,9 @@ const CategoryTree = ({ data }: Props): JSX.Element => {
     const after = text.slice(idx + q.length);
 
     return (
-      <span className="text-zinc-900 dark:text-zinc-100">
+      <span>
         {before}
-        <span className="rounded-md bg-yellow-100 dark:bg-yellow-500/20 px-1 font-semibold">
+        <span className="rounded-md bg-amber-200/70 px-1 font-semibold text-amber-900 dark:bg-amber-500/25 dark:text-amber-100">
           {match}
         </span>
         {after}
@@ -175,60 +175,47 @@ const CategoryTree = ({ data }: Props): JSX.Element => {
           return (
             <li key={node._id}>
               <div
-                className={[
-                  "group flex items-center gap-2 rounded-2xl border border-black/10 dark:border-white/10 bg-white dark:bg-zinc-950 px-3 py-2",
-                  "hover:bg-zinc-50 dark:hover:bg-white/5 transition",
-                ].join(" ")}
-                style={{ marginLeft: level * 12 }}>
+                className="group flex items-center gap-2 rounded-xl border border-border bg-card px-3 py-2 transition-colors hover:bg-muted"
+                style={{ marginInlineStart: level * 14 }}>
                 {/* Expand/collapse */}
                 <button
                   type="button"
                   onClick={() => hasChildren && toggle(node._id)}
                   className={[
-                    "h-7 w-7 rounded-xl grid place-items-center border border-black/10 dark:border-white/10 bg-white dark:bg-zinc-900",
-                    hasChildren
-                      ? "hover:bg-zinc-50 dark:hover:bg-white/10"
-                      : "opacity-40 cursor-default",
+                    "grid size-7 place-items-center rounded-lg border border-border bg-[var(--surface-muted)] text-muted-foreground",
+                    hasChildren ? "hover:bg-muted hover:text-foreground" : "cursor-default opacity-40",
                   ].join(" ")}
                   aria-label={hasChildren ? "toggle" : "leaf"}>
                   {hasChildren ? (
                     isOpen ? (
-                      <ChevronDown className="h-4 w-4 text-zinc-700 dark:text-zinc-200" />
+                      <ChevronDown className="size-4" />
                     ) : (
-                      <ChevronRight className="h-4 w-4 text-zinc-700 dark:text-zinc-200" />
+                      <ChevronRight className="size-4 rtl:rotate-180" />
                     )
                   ) : (
-                    <span className="h-1.5 w-1.5 rounded-full bg-zinc-400 dark:bg-zinc-500" />
+                    <span className="size-1.5 rounded-full bg-muted-foreground" />
                   )}
                 </button>
 
                 {/* Icon */}
-                <div className="h-9 w-9 rounded-2xl bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 grid place-items-center">
-                  {hasChildren ? (
-                    isOpen ? (
-                      <FolderOpen className="h-4 w-4" />
-                    ) : (
-                      <Folder className="h-4 w-4" />
-                    )
+                <div className="grid size-9 place-items-center rounded-xl bg-muted text-foreground">
+                  {hasChildren && isOpen ? (
+                    <FolderOpen className="size-4" />
                   ) : (
-                    <Folder className="h-4 w-4 opacity-80" />
+                    <Folder className="size-4" />
                   )}
                 </div>
 
                 {/* Name */}
                 <div className="min-w-0 flex-1">
-                  <div className="truncate text-sm font-semibold text-zinc-900 dark:text-zinc-100">
-                    {highlight(node.name)}
+                  <div className="truncate text-sm font-bold">{highlight(node.name)}</div>
+                  <div className="text-xs text-muted-foreground">
+                    {hasChildren
+                      ? `${node.children!.length} ${language === "ar" ? "فرع" : "children"}`
+                      : language === "ar"
+                        ? "عنصر"
+                        : "item"}
                   </div>
-                  {hasChildren ? (
-                    <div className="text-xs text-zinc-500 dark:text-zinc-400">
-                      {node.children!.length} {language === "ar" ? "فرع" : "children"}
-                    </div>
-                  ) : (
-                    <div className="text-xs text-zinc-500 dark:text-zinc-400">
-                      {language === "ar" ? "عنصر" : "item"}
-                    </div>
-                  )}
                 </div>
 
                 {/* Quick open/close */}
@@ -236,7 +223,7 @@ const CategoryTree = ({ data }: Props): JSX.Element => {
                   <button
                     type="button"
                     onClick={() => toggle(node._id)}
-                    className="text-xs font-semibold text-zinc-700 dark:text-zinc-200 hover:text-zinc-900 dark:hover:text-white transition">
+                    className="text-xs font-bold text-muted-foreground transition-colors hover:text-foreground">
                     {isOpen
                       ? language === "ar"
                         ? "طي"
@@ -260,12 +247,12 @@ const CategoryTree = ({ data }: Props): JSX.Element => {
   };
 
   return (
-    <div className="rounded-3xl border border-black/10 dark:border-white/10 bg-white/80 dark:bg-zinc-950/80 backdrop-blur shadow-sm p-5">
+    <div>
       {/* Header */}
-      <div className="flex items-start justify-between gap-3">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <h3 className="text-lg font-bold text-zinc-900 dark:text-zinc-100">{t.title}</h3>
-          <p className="text-sm text-zinc-600 dark:text-zinc-400">
+          <h3 className="text-base font-extrabold">{t.title}</h3>
+          <p className="text-sm text-muted-foreground">
             {query
               ? `${t.results}: ${totalVisible} / ${totalAll} ${t.nodes}`
               : `${totalAll} ${t.nodes}`}
@@ -273,55 +260,43 @@ const CategoryTree = ({ data }: Props): JSX.Element => {
         </div>
 
         <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={expandAll}
-            className="rounded-2xl border border-black/10 dark:border-white/10 bg-white dark:bg-zinc-900 px-3 py-2 text-xs font-semibold text-zinc-900 dark:text-zinc-100 hover:bg-zinc-50 dark:hover:bg-white/10 transition">
+          <button type="button" onClick={expandAll} className="ws-chip">
             {t.expandAll}
           </button>
-          <button
-            type="button"
-            onClick={collapseAll}
-            className="rounded-2xl border border-black/10 dark:border-white/10 bg-white dark:bg-zinc-900 px-3 py-2 text-xs font-semibold text-zinc-900 dark:text-zinc-100 hover:bg-zinc-50 dark:hover:bg-white/10 transition">
+          <button type="button" onClick={collapseAll} className="ws-chip">
             {t.collapseAll}
           </button>
         </div>
       </div>
 
-      <Separator className="my-4 bg-black/10 dark:bg-white/10" />
+      <Separator className="my-4" />
 
       {/* Search */}
-      <div className="flex items-center gap-2">
-        <div className="relative w-full">
-          <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-zinc-400 dark:text-zinc-500">
-            <Search className="h-4 w-4" />
-          </span>
-          <input
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder={t.search}
-            className="w-full border border-black/10 dark:border-white/10 bg-white dark:bg-zinc-900 rounded-2xl py-2.5 pl-10 pr-10 text-sm text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 dark:placeholder:text-zinc-500 outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
-          />
-          {query ? (
-            <button
-              type="button"
-              onClick={clearSearch}
-              className="absolute inset-y-0 right-0 flex items-center pr-3 text-zinc-400 dark:text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-200"
-              aria-label={t.clear}>
-              <X className="h-4 w-4" />
-            </button>
-          ) : null}
-        </div>
+      <div className="relative w-full">
+        <Search className="pointer-events-none absolute inset-y-0 start-3.5 my-auto size-4 text-muted-foreground" />
+        <input
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder={t.search}
+          className="ws-input ps-10 pe-10"
+        />
+        {query ? (
+          <button
+            type="button"
+            onClick={clearSearch}
+            className="absolute inset-y-0 end-2 my-auto grid size-7 place-items-center rounded-lg text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+            aria-label={t.clear}>
+            <X className="size-4" />
+          </button>
+        ) : null}
       </div>
 
       {/* Tree */}
-      <div className="mt-4 max-h-[420px] overflow-y-auto pr-1">
+      <div className="mt-4 max-h-[420px] overflow-y-auto pe-1">
         {filtered?.length > 0 ? (
           renderTree(filtered)
         ) : (
-          <div className="rounded-2xl border border-black/10 dark:border-white/10 bg-white dark:bg-zinc-950 p-6 text-center text-zinc-500 dark:text-zinc-400">
-            {t.empty}
-          </div>
+          <div className="ws-tile p-6 text-center text-sm text-muted-foreground">{t.empty}</div>
         )}
       </div>
     </div>

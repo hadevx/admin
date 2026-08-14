@@ -8,6 +8,7 @@ import {
 } from "../../redux/queries/discountApi";
 import { toast } from "react-toastify";
 import { Separator } from "../../components/ui/separator";
+import PageHeader from "@/components/PageHeader";
 import {
   Trash2,
   Plus,
@@ -156,9 +157,19 @@ function Discounts(): JSX.Element {
       return;
     }
 
-    await createDiscount({ category: selectedCategories, discountBy: discount });
-    toast.success(t.createDiscount);
-    refetch();
+    try {
+      // .unwrap() so a rejected request throws instead of silently resolving
+      // and showing a success toast.
+      await createDiscount({ category: selectedCategories, discountBy: discount }).unwrap();
+      toast.success(t.createDiscount);
+      setSelectedCategories([]);
+      setDiscount(0);
+      refetch();
+    } catch (e: any) {
+      toast.error(
+        e?.data?.message || (language === "ar" ? "فشل إنشاء الخصم" : "Failed to create discount"),
+      );
+    }
   };
 
   const handleDeleteDiscount = async (id: string): Promise<void> => {
@@ -201,80 +212,58 @@ function Discounts(): JSX.Element {
   const handleOriginalPriceChange = (e: ChangeEvent<HTMLInputElement>): void =>
     setOriginalPrice(e.target.value);
 
-  // Styles (+ dark mode)
-  const bentoCard =
-    "rounded-3xl border border-black/10 bg-white/80 backdrop-blur shadow-sm dark:border-white/10 dark:bg-zinc-950/80";
-  const tile =
-    "rounded-2xl border border-black/10 bg-white p-4 dark:border-white/10 dark:bg-zinc-950";
-  const chipBase =
-    "select-none inline-flex items-center gap-2 rounded-2xl border px-3 py-2 text-sm font-semibold transition";
-  const chipOn =
-    "bg-zinc-900 text-white border-zinc-900 dark:bg-white dark:text-zinc-900 dark:border-white";
-  const chipOff =
-    "bg-white text-zinc-900 border-black/10 hover:bg-zinc-50 dark:bg-zinc-950 dark:text-white dark:border-white/10 dark:hover:bg-white/5";
+  // Shared surface/control styles come from the design system in index.css
+  const bentoCard = "ws-card";
+  const tile = "ws-tile";
+  const chipBase = "ws-chip select-none px-3 py-2 text-sm";
+  const chipOn = "ws-chip-active";
+  const chipOff = "";
 
   return (
     <Layout>
       {loadingCategories ? (
         <Loader />
       ) : (
-        <div
-          dir={language === "ar" ? "rtl" : "ltr"}
-          className="px-4 w-full max-w-4xl min-h-screen mt-[70px] lg:mt-[50px] lg:py-6 pb-6 text-zinc-900 dark:text-white">
+        <div className="mx-auto w-full max-w-5xl animate-fade-up">
           {/* Header */}
-          <div className="flex items-start justify-between gap-3">
-            <div>
-              <div className="flex items-center gap-2">
-                <div className="h-11 w-11 rounded-2xl bg-zinc-900 text-white grid place-items-center dark:bg-white dark:text-zinc-900">
-                  <Ticket className="h-5 w-5" />
-                </div>
-                <div>
-                  <h1 className="text-xl lg:text-2xl font-extrabold text-zinc-900 dark:text-white">
-                    {t.setDiscounts}
-                  </h1>
-                  <p className="text-sm text-zinc-600 dark:text-zinc-400">{t.subtitle}</p>
-                </div>
-              </div>
-            </div>
-
-            <button
-              onClick={handleCreateDiscount}
-              disabled={loadingCreate}
-              className={clsx(
-                "inline-flex items-center gap-2 rounded-md px-3 py-2 text-sm font-semibold transition",
-                "bg-neutral-950 text-white hover:bg-neutral-900",
-                "dark:bg-white dark:text-zinc-900 dark:hover:bg-zinc-200",
-              )}>
-              {loadingCreate ? (
-                <Loader2Icon className="h-4 w-4 animate-spin" />
-              ) : (
-                <Plus className="h-4 w-4" />
-              )}
-              {t.createDiscount}
-            </button>
-          </div>
-
-          <Separator className="my-5 bg-black/10 dark:bg-white/10" />
+          <PageHeader
+            title={t.setDiscounts}
+            subtitle={t.subtitle}
+            icon={Ticket}
+            actions={
+              <button
+                onClick={handleCreateDiscount}
+                disabled={loadingCreate}
+                className="ws-btn-primary">
+                {loadingCreate ? (
+                  <Loader2Icon className="size-4 animate-spin" />
+                ) : (
+                  <Plus className="size-4" />
+                )}
+                {t.createDiscount}
+              </button>
+            }
+          />
 
           {/* Bento grid */}
           <div className="grid grid-cols-1 gap-4">
             {/* Create discount (wide) */}
             <section className={`${bentoCard} lg:col-span-12 p-5`}>
               <div className="flex items-center gap-2">
-                <Sparkles className="h-4 w-4 text-zinc-900 dark:text-white" />
-                <h2 className="text-base font-bold text-zinc-900 dark:text-white">
+                <Sparkles className="h-4 w-4 text-foreground" />
+                <h2 className="text-base font-bold text-foreground">
                   {language === "ar" ? "إنشاء خصم للفئات" : "Create category discount"}
                 </h2>
               </div>
 
-              <Separator className="my-4 bg-black/10 dark:bg-white/10" />
+              <Separator className="my-4 bg-border" />
 
               <div className="grid grid-cols-1 md:grid-cols-12 gap-3">
                 {/* Discount selector */}
                 <div className={`${tile} md:col-span-5`}>
                   <div className="flex items-center gap-2 mb-2">
-                    <Percent className="h-4 w-4 text-zinc-700 dark:text-zinc-300" />
-                    <label className="text-sm font-semibold text-zinc-800 dark:text-zinc-200">
+                    <Percent className="h-4 w-4 text-muted-foreground" />
+                    <label className="text-sm font-semibold text-foreground">
                       {t.discountBy}
                     </label>
                   </div>
@@ -295,7 +284,7 @@ function Discounts(): JSX.Element {
                     ))}
                   </select>
 
-                  <div className="mt-3 text-xs text-zinc-500 dark:text-zinc-400">
+                  <div className="mt-3 text-xs text-muted-foreground">
                     {language === "ar"
                       ? "اختر نسبة الخصم قبل تحديد الفئات."
                       : "Pick a rate, then select categories."}
@@ -306,12 +295,12 @@ function Discounts(): JSX.Element {
                 <div className={`${tile} md:col-span-7`}>
                   <div className="flex items-center justify-between gap-2">
                     <div className="flex items-center gap-2">
-                      <Calculator className="h-4 w-4 text-zinc-700 dark:text-zinc-300" />
-                      <div className="text-sm font-semibold text-zinc-800 dark:text-zinc-200">
+                      <Calculator className="h-4 w-4 text-muted-foreground" />
+                      <div className="text-sm font-semibold text-foreground">
                         {t.calculateDiscount}
                       </div>
                     </div>
-                    <div className="text-xs text-zinc-500 dark:text-zinc-400">
+                    <div className="text-xs text-muted-foreground">
                       {discount === 0 ? t.none : `${discount * 100}%`}
                     </div>
                   </div>
@@ -337,8 +326,8 @@ function Discounts(): JSX.Element {
                   </div>
 
                   <div className="mt-3 rounded-2xl border px-4 py-3 border-black/10 bg-zinc-50 dark:border-white/10 dark:bg-white/5">
-                    <div className="text-xs text-zinc-500 dark:text-zinc-400">{t.priceAfter}</div>
-                    <div className="text-lg font-extrabold text-zinc-900 dark:text-white">
+                    <div className="text-xs text-muted-foreground">{t.priceAfter}</div>
+                    <div className="text-lg font-extrabold text-foreground">
                       {originalPrice && discount ? (
                         <>
                           {calculateDiscountedPrice()} {t.currency}
@@ -354,11 +343,11 @@ function Discounts(): JSX.Element {
                 <div className={`${tile} md:col-span-12`}>
                   <div className="flex items-center justify-between gap-3 flex-wrap">
                     <div className="flex items-center gap-2">
-                      <Tags className="h-4 w-4 text-zinc-700 dark:text-zinc-300" />
-                      <div className="text-sm font-semibold text-zinc-800 dark:text-zinc-200">
+                      <Tags className="h-4 w-4 text-muted-foreground" />
+                      <div className="text-sm font-semibold text-foreground">
                         {t.categories}
                       </div>
-                      <div className="text-xs text-zinc-500 dark:text-zinc-400">
+                      <div className="text-xs text-muted-foreground">
                         • {t.selected}: {selectedCategories.length}
                       </div>
                     </div>
@@ -387,10 +376,10 @@ function Discounts(): JSX.Element {
                     </div>
                   </div>
 
-                  <Separator className="my-3 bg-black/10 dark:bg-white/10" />
+                  <Separator className="my-3 bg-border" />
 
                   {categories?.length === 0 ? (
-                    <p className="py-3 text-sm text-zinc-700 dark:text-zinc-300">
+                    <p className="py-3 text-sm text-muted-foreground">
                       {t.noCategories}{" "}
                       <Link to="/categories" className="underline text-blue-600 dark:text-blue-300">
                         {t.createCategory}
@@ -427,11 +416,11 @@ function Discounts(): JSX.Element {
             {discountStatus && discountStatus.length > 0 ? (
               <section className="lg:col-span-12">
                 <div className="mt-2 flex items-center justify-between">
-                  <h3 className="text-sm font-semibold text-zinc-900 dark:text-white">
+                  <h3 className="text-sm font-semibold text-foreground">
                     {language === "ar" ? "الخصومات الحاليه" : "Current Discounts"}
                   </h3>
                 </div>
-                <Separator className="my-3 bg-black/10 dark:bg-white/10" />
+                <Separator className="my-3 bg-border" />
 
                 <div className="grid sm:grid-cols-2 md:grid-cols-2 gap-2">
                   {discountStatus.map((d) => (
@@ -447,8 +436,7 @@ function Discounts(): JSX.Element {
                         disabled={loadingDelete && deletingDiscountId === d._id}
                         className={clsx(
                           "rounded-full p-2 transition disabled:opacity-60",
-                          "bg-zinc-900 text-white hover:bg-zinc-800",
-                          "dark:bg-white dark:text-zinc-900 dark:hover:bg-zinc-200",
+                          "bg-emphasis text-emphasis-foreground hover:bg-emphasis-hover",
                         )}>
                         {loadingDelete && deletingDiscountId === d._id ? (
                           <Loader2Icon className="h-4 w-4 animate-spin" />

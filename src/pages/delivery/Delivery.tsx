@@ -3,6 +3,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { toast } from "react-toastify";
 import Spinner from "../../components/Spinner";
 import { Separator } from "../../components/ui/separator";
+import PageHeader from "@/components/PageHeader";
 import {
   Loader2Icon,
   Truck,
@@ -182,11 +183,9 @@ function Delivery() {
     return `${n.toFixed(3)} ${language === "ar" ? "دك" : "KD"}`;
   };
 
-  // ✅ dark mode added
-  const bentoCard =
-    "rounded-3xl border border-black/10 bg-white/80 backdrop-blur shadow-sm dark:border-white/10 dark:bg-zinc-950/80";
-  const input =
-    "w-full px-4 py-2.5 border border-black/10 outline-0 rounded-xl shadow-sm focus:ring-2 focus:ring-blue-500 bg-white text-zinc-900 placeholder:text-zinc-400 dark:border-white/10 dark:bg-zinc-950 dark:text-white dark:placeholder:text-zinc-500";
+  // Shared surface/control styles come from the design system in index.css
+  const bentoCard = "ws-card";
+  const input = "ws-input";
 
   const getGovernorateLabel = (value: string) => {
     const gov = GOVERNORATES.find((g) => g.value === value);
@@ -208,14 +207,14 @@ function Delivery() {
     icon: React.ReactNode;
     hint?: string;
   }) => (
-    <div className="rounded-2xl border border-black/10 bg-white p-4 dark:border-white/10 dark:bg-zinc-950">
+    <div className="ws-tile">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <div className="flex items-center gap-2">
             {icon}
-            <div className="text-sm font-bold text-zinc-900 dark:text-white">{label}</div>
+            <div className="text-sm font-bold text-foreground">{label}</div>
           </div>
-          {hint ? <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">{hint}</p> : null}
+          {hint ? <p className="mt-1 text-xs text-muted-foreground">{hint}</p> : null}
         </div>
 
         <label className="relative inline-flex items-center cursor-pointer select-none">
@@ -247,29 +246,22 @@ function Delivery() {
 
   return (
     <Layout>
-      <div
-        dir={language === "ar" ? "rtl" : "ltr"}
-        className="px-4 w-full max-w-4xl min-h-screen py-6 mt-[50px] text-zinc-900 dark:text-white">
+      <div className="me-auto w-full max-w-5xl animate-fade-up">
         {/* Header */}
-        <div className="flex items-center justify-between gap-3 mb-4">
-          <div>
-            <h1 className="text-lg font-bold text-zinc-800 dark:text-white">{t.pageTitle}</h1>
-            <p className="text-sm text-zinc-600 dark:text-zinc-400">{t.pageDesc}</p>
-          </div>
-        </div>
+        <PageHeader title={t.pageTitle} subtitle={t.pageDesc} icon={Truck} />
 
-        <Separator className="my-4 bg-black/10 dark:bg-white/10" />
+        <Separator className="my-4" />
 
         <div className="flex flex-col gap-4">
           {/* Update card */}
           <section className={`${bentoCard} p-5`}>
             <div className="flex items-center justify-between gap-3">
               <div className="flex items-center gap-3">
-                <div className="h-11 w-11 rounded-2xl bg-zinc-900 text-white grid place-items-center dark:bg-white dark:text-zinc-900">
+                <div className="grid size-11 place-items-center rounded-2xl bg-emphasis text-emphasis-foreground">
                   <Truck className="h-5 w-5" />
                 </div>
                 <div>
-                  <h2 className="text-base md:text-lg font-bold text-zinc-900 dark:text-white">
+                  <h2 className="text-base md:text-lg font-bold text-foreground">
                     {t.updateSettings}
                   </h2>
                 </div>
@@ -280,8 +272,7 @@ function Delivery() {
                 disabled={loadingUpdateDelivery}
                 className={clsx(
                   "inline-flex items-center gap-2 rounded-md px-3 py-2 text-sm font-semibold transition",
-                  "bg-neutral-950 text-white hover:bg-neutral-900",
-                  "dark:bg-white dark:text-zinc-900 dark:hover:bg-zinc-200",
+                  "bg-emphasis text-emphasis-foreground hover:bg-emphasis-hover",
                 )}>
                 <Save className="size-4" />
                 {t.updateBtn}
@@ -289,21 +280,21 @@ function Delivery() {
               </button>
             </div>
 
-            <Separator className="my-4 bg-black/10 dark:bg-white/10" />
+            <Separator className="my-4 bg-border" />
 
             <div className="grid grid-cols-1 gap-3">
               {/* ETA */}
-              <div className="rounded-2xl border border-black/10 bg-white p-4 dark:border-white/10 dark:bg-zinc-950">
+              <div className="ws-tile">
                 <div className="flex items-center gap-2 mb-2">
-                  <Clock3 className="h-4 w-4 text-zinc-700 dark:text-zinc-300" />
-                  <label className="text-sm font-semibold text-zinc-800 dark:text-zinc-200">
+                  <Clock3 className="h-4 w-4 text-muted-foreground" />
+                  <label className="text-sm font-semibold text-foreground">
                     {t.timeToDeliver}
                   </label>
                 </div>
                 <select
                   onChange={(e) => setTimeToDeliver(e.target.value)}
                   value={timeToDeliver}
-                  className={clsx(input, "cursor-pointer")}>
+                  className="ws-select">
                   <option value="" disabled>
                     {t.chooseTime}
                   </option>
@@ -316,17 +307,17 @@ function Delivery() {
               </div>
 
               {/* Default Shipping fee */}
-              <div className="rounded-2xl border border-black/10 bg-white p-4 dark:border-white/10 dark:bg-zinc-950">
+              <div className="ws-tile">
                 <div className="flex items-center gap-2 mb-2">
-                  <Coins className="h-4 w-4 text-zinc-700 dark:text-zinc-300" />
-                  <label className="text-sm font-semibold text-zinc-800 dark:text-zinc-200">
+                  <Coins className="h-4 w-4 text-muted-foreground" />
+                  <label className="text-sm font-semibold text-foreground">
                     {t.shippingFee}
                   </label>
                 </div>
                 <select
                   value={shippingFee}
                   onChange={(e) => setShippingFee(e.target.value)}
-                  className={clsx(input, "cursor-pointer")}>
+                  className="ws-select">
                   <option value="" disabled>
                     {t.chooseFee}
                   </option>
@@ -336,23 +327,23 @@ function Delivery() {
                     </option>
                   ))}
                 </select>
-                <p className="mt-2 text-xs text-zinc-500 dark:text-zinc-400">
+                <p className="mt-2 text-xs text-muted-foreground">
                   {t.useDefaultIfNotFound}
                 </p>
               </div>
 
               {/* Min */}
-              <div className="rounded-2xl border border-black/10 bg-white p-4 dark:border-white/10 dark:bg-zinc-950">
+              <div className="ws-tile">
                 <div className="flex items-center gap-2 mb-2">
-                  <ShieldCheck className="h-4 w-4 text-zinc-700 dark:text-zinc-300" />
-                  <label className="text-sm font-semibold text-zinc-800 dark:text-zinc-200">
+                  <ShieldCheck className="h-4 w-4 text-muted-foreground" />
+                  <label className="text-sm font-semibold text-foreground">
                     {t.minDeliveryCost}
                   </label>
                 </div>
                 <select
                   value={minDeliveryCost}
                   onChange={(e) => setMinDeliveryCost(e.target.value)}
-                  className={clsx(input, "cursor-pointer")}>
+                  className="ws-select">
                   <option value="" disabled>
                     {t.minCost}
                   </option>
@@ -372,15 +363,15 @@ function Delivery() {
                   setEnableFreeThreshold(v);
                 }}
                 label={t.enableFreeThreshold}
-                icon={<BadgeDollarSign className="h-4 w-4 text-zinc-700 dark:text-zinc-300" />}
+                icon={<BadgeDollarSign className="h-4 w-4 text-muted-foreground" />}
                 hint={t.freeThresholdHint}
               />
 
               {enableFreeThreshold && (
-                <div className="rounded-2xl border border-black/10 bg-white p-4 dark:border-white/10 dark:bg-zinc-950">
+                <div className="ws-tile">
                   <div className="flex items-center gap-2 mb-2">
-                    <BadgeDollarSign className="h-4 w-4 text-zinc-700 dark:text-zinc-300" />
-                    <label className="text-sm font-semibold text-zinc-800 dark:text-zinc-200">
+                    <BadgeDollarSign className="h-4 w-4 text-muted-foreground" />
+                    <label className="text-sm font-semibold text-foreground">
                       {t.freeThresholdLabel}
                     </label>
                   </div>
@@ -392,7 +383,7 @@ function Delivery() {
                     placeholder="0"
                     className={clsx(input)}
                   />
-                  <p className="mt-2 text-xs text-zinc-500 dark:text-zinc-400">{t.exampleFree}</p>
+                  <p className="mt-2 text-xs text-muted-foreground">{t.exampleFree}</p>
                 </div>
               )}
             </div>
@@ -401,18 +392,18 @@ function Delivery() {
           {/* Preview */}
           <section className={`${bentoCard} p-5`}>
             <div className="flex items-center gap-3">
-              <div className="h-11 w-11 rounded-2xl bg-zinc-900 text-white grid place-items-center dark:bg-white dark:text-zinc-900">
+              <div className="grid size-11 place-items-center rounded-2xl bg-emphasis text-emphasis-foreground">
                 <Wrench className="h-5 w-5" />
               </div>
               <div>
-                <h2 className="text-base md:text-lg font-bold text-zinc-900 dark:text-white">
+                <h2 className="text-base md:text-lg font-bold text-foreground">
                   {t.currentStatus}
                 </h2>
-                <p className="text-sm text-zinc-600 dark:text-zinc-400">{t.live}</p>
+                <p className="text-sm text-muted-foreground">{t.live}</p>
               </div>
             </div>
 
-            <Separator className="my-4 bg-black/10 dark:bg-white/10" />
+            <Separator className="my-4 bg-border" />
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <PreviewTile label={t.timeToDeliver} loading={isLoading} value={renderTime()} />
@@ -448,7 +439,7 @@ function Delivery() {
               />
 
               <div className="rounded-2xl border border-black/10 bg-white p-4 sm:col-span-2 dark:border-white/10 dark:bg-zinc-950">
-                <span className="block text-xs text-zinc-500 dark:text-zinc-400">
+                <span className="block text-xs text-muted-foreground">
                   {t.freeThresholdTitle}
                 </span>
                 {isLoading ? (
@@ -456,7 +447,7 @@ function Delivery() {
                     <Spinner className="border-t-black dark:border-t-white" />
                   </div>
                 ) : (
-                  <p className="mt-1 font-semibold text-zinc-900 dark:text-white">
+                  <p className="mt-1 font-semibold text-foreground">
                     {current?.freeDeliveryThreshold && current.freeDeliveryThreshold > 0
                       ? `${language === "en" ? "Free above" : "مجاني فوق"} ${money(
                           current.freeDeliveryThreshold,
@@ -467,7 +458,7 @@ function Delivery() {
               </div>
 
               <div className="rounded-2xl border border-black/10 bg-white p-4 sm:col-span-2 dark:border-white/10 dark:bg-zinc-950">
-                <span className="block text-xs text-zinc-500 dark:text-zinc-400">
+                <span className="block text-xs text-muted-foreground">
                   {t.zonesTitle}
                 </span>
 
@@ -484,14 +475,14 @@ function Delivery() {
                         <span className="text-sm text-zinc-600 dark:text-zinc-300">
                           {getGovernorateLabel(z.zone)}
                         </span>
-                        <span className="text-sm font-semibold text-zinc-900 dark:text-white">
+                        <span className="text-sm font-semibold text-foreground">
                           {money(z.fee)}
                         </span>
                       </div>
                     ))}
                   </div>
                 ) : (
-                  <p className="mt-2 text-sm text-zinc-500 dark:text-zinc-400">{t.noZones}</p>
+                  <p className="mt-2 text-sm text-muted-foreground">{t.noZones}</p>
                 )}
               </div>
             </div>
@@ -512,14 +503,14 @@ function PreviewTile({
   loading: boolean;
 }) {
   return (
-    <div className="rounded-2xl border border-black/10 bg-white p-4 dark:border-white/10 dark:bg-zinc-950">
-      <span className="block text-xs text-zinc-500 dark:text-zinc-400">{label}</span>
+    <div className="ws-tile">
+      <span className="block text-xs text-muted-foreground">{label}</span>
       {loading ? (
         <div className="mt-2">
           <Spinner className="border-t-black dark:border-t-white" />
         </div>
       ) : (
-        <p className="mt-1 font-semibold text-zinc-900 dark:text-white">{value}</p>
+        <p className="mt-1 font-semibold text-foreground">{value}</p>
       )}
     </div>
   );

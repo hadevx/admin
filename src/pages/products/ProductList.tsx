@@ -12,25 +12,18 @@ import {
   useGetAllCategoriesQuery,
   useGetCategoriesTreeQuery,
 } from "../../redux/queries/categoryApi";
-import Badge from "../../components/Badge";
-import {
-  Box,
-  Plus,
-  Search,
-  SlidersHorizontal,
-  X,
-  ChevronRight,
-  ChevronLeft,
-  Star,
-} from "lucide-react";
-import Loader from "../../components/Loader";
-import { Separator } from "@/components/ui/separator";
+import { Box, Plus, SlidersHorizontal, X, ChevronRight, Star, ImageOff } from "lucide-react";
 import { toast } from "react-toastify";
 import { useSelector } from "react-redux";
 import { texts } from "./translation";
 import Error from "@/components/Error";
 import Paginate from "@/components/Paginate";
+import PageHeader from "@/components/PageHeader";
+import SearchInput from "@/components/SearchInput";
+import EmptyState from "@/components/EmptyState";
+import { PageSkeleton } from "@/components/Skeleton";
 import CreateProductModal from "../../components/CreateProductModal";
+import clsx from "clsx";
 
 function ProductList() {
   const [page, setPage] = useState(1);
@@ -74,6 +67,7 @@ function ProductList() {
   const language = useSelector((state: any) => state.language.lang);
   const navigate = useNavigate();
   const isRTL = language === "ar";
+  const t = texts[language];
 
   // ✅ Map UI filters -> backend params
   const queryArgs = useMemo(() => {
@@ -94,6 +88,7 @@ function ProductList() {
   const {
     data: productsData,
     isLoading: loadingProducts,
+    isFetching: fetchingProducts,
     error: errorGettingProducts,
   } = useGetProductsQuery(queryArgs);
 
@@ -258,22 +253,10 @@ function ProductList() {
 
   const StockBadge = ({ countInStock }: { countInStock: number }) => {
     if (countInStock === 0)
-      return (
-        <Badge variant="danger" icon={false} className="py-1 rounded-full">
-          {texts[language].outOfStock}
-        </Badge>
-      );
+      return <span className="ws-pill ws-pill-danger">{t.outOfStock}</span>;
     if (countInStock < 5)
-      return (
-        <Badge variant="pending" icon={false} className="py-1 rounded-full">
-          {texts[language].lowStock}
-        </Badge>
-      );
-    return (
-      <Badge variant="success" icon={false} className="py-1 rounded-full">
-        {texts[language].inStock}
-      </Badge>
-    );
+      return <span className="ws-pill ws-pill-warning">{t.lowStock}</span>;
+    return <span className="ws-pill ws-pill-success">{t.inStock}</span>;
   };
 
   const PricePill = ({ product }: { product: any }) => {
@@ -281,27 +264,43 @@ function ProductList() {
     const discounted = Number(product?.discountedPrice || 0).toFixed(3);
 
     return product?.hasDiscount ? (
-      <div className="inline-flex items-center gap-2 rounded-full border bg-white px-3 py-1 text-xs font-black text-gray-900 dark:bg-neutral-950 dark:border-neutral-800 dark:text-neutral-100">
-        <span className="text-green-700 dark:text-emerald-300">{discounted} KD</span>
-        <span className="h-3 w-px bg-gray-200 dark:bg-neutral-800" />
-        <span className="text-gray-500 dark:text-neutral-400 line-through font-bold">
-          {base} KD
+      <div className="inline-flex items-center gap-2 whitespace-nowrap">
+        <span className="font-extrabold text-emerald-600 dark:text-emerald-400">
+          {discounted} KD
         </span>
+        <span className="text-xs font-semibold text-muted-foreground line-through">{base} KD</span>
       </div>
     ) : (
-      <div className="inline-flex items-center rounded-full border bg-white px-3 py-1 text-xs font-black text-gray-900 dark:bg-neutral-950 dark:border-neutral-800 dark:text-neutral-100">
-        {base} KD
-      </div>
+      <span className="whitespace-nowrap font-extrabold">{base} KD</span>
     );
   };
 
-  // ✅ NEW: Featured badge
   const FeaturedBadge = () => (
-    <span className="inline-flex items-center gap-1 rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-[11px] font-extrabold text-amber-700 dark:border-amber-900/60 dark:bg-amber-950/30 dark:text-amber-200">
-      <Star className="h-3 w-3" />
+    <span className="ws-pill ws-pill-warning">
+      <Star className="size-3 fill-current" />
       {isRTL ? "مميز" : "Featured"}
     </span>
   );
+
+  const Thumb = ({ product, size = "size-14" }: { product: any; size?: string }) => {
+    const url = product?.image?.[0]?.url;
+    return url ? (
+      <img
+        className={clsx(size, "shrink-0 rounded-xl border border-border object-cover")}
+        src={url}
+        alt=""
+        loading="lazy"
+      />
+    ) : (
+      <div
+        className={clsx(
+          size,
+          "grid shrink-0 place-items-center rounded-xl border border-border bg-muted text-muted-foreground",
+        )}>
+        <ImageOff className="size-5" />
+      </div>
+    );
+  };
 
   const headerCount = productsData?.total ?? filteredProducts.length;
 
@@ -310,190 +309,156 @@ function ProductList() {
       {errorGettingProducts ? (
         <Error />
       ) : loadingProducts ? (
-        <Loader />
+        <PageSkeleton />
       ) : (
-        <div className="flex w-full mb-10 lg:w-4xl min-h-screen lg:min-h-auto justify-between py-3 mt-[70px] lg:mt-[50px] px-4 text-neutral-900 dark:text-neutral-100">
-          <div className="w-full">
-            {/* HEADER */}
-            <div className={`flex justify-between items-center ${isRTL ? "flex-row-reverse" : ""}`}>
-              <h1
-                dir={isRTL ? "rtl" : "ltr"}
-                className="text-lg lg:text-2xl font-black flex gap-2 lg:gap-5 items-center text-neutral-900 dark:text-neutral-50">
-                {texts[language].products}:
-                <Badge icon={false}>
-                  <Box className="size-5 sm:size-6" />
-                  <p className="text-sm lg:text-sm">
-                    {headerCount}{" "}
-                    <span className="hidden lg:inline">{texts[language].products}</span>
-                  </p>
-                </Badge>
-              </h1>
+        <div className="animate-fade-up">
+          <PageHeader
+            title={t.products}
+            subtitle={isRTL ? "أدر الكتالوج والمخزون" : "Manage your catalogue and stock"}
+            icon={Box}
+            count={headerCount}
+            countLabel={` ${t.products}`}
+            actions={
+              <button onClick={() => setIsCreateModalOpen(true)} className="ws-btn-primary">
+                <Plus className="size-4" />
+                {t.addProduct}
+              </button>
+            }
+          />
+
+          {/* Search + filters */}
+          <div className="ws-card mb-5 p-4">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+              <SearchInput
+                value={searchQuery}
+                onChange={setSearchQuery}
+                placeholder={t.searchProducts}
+                className="flex-1"
+              />
 
               <button
-                onClick={() => setIsCreateModalOpen(true)}
-                className="inline-flex items-center gap-2 rounded-md bg-neutral-950 px-3 py-2 text-sm font-semibold text-white hover:bg-neutral-900 transition dark:bg-neutral-50 dark:text-neutral-950 dark:hover:bg-neutral-200">
-                {texts[language].addProduct}
-                <Plus className="size-4" />
+                type="button"
+                onClick={() => setShowMobileFilters((v) => !v)}
+                className="ws-btn-secondary justify-between sm:hidden">
+                <span className="flex items-center gap-2">
+                  <SlidersHorizontal className="size-4" />
+                  {isRTL ? "الفلاتر" : "Filters"}
+                  {activeFiltersCount > 0 ? (
+                    <span className="grid size-5 place-items-center rounded-full bg-emphasis text-[11px] font-bold text-emphasis-foreground">
+                      {activeFiltersCount}
+                    </span>
+                  ) : null}
+                </span>
+                <span className="text-xs text-muted-foreground">
+                  {showMobileFilters ? (isRTL ? "إخفاء" : "Hide") : isRTL ? "عرض" : "Show"}
+                </span>
               </button>
             </div>
 
-            <Separator className="my-4 bg-black/20 dark:bg-white/10" />
+            <div className={clsx(showMobileFilters ? "block" : "hidden", "sm:block")}>
+              <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-5">
+                <select
+                  value={selectedCategory}
+                  onChange={(e) => setSelectedCategory(e.target.value)}
+                  className="ws-select">
+                  <option value="">{t.allCategories}</option>
+                  {categories?.map((cat: any) => (
+                    <option key={cat._id} value={cat._id}>
+                      {cat.name}
+                    </option>
+                  ))}
+                </select>
 
-            {/* SEARCH + MOBILE FILTER BUTTON */}
-            <div className="mt-5 mb-2">
-              <div className="flex flex-wrap items-center gap-3 mb-4">
-                <div className="relative w-full lg:w-full">
-                  <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400 dark:text-neutral-500">
-                    <Search className="h-5 w-5" />
+                <input
+                  type="number"
+                  placeholder={t.minPrice}
+                  value={minPrice}
+                  onChange={(e) => setMinPrice(e.target.value)}
+                  className="ws-input"
+                />
+                <input
+                  type="number"
+                  placeholder={t.maxPrice}
+                  value={maxPrice}
+                  onChange={(e) => setMaxPrice(e.target.value)}
+                  className="ws-input"
+                />
+
+                <select
+                  value={stockStatus}
+                  onChange={(e) => setStockStatus(e.target.value)}
+                  className="ws-select">
+                  <option value="">{t.allStock}</option>
+                  <option value="in-stock">{t.inStock}</option>
+                  <option value="low-stock">{t.lowStock}</option>
+                  <option value="out-of-stock">{t.outOfStock}</option>
+                </select>
+
+                {/* ✅ Featured filter */}
+                <label
+                  className={clsx(
+                    "flex cursor-pointer items-center justify-between gap-2 rounded-xl border px-3.5 py-2.5 text-sm font-semibold transition-colors",
+                    onlyFeatured
+                      ? "border-amber-300 bg-amber-50 text-amber-700 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-300"
+                      : "border-input bg-card text-muted-foreground hover:bg-muted",
+                  )}>
+                  <span className="flex items-center gap-2">
+                    <Star className={clsx("size-4", onlyFeatured && "fill-current")} />
+                    {isRTL ? "المميز" : "Featured"}
                   </span>
                   <input
-                    type="text"
-                    placeholder={texts[language].searchProducts}
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full bg-white border border-gray-300 rounded-lg py-2.5 pl-10 pr-4 text-sm outline-none transition focus:border-blue-500 focus:border-2 dark:bg-neutral-950 dark:border-neutral-800 dark:text-neutral-100 dark:placeholder:text-neutral-500 dark:focus:border-sky-400"
+                    type="checkbox"
+                    checked={onlyFeatured}
+                    onChange={(e) => setOnlyFeatured(e.target.checked)}
+                    className="size-4 accent-amber-500"
                   />
-                </div>
+                </label>
+              </div>
 
-                {/* Mobile only: Filters toggle */}
-                <div className="w-full lg:hidden">
-                  <button
-                    type="button"
-                    onClick={() => setShowMobileFilters((v) => !v)}
-                    className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2.5 text-sm font-bold flex items-center justify-between dark:bg-neutral-950 dark:border-neutral-800 dark:text-neutral-100">
-                    <span className="flex items-center gap-2">
-                      <SlidersHorizontal className="h-4 w-4" />
-                      {isRTL ? "الفلاتر" : "Filters"}
-                      {activeFiltersCount > 0 ? (
-                        <span className="ml-2 inline-flex items-center justify-center rounded-full bg-black text-white text-xs w-5 h-5 dark:bg-neutral-50 dark:text-neutral-950">
-                          {activeFiltersCount}
-                        </span>
-                      ) : null}
-                    </span>
-                    <span className="text-gray-500 dark:text-neutral-400">
-                      {showMobileFilters ? (isRTL ? "إخفاء" : "Hide") : isRTL ? "عرض" : "Show"}
-                    </span>
+              {activeFiltersCount > 0 ? (
+                <div className="mt-3 flex items-center justify-between border-t border-border pt-3">
+                  <p className="text-xs text-muted-foreground">
+                    {isRTL ? "فلاتر مفعّلة" : "Active filters"}:{" "}
+                    <span className="font-bold text-foreground">{activeFiltersCount}</span>
+                  </p>
+                  <button type="button" onClick={clearFilters} className="ws-chip">
+                    <X className="size-3.5" />
+                    {isRTL ? "مسح" : "Clear"}
                   </button>
                 </div>
-              </div>
+              ) : null}
+            </div>
+          </div>
 
-              {/* FILTERS */}
-              <div className={`${showMobileFilters ? "block" : "hidden"} lg:block`}>
-                <div className="grid w-full grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-2 lg:gap-4 mb-5">
-                  <select
-                    value={selectedCategory}
-                    onChange={(e) => setSelectedCategory(e.target.value)}
-                    className="border bg-white border-gray-300 rounded-lg p-2 text-sm dark:bg-neutral-950 dark:border-neutral-800 dark:text-neutral-100">
-                    <option value="">{texts[language].allCategories}</option>
-                    {categories?.map((cat: any) => (
-                      <option key={cat._id} value={cat._id}>
-                        {cat.name}
-                      </option>
-                    ))}
-                  </select>
-
-                  <input
-                    type="number"
-                    placeholder={texts[language].minPrice}
-                    value={minPrice}
-                    onChange={(e) => setMinPrice(e.target.value)}
-                    className="border bg-white border-gray-300 rounded-lg p-2 text-sm dark:bg-neutral-950 dark:border-neutral-800 dark:text-neutral-100 dark:placeholder:text-neutral-500"
-                  />
-                  <input
-                    type="number"
-                    placeholder={texts[language].maxPrice}
-                    value={maxPrice}
-                    onChange={(e) => setMaxPrice(e.target.value)}
-                    className="border bg-white border-gray-300 rounded-lg p-2 text-sm dark:bg-neutral-950 dark:border-neutral-800 dark:text-neutral-100 dark:placeholder:text-neutral-500"
-                  />
-
-                  <select
-                    value={stockStatus}
-                    onChange={(e) => setStockStatus(e.target.value)}
-                    className="border bg-white border-gray-300 rounded-lg p-2 text-sm dark:bg-neutral-950 dark:border-neutral-800 dark:text-neutral-100">
-                    <option value="">{texts[language].allStock}</option>
-                    <option value="in-stock">{texts[language].inStock}</option>
-                    <option value="low-stock">{texts[language].lowStock}</option>
-                    <option value="out-of-stock">{texts[language].outOfStock}</option>
-                  </select>
-
-                  {/* ✅ Featured filter */}
-                  <label className="border bg-white border-gray-300 rounded-lg p-2 text-sm font-bold flex items-center justify-between gap-2 dark:bg-neutral-950 dark:border-neutral-800 dark:text-neutral-100">
-                    <span className="flex items-center gap-2">
-                      <Star className="h-4 w-4 text-amber-500 dark:text-amber-300" />
-                      {isRTL ? "المميز" : "Featured"}
-                    </span>
-                    <input
-                      type="checkbox"
-                      checked={onlyFeatured}
-                      onChange={(e) => setOnlyFeatured(e.target.checked)}
-                      className="h-4 w-4 accent-black dark:accent-white"
-                    />
-                  </label>
-                </div>
-
-                {activeFiltersCount > 0 ? (
-                  <div className="flex items-center justify-between mb-5">
-                    <p className="text-xs text-gray-500 dark:text-neutral-400">
-                      {isRTL ? "فلاتر مفعّلة" : "Active filters"}:{" "}
-                      <span className="font-bold">{activeFiltersCount}</span>
-                    </p>
-                    <button
-                      type="button"
-                      onClick={clearFilters}
-                      className="text-xs font-bold text-gray-700 hover:text-black inline-flex items-center gap-1 dark:text-neutral-300 dark:hover:text-neutral-50">
-                      <X className="h-4 w-4" />
-                      {isRTL ? "مسح" : "Clear"}
-                    </button>
-                  </div>
-                ) : null}
-              </div>
-
-              {/* Desktop Table */}
-              <div className="hidden lg:block rounded-lg mb-10 border lg:p-5 bg-white overflow-x-auto dark:bg-neutral-950 dark:border-neutral-800">
-                <table className="w-full min-w-[820px] text-sm text-left text-gray-700 dark:text-neutral-200">
-                  <thead className="bg-white text-gray-900/50 font-semibold dark:bg-neutral-950 dark:text-neutral-400">
+          <div
+            className={clsx("transition-opacity duration-200", fetchingProducts && "opacity-60")}>
+            {/* Desktop table */}
+            <div className="hidden lg:block">
+              <div className="ws-table-wrap">
+                <table className="ws-table">
+                  <thead>
                     <tr>
-                      <th className="px-4 py-3 border-b border-gray-200 dark:border-neutral-800">
-                        {texts[language].name}
-                      </th>
-                      <th className="px-4 py-3 border-b border-gray-200 dark:border-neutral-800">
-                        {texts[language].variants}
-                      </th>
-                      <th className="px-4 py-3 border-b border-gray-200 dark:border-neutral-800">
-                        {texts[language].category}
-                      </th>
-                      <th className="px-4 py-3 border-b border-gray-200 dark:border-neutral-800">
-                        {texts[language].stock}
-                      </th>
-                      <th className="px-4 py-3 border-b border-gray-200 dark:border-neutral-800">
-                        {texts[language].status}
-                      </th>
-                      <th className="px-4 py-3 border-b border-gray-200 dark:border-neutral-800">
-                        {texts[language].price}
-                      </th>
+                      <th>{t.name}</th>
+                      <th>{t.variants}</th>
+                      <th>{t.category}</th>
+                      <th>{t.stock}</th>
+                      <th>{t.status}</th>
+                      <th className="text-end">{t.price}</th>
                     </tr>
                   </thead>
 
-                  <tbody className="divide-y divide-gray-200 bg-white dark:divide-neutral-800 dark:bg-neutral-950">
+                  <tbody>
                     {filteredProducts?.length > 0 ? (
-                      filteredProducts?.map((product: any) => (
+                      filteredProducts.map((product: any) => (
                         <tr
                           key={product?._id}
-                          className="hover:bg-gray-100 dark:hover:bg-neutral-900/60 cursor-pointer transition-all duration-300 font-bold"
+                          className="ws-row-link"
                           onClick={() => navigate(`/products/${product?._id}`)}>
-                          <td className="px-4 py-3">
-                            <div className="flex items-center gap-2 max-w-64">
-                              <img
-                                className="w-16 h-16 object-cover rounded-md bg-gray-50 border shrink-0 dark:bg-neutral-900/50 dark:border-neutral-800"
-                                src={product?.image?.[0]?.url || "/placeholder.svg"}
-                                alt="thumbnail"
-                                loading="lazy"
-                              />
+                          <td>
+                            <div className="flex max-w-sm items-center gap-3">
+                              <Thumb product={product} />
                               <div className="min-w-0">
-                                <p className="truncate text-neutral-900 dark:text-neutral-100">
-                                  {product?.name}
-                                </p>
+                                <p className="truncate font-bold">{product?.name}</p>
                                 {product?.featured ? (
                                   <div className="mt-1">
                                     <FeaturedBadge />
@@ -503,120 +468,119 @@ function ProductList() {
                             </div>
                           </td>
 
-                          <td className="px-4 py-3">{product?.variants?.length}</td>
-                          <td className="px-4 py-3">{product?.category?.name}</td>
-                          <td className="px-4 py-3">{product?.countInStock}</td>
+                          <td>
+                            <span className="ws-pill ws-pill-neutral">
+                              {product?.variants?.length ?? 0}
+                            </span>
+                          </td>
+                          <td className="text-muted-foreground">{product?.category?.name || "—"}</td>
+                          <td className="font-bold">{product?.countInStock}</td>
 
-                          <td className="px-4 py-3">
+                          <td>
                             <StockBadge countInStock={product?.countInStock ?? 0} />
                           </td>
 
-                          <td className="px-4 py-3">
-                            {product?.hasDiscount ? (
-                              <div>
-                                <span className="line-through text-zinc-500 dark:text-neutral-500 mr-2">
-                                  {product.price.toFixed(3)} KD
-                                </span>
-                                <span className="text-green-600 dark:text-emerald-300 font-bold">
-                                  {product.discountedPrice.toFixed(3)} KD
-                                </span>
-                              </div>
-                            ) : (
-                              `${product.price.toFixed(3)} KD`
-                            )}
+                          <td className="text-end">
+                            <PricePill product={product} />
                           </td>
                         </tr>
                       ))
                     ) : (
                       <tr>
-                        <td
-                          colSpan={6}
-                          className="px-4 py-6 text-center text-gray-500 dark:text-neutral-500">
-                          {texts[language].noProductsFound}
+                        <td colSpan={6} className="p-0">
+                          <EmptyState
+                            title={t.noProductsFound}
+                            description={
+                              isRTL ? "عدّل الفلاتر أو البحث." : "Adjust your filters or search."
+                            }
+                            icon={Box}
+                            action={
+                              activeFiltersCount > 0 ? (
+                                <button onClick={clearFilters} className="ws-btn-secondary">
+                                  <X className="size-4" />
+                                  {isRTL ? "مسح الفلاتر" : "Clear filters"}
+                                </button>
+                              ) : null
+                            }
+                          />
                         </td>
                       </tr>
                     )}
                   </tbody>
                 </table>
-
-                <Paginate page={page} pages={pages} setPage={setPage} />
               </div>
 
-              {/* Mobile cards */}
-              <div className="lg:hidden mb-10">
-                {filteredProducts?.length > 0 ? (
-                  <div className="space-y-3">
-                    {filteredProducts.map((product: any) => {
-                      const arrow = isRTL ? (
-                        <ChevronLeft className="h-4 w-4 text-gray-400 dark:text-neutral-500" />
-                      ) : (
-                        <ChevronRight className="h-4 w-4 text-gray-400 dark:text-neutral-500" />
-                      );
+              <Paginate page={page} pages={pages} setPage={setPage} />
+            </div>
 
-                      return (
-                        <button
-                          key={product?._id}
-                          onClick={() => navigate(`/products/${product?._id}`)}
-                          className="w-full text-left rounded-2xl border bg-white p-3 shadow-sm hover:bg-gray-50 transition dark:bg-neutral-950 dark:border-neutral-800 dark:hover:bg-neutral-900/60">
-                          <div className="flex gap-3 items-stretch">
-                            <div className="shrink-0">
-                              <img
-                                className="w-20 h-20 rounded-xl object-cover bg-gray-50 border dark:bg-neutral-900/50 dark:border-neutral-800"
-                                src={product?.image?.[0]?.url}
-                                alt="thumbnail"
-                                loading="lazy"
+            {/* Mobile / tablet cards */}
+            <div className="lg:hidden">
+              {filteredProducts?.length > 0 ? (
+                <>
+                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                    {filteredProducts.map((product: any) => (
+                      <button
+                        key={product?._id}
+                        onClick={() => navigate(`/products/${product?._id}`)}
+                        className="ws-card w-full p-3 text-start transition active:scale-[0.99]">
+                        <div className="flex items-stretch gap-3">
+                          <Thumb product={product} size="size-20" />
+
+                          <div className="flex min-w-0 flex-1 flex-col justify-between">
+                            <div className="flex items-start justify-between gap-2">
+                              <div className="min-w-0">
+                                <p className="truncate text-sm font-extrabold">{product?.name}</p>
+                                <p className="mt-0.5 truncate text-xs text-muted-foreground">
+                                  {product?.category?.name || "—"} •{" "}
+                                  <span className="font-bold text-foreground">
+                                    {product?.variants?.length ?? 0}
+                                  </span>{" "}
+                                  {t.variants}
+                                </p>
+                                {product?.featured ? (
+                                  <div className="mt-1.5">
+                                    <FeaturedBadge />
+                                  </div>
+                                ) : null}
+                              </div>
+
+                              <ChevronRight
+                                className={clsx(
+                                  "mt-0.5 size-4 shrink-0 text-muted-foreground",
+                                  isRTL && "rotate-180",
+                                )}
                               />
                             </div>
 
-                            <div className="min-w-0 flex-1 flex flex-col justify-between">
-                              <div className="flex items-start justify-between gap-2">
-                                <div className="min-w-0">
-                                  <p className="text-black dark:text-neutral-100 truncate">
-                                    {product?.name}
-                                  </p>
-
-                                  <div className="mt-1 flex flex-wrap items-center gap-2">
-                                    <p className="text-xs text-gray-500 dark:text-neutral-400 truncate">
-                                      {product?.category?.name || "—"} •{" "}
-                                      <span className="font-bold text-gray-700 dark:text-neutral-200">
-                                        {product?.variants?.length ?? 0}
-                                      </span>{" "}
-                                      {texts[language].variants}
-                                    </p>
-
-                                    {product?.featured ? <FeaturedBadge /> : null}
-                                  </div>
-                                </div>
-
-                                <div className="pt-0.5">{arrow}</div>
-                              </div>
-
-                              <div className="mt-3 flex items-center justify-between gap-2">
-                                <div className="flex items-center gap-2 min-w-0">
-                                  <StockBadge countInStock={product?.countInStock ?? 0} />
-                                  <span className="text-xs text-gray-600 dark:text-neutral-300 font-bold truncate">
-                                    {texts[language].stock}: {product?.countInStock ?? 0}
-                                  </span>
-                                </div>
-
-                                <PricePill product={product} />
-                              </div>
+                            <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
+                              <StockBadge countInStock={product?.countInStock ?? 0} />
+                              <PricePill product={product} />
                             </div>
                           </div>
-                        </button>
-                      );
-                    })}
+                        </div>
+                      </button>
+                    ))}
+                  </div>
 
-                    <div className="pt-2">
-                      <Paginate page={page} pages={pages} setPage={setPage} />
-                    </div>
-                  </div>
-                ) : (
-                  <div className="text-center text-gray-500 dark:text-neutral-500 py-10">
-                    {texts[language].noProductsFound}
-                  </div>
-                )}
-              </div>
+                  <Paginate page={page} pages={pages} setPage={setPage} />
+                </>
+              ) : (
+                <div className="ws-card">
+                  <EmptyState
+                    title={t.noProductsFound}
+                    description={isRTL ? "عدّل الفلاتر أو البحث." : "Adjust your filters or search."}
+                    icon={Box}
+                    action={
+                      activeFiltersCount > 0 ? (
+                        <button onClick={clearFilters} className="ws-btn-secondary">
+                          <X className="size-4" />
+                          {isRTL ? "مسح الفلاتر" : "Clear filters"}
+                        </button>
+                      ) : null
+                    }
+                  />
+                </div>
+              )}
             </div>
           </div>
         </div>

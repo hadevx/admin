@@ -101,12 +101,12 @@ export default function CreateProductModal({
   const [isVariantsOpen, setIsVariantsOpen] = useState(false);
 
   // --- shared styles (minimal, modern) ---
-  const card = "rounded-3xl border border-neutral-200 bg-white shadow-sm";
-  const tile = "rounded-2xl border border-neutral-200 bg-white";
+  const card = "ws-card";
+  const tile = "rounded-2xl border border-border bg-card";
   const input =
-    "w-full rounded-xl  border border-neutral-200 bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-neutral-950/10";
-  const label = "text-xs font-semibold text-neutral-600";
-  const hint = "text-[11px] text-neutral-500";
+    "w-full rounded-xl  border border-border bg-card px-3 py-2 text-sm outline-none focus:ring-4 focus:ring-foreground/10";
+  const label = "text-xs font-semibold text-muted-foreground";
+  const hint = "text-[11px] text-muted-foreground";
 
   // --- variants helpers ---
   const addColorVariant = () =>
@@ -327,7 +327,7 @@ export default function CreateProductModal({
           if (!v) onReset();
         }}>
         <DialogContent
-          dir={isRTL ? "ltr" : "ltr"}
+          dir={isRTL ? "rtl" : "ltr"}
           className="
             w-[calc(100vw-1rem)] sm:w-[calc(100vw-2rem)]
             max-w-[900px] xl:max-w-[900px]
@@ -338,10 +338,10 @@ export default function CreateProductModal({
           {/* Top bar */}
           <div className="px-10 sm:px-10 py-4 border-b  flex justify-end shrink-0 ">
             <DialogHeader>
-              <DialogTitle className="text-lg sm:text-xl text-right font-bold">
+              <DialogTitle className="text-lg font-bold sm:text-xl">
                 {t.addProduct}
               </DialogTitle>
-              <DialogDescription className="text-sm text-neutral-500">
+              <DialogDescription className="text-sm text-muted-foreground">
                 {isRTL
                   ? "أدخل معلومات المنتج بسرعة، ثم أضف المتغيرات عند الحاجة."
                   : "Add product info fast, then add variants only if needed."}
@@ -350,15 +350,15 @@ export default function CreateProductModal({
           </div>
 
           {/* Body */}
-          <div className="flex-1 min-h-0 overflow-y-auto bg-neutral-50">
+          <div className="flex-1 min-h-0 overflow-y-auto bg-muted">
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 px-4 sm:px-6 py-5 sm:py-6">
               {/* LEFT: Main form */}
-              <div className="lg:col-span-7 space-y-4" dir="rtl">
+              <div className="lg:col-span-7 space-y-4">
                 {/* Product images */}
                 <div className={clsx(card, "p-4")}>
                   <div className="flex items-center justify-between gap-3">
                     <div className="min-w-0">
-                      <p className="text-sm font-semibold text-neutral-950">
+                      <p className="text-sm font-semibold text-foreground">
                         {isRTL ? "صور المنتج" : "Product images"}
                       </p>
                       <p className={hint}>
@@ -368,17 +368,17 @@ export default function CreateProductModal({
                       </p>
                     </div>
 
-                    <span className="inline-flex items-center gap-2 rounded-full border bg-white px-3 py-1 text-xs font-semibold text-neutral-800">
+                    <span className="inline-flex items-center gap-2 rounded-full border bg-card px-3 py-1 text-xs font-semibold text-foreground">
                       <ImagePlus className="h-4 w-4" />
                       {imageFiles.length}
                     </span>
                   </div>
 
-                  <label className="mt-3  block cursor-pointer" dir="rtl">
-                    <div className="rounded-2xl border-2 border-dashed border-neutral-200 bg-white px-4 py-5 hover:bg-neutral-50 transition">
+                  <label className="mt-3  block cursor-pointer">
+                    <div className="rounded-2xl border-2 border-dashed border-border bg-card px-4 py-5 hover:bg-muted transition">
                       <div className="flex items-center justify-between gap-3">
                         <div className="min-w-0">
-                          <p className="text-sm font-semibold text-neutral-900">
+                          <p className="text-sm font-semibold text-foreground">
                             {isRTL ? "اضغط لاختيار الصور" : "Click to choose images"}
                           </p>
                           <p className={hint}>
@@ -386,7 +386,7 @@ export default function CreateProductModal({
                           </p>
                         </div>
                         <ChevronRight
-                          className={clsx("h-4 w-4 text-neutral-400", isRTL && "rotate-180")}
+                          className={clsx("h-4 w-4 text-muted-foreground", isRTL && "rotate-180")}
                         />
                       </div>
 
@@ -405,7 +405,7 @@ export default function CreateProductModal({
                       {imageFiles.map((file, i) => (
                         <div
                           key={i}
-                          className="relative rounded-2xl overflow-hidden border bg-white">
+                          className="relative rounded-2xl overflow-hidden border bg-card">
                           <img
                             src={URL.createObjectURL(file)}
                             className="h-20 w-full object-cover"
@@ -414,8 +414,8 @@ export default function CreateProductModal({
                           <button
                             type="button"
                             onClick={() => setImageFiles(imageFiles.filter((_, idx) => idx !== i))}
-                            className="absolute top-2 right-2 rounded-full bg-white/90 border border-neutral-200 p-1 hover:bg-white">
-                            <X className="h-3 w-3 text-neutral-700" />
+                            className="absolute top-2 right-2 rounded-full bg-card/90 border border-border p-1 hover:bg-card">
+                            <X className="h-3 w-3 text-muted-foreground" />
                           </button>
                         </div>
                       ))}
@@ -426,7 +426,7 @@ export default function CreateProductModal({
                 {/* Core fields */}
                 <div className={clsx(card, "p-4")}>
                   <div className="grid grid-cols-1 sm:grid-cols-12 gap-3">
-                    <div className="sm:col-span-6" dir="rtl">
+                    <div className="sm:col-span-6">
                       <label className={label}>{t.productName}</label>
                       <input
                         value={name}
@@ -436,7 +436,7 @@ export default function CreateProductModal({
                       />
                     </div>
 
-                    <div className="sm:col-span-6" dir="rtl">
+                    <div className="sm:col-span-6">
                       <label className={label}>{t.productPrice}</label>
                       <div className="relative mt-2">
                         <input
@@ -450,7 +450,7 @@ export default function CreateProductModal({
                         />
                         <span
                           className={clsx(
-                            "absolute top-1/2 -translate-y-1/2 text-xs font-semibold text-neutral-500",
+                            "absolute top-1/2 -translate-y-1/2 text-xs font-semibold text-muted-foreground",
                             isRTL ? "right-3" : "right-3",
                           )}>
                           KD
@@ -458,7 +458,7 @@ export default function CreateProductModal({
                       </div>
                     </div>
 
-                    <div className="sm:col-span-6" dir="rtl">
+                    <div className="sm:col-span-6">
                       <label className={label}>{t.selectCategory}</label>
                       <select
                         value={category}
@@ -471,7 +471,7 @@ export default function CreateProductModal({
                       </select>
                     </div>
 
-                    <div className="sm:col-span-6" dir="rtl">
+                    <div className="sm:col-span-6">
                       <label className={label}>{t.productStock}</label>
                       <div className="mt-2 relative">
                         <input
@@ -488,7 +488,7 @@ export default function CreateProductModal({
                         />
                         <span
                           className={clsx(
-                            "absolute top-1/2 -translate-y-1/2 text-xs font-semibold text-neutral-500",
+                            "absolute top-1/2 -translate-y-1/2 text-xs font-semibold text-muted-foreground",
                             isRTL ? "left-3" : "right-3",
                           )}>
                           <Package className="h-4 w-4 " />
@@ -496,7 +496,7 @@ export default function CreateProductModal({
                       </div>
 
                       {hasVariants ? (
-                        <p className="mt-2 text-xs text-neutral-500">
+                        <p className="mt-2 text-xs text-muted-foreground">
                           {isRTL
                             ? `المخزون محسوب من المتغيرات: ${totalVariantStock}`
                             : `Stock is calculated from variants: ${totalVariantStock}`}
@@ -504,7 +504,7 @@ export default function CreateProductModal({
                       ) : null}
                     </div>
 
-                    <div className="sm:col-span-12" dir="rtl">
+                    <div className="sm:col-span-12">
                       <label className={label}>{t.productDescription}</label>
                       <textarea
                         rows={4}
@@ -523,7 +523,7 @@ export default function CreateProductModal({
                 <div className={clsx(card, "p-4")}>
                   <div className="flex items-center justify-between gap-3">
                     <div className="min-w-0">
-                      <p className="text-sm font-semibold text-neutral-950">
+                      <p className="text-sm font-semibold text-foreground">
                         {isRTL ? "المتغيرات" : "Variants"}
                       </p>
                       <p className={hint}>
@@ -557,17 +557,17 @@ export default function CreateProductModal({
                               <div className="min-w-0">
                                 <div className="flex items-center gap-2">
                                   <span
-                                    className="h-3.5 w-3.5 rounded-full border border-neutral-200"
+                                    className="h-3.5 w-3.5 rounded-full border border-border"
                                     style={{
                                       backgroundColor:
                                         v.color?.trim().toLowerCase() || "transparent",
                                     }}
                                   />
-                                  <p className="text-sm font-semibold text-neutral-950 truncate">
+                                  <p className="text-sm font-semibold text-foreground truncate">
                                     {v.color || (isRTL ? `لون ${idx + 1}` : `Color ${idx + 1}`)}
                                   </p>
                                 </div>
-                                <p className="mt-1 text-xs text-neutral-500">
+                                <p className="mt-1 text-xs text-muted-foreground">
                                   {(v.sizes?.length || 0) + " " + (isRTL ? "مقاسات" : "sizes")} •{" "}
                                   {vStock + " " + (isRTL ? "قطعة" : "items")}
                                 </p>
@@ -576,7 +576,7 @@ export default function CreateProductModal({
                               <button
                                 type="button"
                                 onClick={() => removeColorVariant(idx)}
-                                className="h-9 w-9 rounded-xl border border-neutral-200 bg-white grid place-items-center hover:bg-neutral-50">
+                                className="h-9 w-9 rounded-xl border border-border bg-card grid place-items-center hover:bg-muted">
                                 <Trash2 className="h-4 w-4 text-rose-700" />
                               </button>
                             </div>
@@ -586,7 +586,7 @@ export default function CreateProductModal({
                                 {v.images.slice(0, 6).map((file, i) => (
                                   <div
                                     key={i}
-                                    className="h-10 w-10 rounded-xl overflow-hidden border bg-white">
+                                    className="h-10 w-10 rounded-xl overflow-hidden border bg-card">
                                     <img
                                       src={URL.createObjectURL(file)}
                                       className="h-full w-full object-cover"
@@ -603,17 +603,17 @@ export default function CreateProductModal({
                       <Button
                         type="button"
                         onClick={addColorVariant}
-                        className="w-full rounded-xl bg-neutral-950 hover:bg-neutral-900">
+                        className="w-full rounded-xl bg-emphasis hover:bg-emphasis-hover text-emphasis-foreground">
                         <Plus className="h-4 w-4 mr-2" />
                         {isRTL ? "إضافة لون" : "Add color"}
                       </Button>
                     </div>
                   ) : (
-                    <div className="rounded-2xl border border-dashed bg-white p-5 text-center">
-                      <p className="text-sm font-semibold text-neutral-900">
+                    <div className="rounded-2xl border border-dashed bg-card p-5 text-center">
+                      <p className="text-sm font-semibold text-foreground">
                         {isRTL ? "بدون متغيرات" : "No variants"}
                       </p>
-                      <p className="mt-1 text-xs text-neutral-500">
+                      <p className="mt-1 text-xs text-muted-foreground">
                         {isRTL
                           ? "إذا كان المنتج له ألوان/مقاسات، أضفها هنا."
                           : "If your product has colors/sizes, add them here."}
@@ -634,14 +634,14 @@ export default function CreateProductModal({
                 </div>
 
                 {/* Quick summary */}
-                <div className={clsx(tile, "p-4 bg-white/70 backdrop-blur")}>
+                <div className={clsx(tile, "p-4 bg-card/70 backdrop-blur")}>
                   <div className="flex items-center gap-2">
-                    <div className="h-9 w-9 rounded-2xl border border-neutral-200 bg-white grid place-items-center">
-                      <Boxes className="h-4 w-4 text-neutral-900" />
+                    <div className="h-9 w-9 rounded-2xl border border-border bg-card grid place-items-center">
+                      <Boxes className="h-4 w-4 text-foreground" />
                     </div>
                     <div className="min-w-0">
-                      <p className="text-xs text-neutral-500">{isRTL ? "ملخص" : "Summary"}</p>
-                      <p className="text-sm font-semibold text-neutral-950">
+                      <p className="text-xs text-muted-foreground">{isRTL ? "ملخص" : "Summary"}</p>
+                      <p className="text-sm font-semibold text-foreground">
                         {variants.length
                           ? `${variants.length} ${isRTL ? "ألوان" : "colors"} • ${totalVariantStock} ${
                               isRTL ? "قطعة" : "items"
@@ -658,7 +658,7 @@ export default function CreateProductModal({
           </div>
 
           {/* Footer */}
-          <div className="px-4 sm:px-6 py-4 border-t bg-white shrink-0">
+          <div className="px-4 sm:px-6 py-4 border-t bg-card shrink-0">
             <div className="flex flex-col-reverse sm:flex-row justify-end gap-2">
               <Button
                 variant="outline"
@@ -668,7 +668,7 @@ export default function CreateProductModal({
               </Button>
 
               <Button
-                className="rounded-xl w-full sm:w-auto bg-neutral-950 hover:bg-neutral-900"
+                className="rounded-xl w-full sm:w-auto bg-emphasis hover:bg-emphasis-hover text-emphasis-foreground"
                 disabled={creating || uploading}
                 onClick={onCreate}>
                 {uploading ? t.uploading : creating ? t.creating : t.create}
@@ -692,10 +692,10 @@ export default function CreateProductModal({
           {/* header */}
           <div className="px-10 sm:px-10 py-4 border-b  shrink-0 flex justify-start ">
             <DialogHeader>
-              <DialogTitle className="text-lg sm:text-xl text-right font-bold">
+              <DialogTitle className="text-lg font-bold sm:text-xl">
                 {isRTL ? "إدارة المتغيرات" : "Manage variants"}
               </DialogTitle>
-              <DialogDescription className="text-sm text-neutral-500">
+              <DialogDescription className="text-sm text-muted-foreground">
                 {isRTL
                   ? "أضف لونًا، ثم المقاسات والسعر والمخزون. الصور اختيارية."
                   : "Add a color, then sizes with price and stock. Images are optional."}
@@ -704,7 +704,7 @@ export default function CreateProductModal({
           </div>
 
           {/* body */}
-          <div className="flex-1 min-h-0 overflow-y-auto bg-neutral-50 px-4 sm:px-6 py-5">
+          <div className="flex-1 min-h-0 overflow-y-auto bg-muted px-4 sm:px-6 py-5">
             <div className="space-y-4">
               {variants.map((variant, i) => {
                 const variantStock = (variant.sizes || []).reduce(
@@ -717,11 +717,11 @@ export default function CreateProductModal({
                     {/* header row */}
                     <div className="p-4 sm:p-5 flex items-center justify-between gap-3">
                       <div className="min-w-0">
-                        <p className="text-sm font-semibold text-neutral-950">
+                        <p className="text-sm font-semibold text-foreground">
                           {isRTL ? "متغير" : "Variant"} •{" "}
-                          <span className="text-neutral-600">{variant.color || "—"}</span>
+                          <span className="text-muted-foreground">{variant.color || "—"}</span>
                         </p>
-                        <p className="text-xs text-neutral-500">
+                        <p className="text-xs text-muted-foreground">
                           {(variant.sizes?.length || 0) + " " + (isRTL ? "مقاسات" : "sizes")} •{" "}
                           {(variant.images?.length || 0) + " " + (isRTL ? "صور" : "images")} •{" "}
                           {variantStock + " " + (isRTL ? "قطعة" : "items")}
@@ -744,22 +744,22 @@ export default function CreateProductModal({
                       {/* ✅ COLOR (first) */}
                       <div className={clsx(tile, "p-4 lg:col-span-5")}>
                         <div className="flex items-center gap-2 mb-3">
-                          <div className="h-9 w-9 rounded-2xl border border-neutral-200 bg-neutral-50 grid place-items-center">
-                            <Palette className="h-4 w-4 text-neutral-900" />
+                          <div className="h-9 w-9 rounded-2xl border border-border bg-muted grid place-items-center">
+                            <Palette className="h-4 w-4 text-foreground" />
                           </div>
 
                           <div className="min-w-0">
-                            <div className="text-xs text-neutral-500">
+                            <div className="text-xs text-muted-foreground">
                               {isRTL ? "اللون" : "Color"}
                             </div>
-                            <div className="text-sm font-semibold text-neutral-950 truncate">
+                            <div className="text-sm font-semibold text-foreground truncate">
                               {variant.color || "—"}
                             </div>
                           </div>
 
                           <span
                             className={clsx(
-                              "ml-auto h-4 w-4 rounded-full border border-neutral-200",
+                              "ml-auto h-4 w-4 rounded-full border border-border",
                               isRTL && "ml-0 mr-auto",
                             )}
                             style={{
@@ -795,7 +795,7 @@ export default function CreateProductModal({
                             ))}
                           </select>
 
-                          <p className="text-[11px] text-neutral-500">
+                          <p className="text-[11px] text-muted-foreground">
                             {isRTL
                               ? "اكتب اللون أو اختره من القائمة."
                               : "Type or pick from the list."}
@@ -807,14 +807,14 @@ export default function CreateProductModal({
                       <div className={clsx(tile, "p-4 lg:col-span-7")}>
                         <div className="flex items-center justify-between gap-3">
                           <div className="flex items-center gap-2">
-                            <div className="h-9 w-9 rounded-2xl border border-neutral-200 bg-neutral-50 grid place-items-center">
-                              <Ruler className="h-4 w-4 text-neutral-900" />
+                            <div className="h-9 w-9 rounded-2xl border border-border bg-muted grid place-items-center">
+                              <Ruler className="h-4 w-4 text-foreground" />
                             </div>
                             <div>
-                              <div className="text-xs text-neutral-500">
+                              <div className="text-xs text-muted-foreground">
                                 {isRTL ? "المقاسات" : "Sizes"}
                               </div>
-                              <div className="text-sm font-semibold text-neutral-950">
+                              <div className="text-sm font-semibold text-foreground">
                                 {variant.sizes?.length || "—"}
                               </div>
                             </div>
@@ -836,7 +836,7 @@ export default function CreateProductModal({
                           {variant.sizes.map((row, j) => (
                             <div
                               key={j}
-                              className="rounded-2xl border border-neutral-200 bg-white p-3">
+                              className="rounded-2xl border border-border bg-card p-3">
                               <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 items-end">
                                 {/* size */}
                                 <div className="sm:col-span-5">
@@ -902,11 +902,11 @@ export default function CreateProductModal({
                           ))}
 
                           {!variant.sizes.length ? (
-                            <div className="rounded-2xl border border-dashed border-neutral-200 bg-neutral-50 p-4 text-center">
-                              <p className="text-xs font-semibold text-neutral-900">
+                            <div className="rounded-2xl border border-dashed border-border bg-muted p-4 text-center">
+                              <p className="text-xs font-semibold text-foreground">
                                 {isRTL ? "لا توجد مقاسات" : "No sizes yet"}
                               </p>
-                              <p className="mt-1 text-xs text-neutral-500">
+                              <p className="mt-1 text-xs text-muted-foreground">
                                 {isRTL ? "أضف مقاسًا واحدًا على الأقل." : "Add at least one size."}
                               </p>
                             </div>
@@ -918,14 +918,14 @@ export default function CreateProductModal({
                       <div className={clsx(tile, "p-4 lg:col-span-12")}>
                         <div className="flex items-center justify-between gap-3">
                           <div className="flex items-center gap-2">
-                            <div className="h-9 w-9 rounded-2xl border border-neutral-200 bg-neutral-50 grid place-items-center">
-                              <ImagePlus className="h-4 w-4 text-neutral-900" />
+                            <div className="h-9 w-9 rounded-2xl border border-border bg-muted grid place-items-center">
+                              <ImagePlus className="h-4 w-4 text-foreground" />
                             </div>
                             <div>
-                              <div className="text-xs text-neutral-500">
+                              <div className="text-xs text-muted-foreground">
                                 {isRTL ? "الصور" : "Images"}
                               </div>
-                              <div className="text-sm font-semibold text-neutral-950">
+                              <div className="text-sm font-semibold text-foreground">
                                 {variant.images?.length || 0}
                               </div>
                             </div>
@@ -933,7 +933,7 @@ export default function CreateProductModal({
 
                           {/* small add-box input style */}
                           <label className="cursor-pointer">
-                            <div className="inline-flex items-center gap-2 rounded-xl border border-neutral-200 bg-white px-3 py-2 text-xs font-semibold text-neutral-900 hover:bg-neutral-50 transition">
+                            <div className="inline-flex items-center gap-2 rounded-xl border border-border bg-card px-3 py-2 text-xs font-semibold text-foreground hover:bg-muted transition">
                               <Plus className="h-4 w-4" />
                               {isRTL ? "إضافة صور" : "Add images"}
                             </div>
@@ -958,7 +958,7 @@ export default function CreateProductModal({
                               {variant.images.map((file, idx) => (
                                 <div
                                   key={idx}
-                                  className="relative h-20 rounded-2xl overflow-hidden border bg-white">
+                                  className="relative h-20 rounded-2xl overflow-hidden border bg-card">
                                   <img
                                     src={URL.createObjectURL(file)}
                                     className="h-full w-full object-cover"
@@ -972,14 +972,14 @@ export default function CreateProductModal({
                                         variant.images.filter((_, x) => x !== idx),
                                       )
                                     }
-                                    className="absolute top-2 right-2 rounded-full bg-white/90 border border-neutral-200 p-1 hover:bg-white">
-                                    <X className="h-3 w-3 text-neutral-700" />
+                                    className="absolute top-2 right-2 rounded-full bg-card/90 border border-border p-1 hover:bg-card">
+                                    <X className="h-3 w-3 text-muted-foreground" />
                                   </button>
                                 </div>
                               ))}
                             </div>
                           ) : (
-                            <div className="rounded-2xl border border-dashed border-neutral-200 bg-neutral-50 p-4 text-center text-xs text-neutral-500">
+                            <div className="rounded-2xl border border-dashed border-border bg-muted p-4 text-center text-xs text-muted-foreground">
                               {isRTL ? "لا توجد صور" : "No images"}
                             </div>
                           )}
@@ -993,7 +993,7 @@ export default function CreateProductModal({
               <Button
                 type="button"
                 onClick={addColorVariant}
-                className="w-full rounded-xl bg-neutral-950 hover:bg-neutral-900">
+                className="w-full rounded-xl bg-emphasis hover:bg-emphasis-hover text-emphasis-foreground">
                 <Plus className="h-4 w-4 mr-2" />
                 {isRTL ? "إضافة لون" : "Add color"}
               </Button>
@@ -1001,7 +1001,7 @@ export default function CreateProductModal({
           </div>
 
           {/* footer */}
-          <div className="px-4 sm:px-6 py-4 border-t bg-white shrink-0 flex justify-end gap-2">
+          <div className="px-4 sm:px-6 py-4 border-t bg-card shrink-0 flex justify-end gap-2">
             <Button
               variant="outline"
               className="rounded-xl"
@@ -1009,7 +1009,7 @@ export default function CreateProductModal({
               {isRTL ? "إغلاق" : "Close"}
             </Button>
             <Button
-              className="rounded-xl bg-neutral-950 hover:bg-neutral-900"
+              className="rounded-xl bg-emphasis hover:bg-emphasis-hover text-emphasis-foreground"
               onClick={() => setIsVariantsOpen(false)}>
               {isRTL ? "تم" : "Done"}
             </Button>

@@ -23,14 +23,25 @@ import { useEffect } from "react";
 
 function App() {
   const { adminUserInfo } = useSelector((state: any) => state.auth);
-  const { theme } = useSelector((state: RootState) => state.theme);
+  const { theme, skin } = useSelector((state: RootState) => state.theme);
+  const lang = useSelector((state: any) => state.language.lang);
+
   useEffect(() => {
-    if (theme === "dark") {
-      document.documentElement.classList.add("dark");
-    } else {
-      document.documentElement.classList.remove("dark");
-    }
+    document.documentElement.classList.toggle("dark", theme === "dark");
   }, [theme]);
+
+  // The colour scheme is a separate axis from light/dark — every skin defines
+  // both, so the two settings compose instead of overriding each other.
+  useEffect(() => {
+    document.documentElement.dataset.skin = skin;
+  }, [skin]);
+
+  // Direction lives on <html> so logical utilities (ps-, start-, text-start…)
+  // mirror themselves instead of every page branching on the language.
+  useEffect(() => {
+    document.documentElement.dir = lang === "ar" ? "rtl" : "ltr";
+    document.documentElement.lang = lang;
+  }, [lang]);
   return (
     <Routes>
       {/* Root route redirects based on login status */}

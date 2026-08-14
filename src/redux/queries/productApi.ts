@@ -54,16 +54,20 @@ export const productApi = api.injectEndpoints({
       providesTags: ["Product"],
     }),
 
+    // Tagged so saving an edit refetches the detail view. Without this the
+    // page kept serving the pre-edit cache until a hard reload.
     getProductById: builder.query<any, string>({
       query: (productId) => ({
         url: `/api/products/${productId}`,
       }),
+      providesTags: (_result, _error, productId) => [{ type: "Product", id: productId }, "Product"],
     }),
 
     getProductsByCategory: builder.query<any, string>({
       query: (category) => ({
         url: `/api/products/category/${category}`,
       }),
+      providesTags: ["Product"],
     }),
 
     updateStock: builder.mutation<any, any>({
@@ -138,18 +142,11 @@ export const productApi = api.injectEndpoints({
       invalidatesTags: ["Product"],
     }),
 
-    deleteImage: builder.mutation<any, any>({
-      query: (data) => ({
-        url: `/api/products/delete-image`,
-        method: "POST",
-        body: data,
-      }),
-    }),
-
     getLatestProducts: builder.query<any, void>({
       query: () => ({
         url: "/api/products/latest",
       }),
+      providesTags: ["Product"],
     }),
   }),
 });
@@ -164,7 +161,6 @@ export const {
   useDeleteProductMutation,
   useUpdateProductMutation,
   useGetLatestProductsQuery,
-  useDeleteImageMutation,
   useUploadVariantImageMutation,
   useUpdateProductVariantMutation,
   useDeleteProductVariantMutation,

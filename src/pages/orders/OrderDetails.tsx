@@ -12,18 +12,28 @@ import { Separator } from "../../components/ui/separator";
 import Loader from "../../components/Loader";
 import { PDFDownloadLink } from "@react-pdf/renderer";
 import Invoise from "../../components/Invoise";
-import { Loader2Icon, TicketPercent, BadgePercent, Hash } from "lucide-react";
+import {
+  Loader2Icon,
+  TicketPercent,
+  BadgePercent,
+  Hash,
+  CheckCircle2,
+  XCircle,
+  Download,
+} from "lucide-react";
 import { useSelector } from "react-redux";
+import { useState } from "react";
+import ReasonDialog from "../../components/ReasonDialog";
 
 function OrderDetails() {
   const { orderId } = useParams();
+  const [cancelOpen, setCancelOpen] = useState(false);
   const { data: order, isLoading, refetch } = useGetOrderQuery(orderId);
   const [updateOrderToDeliverd, { isLoading: loadingDelivered }] =
     useUpdateOrderToDeliverdMutation();
   const [updateOrderToCanceled, { isLoading: isCanceled }] = useUpdateOrderToCanceledMutation();
 
   const language = useSelector((state: any) => state.language.lang); // 'ar' or 'en'
-  const dir = language === "ar" ? "rtl" : "ltr";
 
   const handleUpdateOrderToDelivered = async () => {
     try {
@@ -37,13 +47,17 @@ function OrderDetails() {
     }
   };
 
-  const handleUpdateOrderToCanceled = async () => {
+  const handleUpdateOrderToCanceled = async (cancelReason: string) => {
     try {
-      await updateOrderToCanceled(orderId).unwrap();
+      await updateOrderToCanceled({ orderId: orderId as string, cancelReason }).unwrap();
       toast.success(language === "ar" ? "تم إلغاء الطلب" : "Order is canceled");
+      setCancelOpen(false);
       refetch();
-    } catch (error) {
-      toast.error(language === "ar" ? "فشل في إلغاء الطلب" : "Failed to cancel order");
+    } catch (error: any) {
+      toast.error(
+        error?.data?.message ||
+          (language === "ar" ? "فشل في إلغاء الطلب" : "Failed to cancel order"),
+      );
     }
   };
 
@@ -69,31 +83,29 @@ function OrderDetails() {
       {isLoading ? (
         <Loader />
       ) : (
-        <div
-          className={clsx(
-            "mb-10 mt-[50px] min-h-screen w-full lg:w-4xl lg:py-3 lg:mt-[50px] font-custom",
-            dir === "rtl" ? "rtl" : "ltr",
-            "text-neutral-900 dark:text-neutral-100",
-          )}>
-          <div className="px-4 py-6">
+        <div className="me-auto w-full max-w-5xl animate-fade-up">
+          <div>
             {/* Header */}
-            <div
-              className="flex gap-2 flex-col lg:flex-row justify-between lg:items-center"
-              dir={language === "ar" ? "rtl" : "ltr"}>
-              <h1 className="text-lg lg:text-2xl font-bold text-neutral-900 dark:text-neutral-50">
-                {language === "ar" ? "تفاصيل الطلب:" : "Order details:"}
-              </h1>
+            <div className="mb-4 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+              <div className="min-w-0">
+                <h1 className="text-xl font-extrabold tracking-tight sm:text-2xl">
+                  {language === "ar" ? "تفاصيل الطلب" : "Order details"}
+                </h1>
+                <p className="mt-0.5 truncate font-mono text-xs text-muted-foreground">
+                  #{order?._id}
+                </p>
+              </div>
 
-              <div className="flex text-xs items-center gap-3 lg:gap-2 sm:justify-end lg:justify-end lg:items-center">
+              <div className="flex flex-wrap items-center gap-2">
                 <button
                   disabled={order?.isDelivered || order?.isCanceled || loadingDelivered}
                   onClick={handleUpdateOrderToDelivered}
-                  className={clsx(
-                    "select-none hover:opacity-80 lg:text-sm transition-all duration-300 lg:float-right px-3 py-2 rounded-md font-bold",
-                    order?.isDelivered || order?.isCanceled
-                      ? "bg-gray-200 text-gray-600 pointer-events-none dark:bg-neutral-800 dark:text-neutral-400"
-                      : "bg-neutral-950 text-white dark:bg-neutral-50 dark:text-neutral-950",
-                  )}>
+                  className="ws-btn-primary ws-btn-sm">
+                  {loadingDelivered ? (
+                    <Loader2Icon className="size-4 animate-spin" />
+                  ) : (
+                    <CheckCircle2 className="size-4" />
+                  )}
                   {loadingDelivered
                     ? language === "ar"
                       ? "جارٍ التحديث..."
@@ -107,87 +119,95 @@ function OrderDetails() {
                 <PDFDownloadLink
                   document={<Invoise order={order} />}
                   fileName={`invoice-${order?._id}-${order?.createdAt?.substring(0, 10)}.pdf`}>
-                  <button
-                    className={clsx(
-                      "select-none hover:opacity-70 lg:text-sm transition-all duration-300 float-right px-3 py-2 rounded-md font-bold shadow",
-                      "bg-neutral-950 text-white dark:bg-neutral-50 dark:text-neutral-950",
-                    )}>
+                  <button className="ws-btn-secondary ws-btn-sm">
+                    <Download className="size-4" />
                     {language === "ar" ? "تحميل الفاتورة" : "Download Invoice"}
                   </button>
                 </PDFDownloadLink>
 
-                {isCanceled ? (
-                  <Loader2Icon className="animate-spin" />
-                ) : (
-                  <button
-                    disabled={order?.isDelivered || order?.isCanceled}
-                    onClick={handleUpdateOrderToCanceled}
-                    className={clsx(
-                      "select-none hover:opacity-70 transition-all duration-300 lg:text-sm px-3 py-2 rounded-md font-bold shadow lg:float-right",
-                      order?.isCanceled || order?.isDelivered
-                        ? "bg-gray-200 text-gray-600 pointer-events-none dark:bg-neutral-800 dark:text-neutral-400"
-                        : "bg-gradient-to-t from-rose-500 to-rose-400 text-white dark:from-rose-600 dark:to-rose-500",
-                    )}>
-                    {isCanceled
-                      ? language === "ar"
-                        ? "جارٍ التحديث..."
-                        : "Updating..."
-                      : language === "ar"
-                        ? "إلغاء الطلب"
-                        : "Mark as canceled"}
-                  </button>
-                )}
+                <button
+                  disabled={order?.isDelivered || order?.isCanceled || isCanceled}
+                  onClick={() => setCancelOpen(true)}
+                  className="ws-btn-danger ws-btn-sm">
+                  {isCanceled ? (
+                    <Loader2Icon className="size-4 animate-spin" />
+                  ) : (
+                    <XCircle className="size-4" />
+                  )}
+                  {language === "ar" ? "إلغاء الطلب" : "Mark as canceled"}
+                </button>
               </div>
             </div>
 
-            <Separator className="my-4 bg-black/20 dark:bg-white/10" />
+            <Separator className="my-4" />
 
             {order && (
               <div
                 className={clsx(
                   "text-sm lg:text-sm border rounded-lg p-6",
-                  "bg-white border-gray-200",
-                  "dark:bg-neutral-950 dark:border-neutral-800",
+                  "border-border bg-card",
                 )}
                 dir={language === "ar" ? "rtl" : ""}>
+                {/* Why this order was cancelled — only when a reason was given */}
+                {order.isCanceled && order.cancelReason ? (
+                  <div className="mb-5 rounded-2xl border border-rose-200 bg-rose-50 p-4 dark:border-rose-500/25 dark:bg-rose-500/10">
+                    <div className="flex items-center gap-2 text-rose-700 dark:text-rose-300">
+                      <XCircle className="size-4 shrink-0" />
+                      <span className="text-sm font-bold">
+                        {language === "ar" ? "سبب الإلغاء" : "Cancellation reason"}
+                      </span>
+                    </div>
+                    <p className="mt-1.5 whitespace-pre-wrap break-words text-sm text-foreground">
+                      {order.cancelReason}
+                    </p>
+                    {order.canceledAt ? (
+                      <p className="mt-1 text-xs text-muted-foreground">
+                        {new Date(order.canceledAt).toLocaleString(
+                          language === "ar" ? "ar-KW" : "en-US",
+                        )}
+                      </p>
+                    ) : null}
+                  </div>
+                ) : null}
+
                 {/* User Info */}
                 <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-7">
-                  <h2 className="text-lg font-semibold col-span-full mb-4 text-neutral-900 dark:text-neutral-50">
+                  <h2 className="text-lg font-semibold col-span-full mb-4 text-foreground">
                     {language === "ar" ? "رقم الطلب:" : "Order ID:"} {order._id}
                   </h2>
 
-                  <div className="flex flex-col text-gray-700 dark:text-neutral-300">
-                    <span className="font-semibold text-neutral-900 dark:text-neutral-200">
+                  <div className="flex flex-col text-muted-foreground">
+                    <span className="font-semibold text-foreground">
                       {language === "ar" ? "تاريخ الإنشاء:" : "Created on:"}
                     </span>
-                    <span className="text-neutral-700 dark:text-neutral-300">
+                    <span className="text-muted-foreground">
                       {order.createdAt.substring(0, 10)}
                     </span>
                   </div>
 
-                  <div className="flex flex-col text-gray-700 dark:text-neutral-300">
-                    <span className="font-semibold text-neutral-900 dark:text-neutral-200">
+                  <div className="flex flex-col text-muted-foreground">
+                    <span className="font-semibold text-foreground">
                       {language === "ar" ? "اسم المستخدم:" : "User name:"}
                     </span>
-                    <span className="text-neutral-700 dark:text-neutral-300">
+                    <span className="text-muted-foreground">
                       {order.user.name}
                     </span>
                   </div>
 
-                  <div className="flex flex-col text-gray-700 dark:text-neutral-300">
-                    <span className="font-semibold text-neutral-900 dark:text-neutral-200">
+                  <div className="flex flex-col text-muted-foreground">
+                    <span className="font-semibold text-foreground">
                       {language === "ar" ? "البريد الإلكتروني:" : "User email:"}
                     </span>
-                    <span className="text-neutral-700 dark:text-neutral-300">
+                    <span className="text-muted-foreground">
                       {order.user.email}
                     </span>
                   </div>
 
-                  <div className="flex flex-col text-gray-700 dark:text-neutral-300">
-                    <span className="font-semibold text-neutral-900 dark:text-neutral-200">
+                  <div className="flex flex-col text-muted-foreground">
+                    <span className="font-semibold text-foreground">
                       {language === "ar" ? "الهاتف:" : "User phone:"}
                     </span>
-                    <span className="text-neutral-700 dark:text-neutral-300">
+                    <span className="text-muted-foreground">
                       {order.user.phone}
                     </span>
                   </div>
@@ -233,7 +253,7 @@ function OrderDetails() {
 
                     <div className="mt-4 grid grid-cols-1 sm:grid-cols-3 gap-3" dir="ltr">
                       {/* Code */}
-                      <div className="rounded-xl border bg-white p-3 flex items-center gap-3 dark:bg-neutral-950 dark:border-neutral-800">
+                      <div className="rounded-xl border bg-card p-3 flex items-center gap-3 border-border">
                         <div className="h-9 w-9 rounded-lg bg-zinc-100 flex items-center justify-center dark:bg-neutral-900/60">
                           <Hash className="h-4 w-4 text-zinc-700 dark:text-neutral-200" />
                         </div>
@@ -248,7 +268,7 @@ function OrderDetails() {
                       </div>
 
                       {/* Total Discount */}
-                      <div className="rounded-xl border bg-white p-3 flex items-center gap-3 dark:bg-neutral-950 dark:border-neutral-800">
+                      <div className="rounded-xl border bg-card p-3 flex items-center gap-3 border-border">
                         <div className="h-9 w-9 rounded-lg bg-rose-50 flex items-center justify-center dark:bg-rose-950/40">
                           <BadgePercent className="h-4 w-4 text-rose-600 dark:text-rose-300" />
                         </div>
@@ -263,7 +283,7 @@ function OrderDetails() {
                       </div>
 
                       {/* Per Unit (approx) */}
-                      <div className="rounded-xl border bg-white p-3 flex items-center gap-3 dark:bg-neutral-950 dark:border-neutral-800">
+                      <div className="rounded-xl border bg-card p-3 flex items-center gap-3 border-border">
                         <div className="h-9 w-9 rounded-lg bg-emerald-50 flex items-center justify-center dark:bg-emerald-950/40">
                           <TicketPercent className="h-4 w-4 text-emerald-700 dark:text-emerald-300" />
                         </div>
@@ -286,31 +306,31 @@ function OrderDetails() {
                   <table className="w-full table-auto border-collapse mb-5">
                     <thead>
                       <tr className="bg-gray-100 border-b dark:bg-neutral-900/60 dark:border-neutral-800">
-                        <th className="py-2 px-2 lg:px-4 text-left text-neutral-900 dark:text-neutral-200">
+                        <th className="py-2 px-2 lg:px-4 text-left text-foreground">
                           {language === "ar" ? "المنتج" : "Item"}
                         </th>
-                        <th className="py-2 px-2 lg:px-4 text-left text-neutral-900 dark:text-neutral-200">
+                        <th className="py-2 px-2 lg:px-4 text-left text-foreground">
                           {language === "ar" ? "النوع" : "Variants"}
                         </th>
-                        <th className="py-2 px-2 lg:px-4 text-left text-neutral-900 dark:text-neutral-200">
+                        <th className="py-2 px-2 lg:px-4 text-left text-foreground">
                           {language === "ar" ? "الكمية" : "Quantity"}
                         </th>
 
                         {hasDiscount && (
-                          <th className="py-2 px-2 lg:px-4 text-left text-neutral-900 dark:text-neutral-200">
+                          <th className="py-2 px-2 lg:px-4 text-left text-foreground">
                             {language === "ar" ? "قبل الخصم" : "Before discount"}
                           </th>
                         )}
                         {hasDiscount && (
-                          <th className="py-2 px-2 lg:px-4 text-left text-neutral-900 dark:text-neutral-200">
+                          <th className="py-2 px-2 lg:px-4 text-left text-foreground">
                             {language === "ar" ? "الخصم" : "Discount"}
                           </th>
                         )}
 
-                        <th className="py-2 px-2 lg:px-4 text-left text-neutral-900 dark:text-neutral-200">
+                        <th className="py-2 px-2 lg:px-4 text-left text-foreground">
                           {language === "ar" ? "السعر" : "Price"}
                         </th>
-                        <th className="py-2 px-2 lg:px-4 text-left text-neutral-900 dark:text-neutral-200">
+                        <th className="py-2 px-2 lg:px-4 text-left text-foreground">
                           {language === "ar" ? "الإجمالي" : "Total"}
                         </th>
                       </tr>
@@ -334,30 +354,30 @@ function OrderDetails() {
                         return (
                           <tr
                             key={item._id}
-                            className="border-b border-gray-200 dark:border-neutral-800">
+                            className="border-b border-border">
                             <td className="py-2 px-2 lg:px-4 flex items-center gap-2 max-w-[150px] sm:max-w-[300px]">
                               <img
                                 src={item?.variantImage?.[0]?.url || item?.image?.[0]?.url}
                                 className="w-10 h-10 md:w-16 md:h-16 object-cover rounded-lg border bg-zinc-100 dark:border-neutral-800 dark:bg-neutral-900/50"
                                 alt={item.name}
                               />
-                              <p className="break-words text-neutral-900 dark:text-neutral-100">
+                              <p className="break-words text-foreground">
                                 {item.name}
                               </p>
                             </td>
 
-                            <td className="py-2 px-2 lg:px-4 text-neutral-700 dark:text-neutral-300">
+                            <td className="py-2 px-2 lg:px-4 text-muted-foreground">
                               {item.variantColor && item.variantSize
                                 ? `${item.variantColor} / ${item.variantSize}`
                                 : "-/-"}
                             </td>
 
-                            <td className="py-2 px-2 lg:px-4 text-neutral-700 dark:text-neutral-300">
+                            <td className="py-2 px-2 lg:px-4 text-muted-foreground">
                               {qty}
                             </td>
 
                             {hasDiscount && (
-                              <td className="py-2 px-2 lg:px-4 text-gray-500 dark:text-neutral-500 line-through">
+                              <td className="py-2 px-2 lg:px-4 text-muted-foreground line-through">
                                 {formatKD(originalUnit)}
                               </td>
                             )}
@@ -367,11 +387,11 @@ function OrderDetails() {
                               </td>
                             )}
 
-                            <td className="py-2 px-2 lg:px-4 font-semibold text-neutral-900 dark:text-neutral-100">
+                            <td className="py-2 px-2 lg:px-4 font-semibold text-foreground">
                               {formatKD(finalUnit)}
                             </td>
 
-                            <td className="py-2 px-2 lg:px-4 text-neutral-700 dark:text-neutral-300">
+                            <td className="py-2 px-2 lg:px-4 text-muted-foreground">
                               {formatKD(totalFinal)}
                             </td>
                           </tr>
@@ -400,17 +420,17 @@ function OrderDetails() {
                         />
 
                         <div className="flex-1 space-y-1 text-sm">
-                          <p className="font-semibold break-words text-neutral-900 dark:text-neutral-50">
+                          <p className="font-semibold break-words text-foreground">
                             {item.name}
                           </p>
 
-                          <p className="text-gray-600 dark:text-neutral-400">
+                          <p className="text-muted-foreground">
                             {language === "ar" ? "اللون/الحجم" : "Color/Size"}:{" "}
                             {item.variantColor ?? "-"} / {item.variantSize ?? "-"}
                           </p>
 
                           {hasDiscount && (
-                            <p className="text-gray-500 dark:text-neutral-500 line-through">
+                            <p className="text-muted-foreground line-through">
                               {language === "ar" ? "قبل الخصم" : "Before"}: {formatKD(originalUnit)}
                             </p>
                           )}
@@ -421,16 +441,16 @@ function OrderDetails() {
                             </p>
                           )}
 
-                          <p className="text-gray-600 dark:text-neutral-400">
+                          <p className="text-muted-foreground">
                             {language === "ar" ? "السعر" : "Price"}: {formatKD(finalUnit)}
                           </p>
 
-                          <p className="text-gray-600 dark:text-neutral-400">
+                          <p className="text-muted-foreground">
                             {language === "ar" ? "الكميه" : "Qty"}: {qty}
                           </p>
 
                           <div className="flex items-center justify-between mt-2">
-                            <p className="font-bold text-neutral-900 dark:text-neutral-50">
+                            <p className="font-bold text-foreground">
                               {language === "ar" ? "الإجمالي" : "Total"}:{" "}
                               {formatKD(qty * finalUnit)}
                             </p>
@@ -442,50 +462,64 @@ function OrderDetails() {
                 </div>
 
                 {/* Delivery & Total */}
-                <div className="flex flex-col gap-2 mb-5" dir={language === "ar" ? "rtl" : "ltr"}>
-                  <p className="text-neutral-800 dark:text-neutral-200">
-                    {language === "ar" ? "التوصيل:" : "Delivery:"}{" "}
-                    <strong>{formatKD(order.shippingPrice)}</strong>
-                  </p>
+                <div className="mb-5 ms-auto w-full max-w-sm">
+                  <div className="ws-tile space-y-2">
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-muted-foreground">
+                        {language === "ar" ? "التوصيل" : "Delivery"}
+                      </span>
+                      <span className="font-bold">{formatKD(order.shippingPrice)}</span>
+                    </div>
 
-                  {hasDiscount && (
-                    <p className="text-rose-600 dark:text-rose-300 font-semibold">
-                      {language === "ar" ? "خصم الكوبون:" : "Coupon Discount:"} -{" "}
-                      {formatKD(order.discountAmount)}
-                    </p>
-                  )}
+                    {hasDiscount && (
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="text-muted-foreground">
+                          {language === "ar" ? "خصم الكوبون" : "Coupon discount"}
+                        </span>
+                        <span className="font-bold text-rose-600 dark:text-rose-400">
+                          -{formatKD(order.discountAmount)}
+                        </span>
+                      </div>
+                    )}
 
-                  <p className="text-neutral-800 dark:text-neutral-200">
-                    {language === "ar" ? " الإجمالي: " : "Total Price:"}{" "}
-                    <strong>{formatKD(order.totalPrice)}</strong>
-                  </p>
+                    <Separator />
+
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm font-bold">
+                        {language === "ar" ? "الإجمالي" : "Total"}
+                      </span>
+                      <span className="text-lg font-extrabold">{formatKD(order.totalPrice)}</span>
+                    </div>
+                  </div>
                 </div>
 
                 {/* Shipping Address */}
-                <table className="w-full border-collapse border mb-5 border-gray-200 dark:border-neutral-800">
-                  <tbody>
-                    {["governorate", "city", "block", "street", "house"].map((field) => (
-                      <tr key={field} className="dark:border-neutral-800">
-                        <th className="border px-3 py-2 font-semibold border-gray-200 dark:border-neutral-800 bg-gray-50 dark:bg-neutral-900/60 text-neutral-900 dark:text-neutral-200">
-                          {language === "ar"
-                            ? field === "governorate"
-                              ? "المحافظة"
-                              : field === "city"
-                                ? "المدينة"
-                                : field === "block"
-                                  ? "القطعة"
-                                  : field === "street"
-                                    ? "الشارع"
-                                    : "المنزل"
-                            : field.charAt(0).toUpperCase() + field.slice(1)}
-                        </th>
-                        <td className="border px-3 py-2 border-gray-200 dark:border-neutral-800 text-neutral-800 dark:text-neutral-300">
-                          {order.shippingAddress[field]}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+                <div className="mb-5 overflow-hidden rounded-xl border border-border">
+                  <table className="w-full text-sm">
+                    <tbody>
+                      {["governorate", "city", "block", "street", "house"].map((field) => (
+                        <tr key={field} className="border-b border-border last:border-b-0">
+                          <th className="w-40 bg-[var(--surface-muted)] px-3 py-2.5 text-start font-semibold text-muted-foreground">
+                            {language === "ar"
+                              ? field === "governorate"
+                                ? "المحافظة"
+                                : field === "city"
+                                  ? "المدينة"
+                                  : field === "block"
+                                    ? "القطعة"
+                                    : field === "street"
+                                      ? "الشارع"
+                                      : "المنزل"
+                              : field.charAt(0).toUpperCase() + field.slice(1)}
+                          </th>
+                          <td className="px-3 py-2.5 font-medium">
+                            {order.shippingAddress[field]}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
 
                 {/* Payment & Status */}
                 <div
@@ -498,10 +532,10 @@ function OrderDetails() {
                   <p
                     className={clsx(
                       "flex items-center gap-3 font-medium",
-                      "text-gray-700 dark:text-neutral-300",
+                      "text-muted-foreground",
                       language === "ar" ? "flex-row-reverse" : "",
                     )}>
-                    <span className="font-semibold text-neutral-900 dark:text-neutral-200">
+                    <span className="font-semibold text-foreground">
                       {language === "ar" ? ":طريقة الدفع" : "Payment Method:"}
                     </span>{" "}
                     {order.paymentMethod}
@@ -510,10 +544,10 @@ function OrderDetails() {
                   <div
                     className={clsx(
                       "flex items-center gap-3 font-medium",
-                      "text-gray-700 dark:text-neutral-300",
+                      "text-muted-foreground",
                       language === "ar" ? "flex-row-reverse" : "",
                     )}>
-                    <span className="font-semibold text-neutral-900 dark:text-neutral-200">
+                    <span className="font-semibold text-foreground">
                       {language === "ar" ? ":حالة الطلب" : "Order status:"}
                     </span>
                     {order.isDelivered ? (
@@ -537,6 +571,22 @@ function OrderDetails() {
           </div>
         </div>
       )}
+
+      <ReasonDialog
+        open={cancelOpen}
+        onOpenChange={setCancelOpen}
+        language={language}
+        loading={isCanceled}
+        title={language === "ar" ? "إلغاء الطلب" : "Cancel this order"}
+        description={
+          language === "ar"
+            ? "لا يمكن التراجع عن الإلغاء. يمكنك إضافة سبب للسجل."
+            : "Cancelling can't be undone. You can add a reason for the record."
+        }
+        placeholder={language === "ar" ? "سبب الإلغاء" : "Cancellation reason"}
+        confirmLabel={language === "ar" ? "تأكيد الإلغاء" : "Cancel order"}
+        onConfirm={handleUpdateOrderToCanceled}
+      />
     </Layout>
   );
 }

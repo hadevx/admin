@@ -9,7 +9,6 @@ import Spinner from "../../components/Spinner";
 import { Separator } from "../../components/ui/separator";
 import {
   Loader2Icon,
-  Globe,
   Store as StoreIcon,
   Wrench,
   Megaphone,
@@ -22,11 +21,11 @@ import {
   Mail,
   Building2,
   Save,
+  Palette,
 } from "lucide-react";
-import { toggleLang } from "../../redux/slices/languageSlice";
-import { useSelector, useDispatch } from "react-redux";
+import { useSelector } from "react-redux";
 import clsx from "clsx";
-import ThemeToggle from "@/components/ThemeToggle";
+import ThemePicker from "../../components/ThemePicker";
 
 type RootState = {
   language: { lang: "en" | "ar" };
@@ -75,7 +74,6 @@ function Settings(): JSX.Element {
   const [cashOnDeliveryEnabled, setCashOnDeliveryEnabled] = useState<boolean>(true);
 
   const language = useSelector((state: RootState) => state.language.lang);
-  const dispatch = useDispatch();
 
   const current = storeStatus?.[0];
 
@@ -135,6 +133,12 @@ function Settings(): JSX.Element {
     contactPreview: language === "en" ? "Contact preview" : "معاينة التواصل",
     noBanner: language === "en" ? "No banner" : "لا يوجد",
     na: language === "en" ? "N/A" : "غير متوفر",
+
+    appearance: language === "en" ? "Appearance" : "المظهر",
+    appearanceDesc:
+      language === "en"
+        ? "Pick a colour scheme for the dashboard. Saved on this device only."
+        : "اختر نظام ألوان للوحة التحكم. يُحفظ على هذا الجهاز فقط.",
   };
 
   const formatDate = (isoString?: string): string => {
@@ -188,14 +192,10 @@ function Settings(): JSX.Element {
     );
   }, [current]);
 
-  // ✅ dark mode added everywhere
-  const bentoCard =
-    "rounded-3xl border border-black/10 bg-white/80 backdrop-blur shadow-sm dark:border-white/10 dark:bg-zinc-950/80";
-  const pill =
-    "inline-flex items-center gap-2 rounded-full border border-black/10 bg-white px-4 py-2 text-sm font-medium text-zinc-700 hover:bg-zinc-100 transition drop-shadow-[0_1px_1px_rgba(0,0,0,0.08)] dark:border-white/10 dark:bg-zinc-950 dark:text-zinc-200 dark:hover:bg-white/5";
-  const input =
-    "w-full px-4 py-2.5 border border-black/10 outline-0 rounded-xl shadow-sm focus:ring-2 focus:ring-blue-500 bg-white text-zinc-900 placeholder:text-zinc-400 dark:border-white/10 dark:bg-zinc-950 dark:text-white dark:placeholder:text-zinc-500";
-  const hint = "mt-1 text-xs text-zinc-500 dark:text-zinc-400";
+  // Shared surface/control styles now come from the design system in index.css
+  const bentoCard = "ws-card";
+  const input = "ws-input";
+  const hint = "mt-1 text-xs text-muted-foreground";
 
   const Switch = ({
     checked,
@@ -211,38 +211,35 @@ function Settings(): JSX.Element {
     hintText?: string;
   }) => {
     return (
-      <div className="rounded-2xl border border-black/10 bg-white p-4 dark:border-white/10 dark:bg-zinc-950">
+      <div className="ws-tile">
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
             <div className="flex items-center gap-2">
               {icon}
-              <div className="text-sm font-bold text-zinc-900 dark:text-white">{label}</div>
+              <div className="text-sm font-bold">{label}</div>
             </div>
-            {hintText ? (
-              <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">{hintText}</p>
-            ) : null}
+            {hintText ? <p className="mt-1 text-xs text-muted-foreground">{hintText}</p> : null}
           </div>
 
-          <label className="relative inline-flex items-center cursor-pointer select-none">
+          <label className="relative inline-flex shrink-0 cursor-pointer select-none items-center">
             <input
               type="checkbox"
-              className="sr-only"
+              className="peer sr-only"
               checked={checked}
               onChange={(e) => onChange(e.target.checked)}
             />
             <span
               className={clsx(
-                "w-12 h-7 rounded-full transition border",
+                "h-7 w-12 rounded-full border transition-colors peer-focus-visible:ring-2 peer-focus-visible:ring-ring/60",
                 checked
-                  ? "bg-emerald-600 border-emerald-600"
-                  : "bg-zinc-200 border-zinc-200 dark:bg-white/10 dark:border-white/10",
+                  ? "border-emerald-600 bg-emerald-600"
+                  : "border-border bg-muted dark:bg-white/10",
               )}
             />
             <span
               className={clsx(
-                "absolute top-0.5 left-0.5 h-6 w-6 rounded-full shadow transition",
-                "bg-white dark:bg-zinc-200",
-                checked ? "translate-x-5" : "translate-x-0",
+                "absolute top-0.5 size-6 rounded-full bg-white shadow transition-transform",
+                checked ? "start-0.5 translate-x-5 rtl:-translate-x-5" : "start-0.5 translate-x-0",
               )}
             />
           </label>
@@ -253,36 +250,42 @@ function Settings(): JSX.Element {
 
   return (
     <Layout>
-      <div
-        dir={language === "ar" ? "rtl" : "ltr"}
-        className="px-4 w-full max-w-4xl min-h-screen py-6 mt-[50px] text-zinc-900 dark:text-white">
-        {/* Header */}
-        <div className="flex items-center justify-between gap-3 mb-4">
-          <div>
-            <h1 className="text-lg font-bold text-zinc-800 dark:text-white">{t.settings}</h1>
-            <p className="text-sm text-zinc-600 dark:text-zinc-400">{t.desc}</p>
-          </div>
-          <div className="flex items-center gap-2">
-            <button onClick={() => dispatch(toggleLang())} className={pill}>
-              <Globe className="w-4 h-4 text-blue-500" />
-              <span>{language === "en" ? "العربية" : "English"}</span>
-            </button>
-            <ThemeToggle />
-          </div>
+      <div className="me-auto w-full max-w-4xl animate-fade-up">
+        {/* Header — language and theme live in the top bar */}
+        <div className="mb-4">
+          <h1 className="text-xl font-extrabold tracking-tight sm:text-2xl">{t.settings}</h1>
+          <p className="text-sm text-muted-foreground">{t.desc}</p>
         </div>
 
-        <Separator className="my-4 bg-black/10 dark:bg-white/10" />
+        <Separator className="my-4" />
 
         <div className="flex flex-col gap-4">
+          {/* Appearance — device-local, so it saves instantly with no Save button */}
+          <section className={`${bentoCard} p-5`}>
+            <div className="flex items-center gap-3">
+              <div className="grid size-11 place-items-center rounded-2xl bg-emphasis text-emphasis-foreground">
+                <Palette className="h-5 w-5" />
+              </div>
+              <div>
+                <h2 className="text-base md:text-lg font-bold text-foreground">{t.appearance}</h2>
+                <p className="text-sm text-muted-foreground">{t.appearanceDesc}</p>
+              </div>
+            </div>
+
+            <Separator className="my-4 bg-border" />
+
+            <ThemePicker language={language} />
+          </section>
+
           {/* Update card */}
           <section className={`${bentoCard} p-5`}>
             <div className="flex items-center justify-between gap-3">
               <div className="flex items-center gap-3">
-                <div className="h-11 w-11 rounded-2xl bg-zinc-900 text-white grid place-items-center dark:bg-white dark:text-zinc-900">
+                <div className="grid size-11 place-items-center rounded-2xl bg-emphasis text-emphasis-foreground">
                   <StoreIcon className="h-5 w-5" />
                 </div>
                 <div>
-                  <h2 className="text-base md:text-lg font-bold text-zinc-900 dark:text-white">
+                  <h2 className="text-base md:text-lg font-bold text-foreground">
                     {t.storeSettings}
                   </h2>
                 </div>
@@ -293,8 +296,7 @@ function Settings(): JSX.Element {
                 disabled={loadingUpdateStatus}
                 className={clsx(
                   "inline-flex items-center gap-2 rounded-md px-3 py-2 text-sm font-semibold transition",
-                  "bg-neutral-950 text-white hover:bg-neutral-900",
-                  "dark:bg-white dark:text-zinc-900 dark:hover:bg-zinc-200",
+                  "bg-emphasis text-emphasis-foreground hover:bg-emphasis-hover",
                 )}>
                 <Save className="size-4" />
                 {t.save}
@@ -302,21 +304,21 @@ function Settings(): JSX.Element {
               </button>
             </div>
 
-            <Separator className="my-4 bg-black/10 dark:bg-white/10" />
+            <Separator className="my-4 bg-border" />
 
             <div className="grid grid-cols-2 gap-3">
               {/* Condition */}
-              <div className="rounded-2xl border border-black/10 bg-white p-4 dark:border-white/10 dark:bg-zinc-950">
+              <div className="ws-tile">
                 <div className="flex items-center gap-2 mb-2">
-                  <Wrench className="h-4 w-4 text-zinc-700 dark:text-zinc-300" />
-                  <label className="text-sm font-semibold text-zinc-800 dark:text-zinc-200">
+                  <Wrench className="h-4 w-4 text-muted-foreground" />
+                  <label className="text-sm font-semibold text-foreground">
                     {t.condition}
                   </label>
                 </div>
                 <select
                   value={status}
                   onChange={(e) => setStatus(e.target.value)}
-                  className={clsx(input, "cursor-pointer")}>
+                  className="ws-select">
                   <option value="" disabled>
                     {t.chooseCondition}
                   </option>
@@ -327,10 +329,10 @@ function Settings(): JSX.Element {
               </div>
 
               {/* Store name */}
-              <div className="rounded-2xl border border-black/10 bg-white p-4 dark:border-white/10 dark:bg-zinc-950">
+              <div className="ws-tile">
                 <div className="flex items-center gap-2 mb-2">
-                  <Building2 className="h-4 w-4 text-zinc-700 dark:text-zinc-300" />
-                  <label className="text-sm font-semibold text-zinc-800 dark:text-zinc-200">
+                  <Building2 className="h-4 w-4 text-muted-foreground" />
+                  <label className="text-sm font-semibold text-foreground">
                     {t.storeName}
                   </label>
                 </div>
@@ -343,10 +345,10 @@ function Settings(): JSX.Element {
               </div>
 
               {/* Banner */}
-              <div className="rounded-2xl border border-black/10 bg-white p-4 dark:border-white/10 dark:bg-zinc-950">
+              <div className="ws-tile">
                 <div className="flex items-center gap-2 mb-2">
-                  <Megaphone className="h-4 w-4 text-zinc-700 dark:text-zinc-300" />
-                  <label className="text-sm font-semibold text-zinc-800 dark:text-zinc-200">
+                  <Megaphone className="h-4 w-4 text-muted-foreground" />
+                  <label className="text-sm font-semibold text-foreground">
                     {t.banner}
                   </label>
                 </div>
@@ -364,22 +366,22 @@ function Settings(): JSX.Element {
                 checked={cashOnDeliveryEnabled}
                 onChange={setCashOnDeliveryEnabled}
                 label={t.codLabel}
-                icon={<Banknote className="h-4 w-4 text-zinc-700 dark:text-zinc-300" />}
+                icon={<Banknote className="h-4 w-4 text-muted-foreground" />}
                 hintText={t.codHint}
               />
 
               {/* Contact & Social */}
-              <div className="rounded-2xl col-span-full border border-black/10 bg-white p-4 dark:border-white/10 dark:bg-zinc-950">
-                <h3 className="text-sm font-bold text-zinc-900 dark:text-white">
+              <div className="ws-tile col-span-full">
+                <h3 className="text-sm font-bold text-foreground">
                   {t.contactTitle}
                 </h3>
                 <p className={hint}>{t.contactHint}</p>
 
                 <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <div className="rounded-2xl border border-black/10 bg-white p-3 dark:border-white/10 dark:bg-white/5">
+                  <div className="ws-tile p-3">
                     <div className="flex items-center gap-2 mb-2">
-                      <Phone className="h-4 w-4 text-zinc-700 dark:text-zinc-300" />
-                      <label className="text-sm font-semibold text-zinc-800 dark:text-zinc-200">
+                      <Phone className="h-4 w-4 text-muted-foreground" />
+                      <label className="text-sm font-semibold text-foreground">
                         {t.phone}
                       </label>
                     </div>
@@ -391,10 +393,10 @@ function Settings(): JSX.Element {
                     />
                   </div>
 
-                  <div className="rounded-2xl border border-black/10 bg-white p-3 dark:border-white/10 dark:bg-white/5">
+                  <div className="ws-tile p-3">
                     <div className="flex items-center gap-2 mb-2">
-                      <Mail className="h-4 w-4 text-zinc-700 dark:text-zinc-300" />
-                      <label className="text-sm font-semibold text-zinc-800 dark:text-zinc-200">
+                      <Mail className="h-4 w-4 text-muted-foreground" />
+                      <label className="text-sm font-semibold text-foreground">
                         {t.email}
                       </label>
                     </div>
@@ -407,10 +409,10 @@ function Settings(): JSX.Element {
                     />
                   </div>
 
-                  <div className="rounded-2xl border border-black/10 bg-white p-3 dark:border-white/10 dark:bg-white/5">
+                  <div className="ws-tile p-3">
                     <div className="flex items-center gap-2 mb-2">
-                      <Instagram className="h-4 w-4 text-zinc-700 dark:text-zinc-300" />
-                      <label className="text-sm font-semibold text-zinc-800 dark:text-zinc-200">
+                      <Instagram className="h-4 w-4 text-muted-foreground" />
+                      <label className="text-sm font-semibold text-foreground">
                         Instagram
                       </label>
                     </div>
@@ -426,10 +428,10 @@ function Settings(): JSX.Element {
                     />
                   </div>
 
-                  <div className="rounded-2xl border border-black/10 bg-white p-3 dark:border-white/10 dark:bg-white/5">
+                  <div className="ws-tile p-3">
                     <div className="flex items-center gap-2 mb-2">
-                      <Twitter className="h-4 w-4 text-zinc-700 dark:text-zinc-300" />
-                      <label className="text-sm font-semibold text-zinc-800 dark:text-zinc-200">
+                      <Twitter className="h-4 w-4 text-muted-foreground" />
+                      <label className="text-sm font-semibold text-foreground">
                         {t.twitterX}
                       </label>
                     </div>
@@ -447,8 +449,8 @@ function Settings(): JSX.Element {
 
                   <div className="rounded-2xl border border-black/10 bg-white p-3 sm:col-span-2 dark:border-white/10 dark:bg-white/5">
                     <div className="flex items-center gap-2 mb-2">
-                      <Music2 className="h-4 w-4 text-zinc-700 dark:text-zinc-300" />
-                      <label className="text-sm font-semibold text-zinc-800 dark:text-zinc-200">
+                      <Music2 className="h-4 w-4 text-muted-foreground" />
+                      <label className="text-sm font-semibold text-foreground">
                         TikTok
                       </label>
                     </div>
@@ -471,23 +473,23 @@ function Settings(): JSX.Element {
           {/* Preview card */}
           <section className={`${bentoCard} p-5`}>
             <div className="flex items-center gap-3">
-              <div className="h-11 w-11 rounded-2xl bg-zinc-900 text-white grid place-items-center dark:bg-white dark:text-zinc-900">
+              <div className="grid size-11 place-items-center rounded-2xl bg-emphasis text-emphasis-foreground">
                 <Clock className="h-5 w-5" />
               </div>
               <div>
-                <h2 className="text-base md:text-lg font-bold text-zinc-900 dark:text-white">
+                <h2 className="text-base md:text-lg font-bold text-foreground">
                   {t.currentTitle}
                 </h2>
-                <p className="text-sm text-zinc-600 dark:text-zinc-400">{t.currentDesc}</p>
+                <p className="text-sm text-muted-foreground">{t.currentDesc}</p>
               </div>
             </div>
 
-            <Separator className="my-4 bg-black/10 dark:bg-white/10" />
+            <Separator className="my-4 bg-border" />
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {/* Store Name beside Store Status */}
-              <div className="rounded-2xl border border-black/10 bg-white p-4 dark:border-white/10 dark:bg-zinc-950">
-                <span className="block text-xs text-zinc-500 dark:text-zinc-400">
+              <div className="ws-tile">
+                <span className="block text-xs text-muted-foreground">
                   {t.nameLabel}
                 </span>
                 {isLoading ? (
@@ -495,14 +497,14 @@ function Settings(): JSX.Element {
                     <Spinner className="border-t-black dark:border-t-white" />
                   </div>
                 ) : (
-                  <p className="mt-1 font-semibold text-zinc-900 dark:text-white">
+                  <p className="mt-1 font-semibold text-foreground">
                     {current?.storeName?.trim() || "—"}
                   </p>
                 )}
               </div>
 
-              <div className="rounded-2xl border border-black/10 bg-white p-4 dark:border-white/10 dark:bg-zinc-950">
-                <span className="block text-xs text-zinc-500 dark:text-zinc-400">
+              <div className="ws-tile">
+                <span className="block text-xs text-muted-foreground">
                   {t.statusLabel}
                 </span>
                 {isLoading ? (
@@ -518,8 +520,8 @@ function Settings(): JSX.Element {
                 )}
               </div>
 
-              <div className="rounded-2xl border border-black/10 bg-white p-4 dark:border-white/10 dark:bg-zinc-950">
-                <span className="block text-xs text-zinc-500 dark:text-zinc-400">
+              <div className="ws-tile">
+                <span className="block text-xs text-muted-foreground">
                   {t.lastUpdated}
                 </span>
                 {isLoading ? (
@@ -527,14 +529,14 @@ function Settings(): JSX.Element {
                     <Spinner className="border-t-black dark:border-t-white" />
                   </div>
                 ) : (
-                  <p className="mt-1 font-semibold text-zinc-900 dark:text-white">
+                  <p className="mt-1 font-semibold text-foreground">
                     {formatDate(current?.updatedAt)}
                   </p>
                 )}
               </div>
 
-              <div className="rounded-2xl border border-black/10 bg-white p-4 dark:border-white/10 dark:bg-zinc-950">
-                <span className="block text-xs text-zinc-500 dark:text-zinc-400">
+              <div className="ws-tile">
+                <span className="block text-xs text-muted-foreground">
                   {t.codPreview}
                 </span>
                 {isLoading ? (
@@ -542,14 +544,14 @@ function Settings(): JSX.Element {
                     <Spinner className="border-t-black dark:border-t-white" />
                   </div>
                 ) : (
-                  <p className="mt-1 font-semibold text-zinc-900 dark:text-white">
+                  <p className="mt-1 font-semibold text-foreground">
                     {current?.cashOnDeliveryEnabled ? t.enabled : t.disabled}
                   </p>
                 )}
               </div>
 
               <div className="rounded-2xl border border-black/10 bg-white p-4 sm:col-span-2 dark:border-white/10 dark:bg-zinc-950">
-                <span className="block text-xs text-zinc-500 dark:text-zinc-400">
+                <span className="block text-xs text-muted-foreground">
                   {t.bannerLabel}
                 </span>
                 {isLoading ? (
@@ -557,7 +559,7 @@ function Settings(): JSX.Element {
                     <Spinner className="border-t-black dark:border-t-white" />
                   </div>
                 ) : (
-                  <p className="mt-1 whitespace-pre-wrap break-words text-sm font-semibold text-zinc-900 dark:text-white">
+                  <p className="mt-1 whitespace-pre-wrap break-words text-sm font-semibold text-foreground">
                     {current?.banner?.trim() ? current.banner : t.noBanner}
                   </p>
                 )}
@@ -565,7 +567,7 @@ function Settings(): JSX.Element {
 
               {/* Contact preview */}
               <div className="rounded-2xl border border-black/10 bg-white p-4 sm:col-span-2 dark:border-white/10 dark:bg-zinc-950">
-                <span className="block text-xs text-zinc-500 dark:text-zinc-400">
+                <span className="block text-xs text-muted-foreground">
                   {t.contactPreview}
                 </span>
                 {isLoading ? (
@@ -596,11 +598,11 @@ function Settings(): JSX.Element {
 function PreviewRow({ label, value }: { label: string; value?: string }) {
   return (
     <div className="flex items-center justify-between gap-3 rounded-xl border border-black/10 bg-white px-3 py-2 dark:border-white/10 dark:bg-white/5">
-      <span className="text-zinc-500 dark:text-zinc-400">{label}</span>
+      <span className="text-muted-foreground">{label}</span>
       <span
         className={clsx(
-          "font-semibold text-zinc-900 dark:text-white",
-          !value && "text-zinc-400 dark:text-zinc-500",
+          "font-semibold text-foreground",
+          !value && "text-muted-foreground",
         )}>
         {value?.trim() ? value : "—"}
       </span>

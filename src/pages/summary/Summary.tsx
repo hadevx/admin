@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useRef, useState, type JSX } from "react";
 import { useSelector } from "react-redux";
 import Layout from "../../Layout";
-import Loader from "../../components/Loader";
 import { useGetGovernorateQuery } from "@/redux/queries/userApi";
 import { useGetOrderStatsQuery, useGetRevenuStatsQuery } from "../../redux/queries/orderApi";
 import {
@@ -20,7 +19,6 @@ import {
   Bar,
   LabelList,
 } from "recharts";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Users,
   ShoppingBag,
@@ -33,11 +31,19 @@ import {
   RefreshCw,
   Table2,
   Copy,
+  BarChart3,
+  LineChart as LineIcon,
+  PieChart as PieIcon,
+  Check,
 } from "lucide-react";
 import clsx from "clsx";
+import StatCard from "@/components/StatCard";
+import EmptyState from "@/components/EmptyState";
+import { PageSkeleton } from "@/components/Skeleton";
 
 type RootState = {
   language: { lang: "en" | "ar" };
+  theme: { theme: "light" | "dark" };
 };
 
 type ActiveChart = "users" | "orders" | "revenue";
@@ -88,6 +94,7 @@ const SummaryCharts = (): JSX.Element => {
 
   // last updated
   const [lastUpdatedAt, setLastUpdatedAt] = useState<Date | null>(null);
+  const [copied, setCopied] = useState(false);
   const firstLoadRef = useRef(true);
 
   const isLoading = loadingUsers || loadingOrders || loadingRevenue;
@@ -115,6 +122,16 @@ const SummaryCharts = (): JSX.Element => {
       }) || []
     );
   }, [usersData]);
+
+  // One hue per metric, reused by the cards, the chart and the table bars so
+  // the colour always means the same thing.
+  const METRIC_ACCENT: Record<ActiveChart, string> = {
+    users: "var(--viz-1)",
+    orders: "var(--viz-2)",
+    revenue: "var(--viz-3)",
+  };
+
+  const accent = METRIC_ACCENT[activeChart];
 
   // Summary cards
   const summaryStats = useMemo(
@@ -303,19 +320,20 @@ const SummaryCharts = (): JSX.Element => {
     return activeChart === "revenue" ? Number(v).toFixed(3) : v;
   };
 
-  // Pie colors
+  // Categorical palette — distinct hues so adjacent slices never blur together.
+  // These go straight into SVG fill/stroke attributes, where `var()` resolves
+  // at paint time, so the palette follows the theme with no JS involved.
+  // (Reading the tokens with getComputedStyle would be a frame stale: the
+  // `.dark` class is toggled by a parent effect that runs after this render.)
   const PIE_COLORS = [
-    "#FF6B6B",
-    "#4D96FF",
-    "#6BCB77",
-    "#FFD93D",
-    "#845EC2",
-    "#00C9A7",
-    "#FF9671",
-    "#2C73D2",
-    "#C34A36",
-    "#0081CF",
-    "#F9F871",
+    "var(--viz-1)",
+    "var(--viz-2)",
+    "var(--viz-3)",
+    "var(--viz-4)",
+    "var(--viz-5)",
+    "var(--viz-6)",
+    "var(--viz-7)",
+    "var(--viz-8)",
   ];
 
   const renderPieLabel = (entry: any) => {
@@ -341,12 +359,20 @@ const SummaryCharts = (): JSX.Element => {
         ? "Orders"
         : "Revenue";
 
-  const StatChip = ({ label, value }: { label: string; value: string }) => (
-    <div className="rounded-2xl border border-neutral-200 bg-white px-4 py-3 dark:border-neutral-800 dark:bg-neutral-900">
-      <div className="text-xs text-neutral-500 dark:text-neutral-400">{label}</div>
-      <div className="mt-1 text-base font-semibold text-neutral-950 dark:text-neutral-50">
-        {value}
-      </div>
+  const StatChip = ({ label, value, tone }: { label: string; value: string; tone: string }) => (
+    <div
+      className="relative overflow-hidden rounded-xl border p-3 ps-4"
+      style={{
+        borderColor: `color-mix(in srgb, ${tone} 24%, var(--border))`,
+        backgroundColor: `color-mix(in srgb, ${tone} 7%, var(--surface-muted))`,
+      }}>
+      <span
+        aria-hidden
+        className="absolute inset-y-0 start-0 w-1"
+        style={{ backgroundColor: tone }}
+      />
+      <div className="text-xs text-muted-foreground">{label}</div>
+      <div className="mt-1 truncate text-base font-extrabold">{value}</div>
     </div>
   );
 
@@ -362,14 +388,8 @@ const SummaryCharts = (): JSX.Element => {
     <button
       type="button"
       onClick={onClick}
-      className={clsx(
-        "inline-flex items-center gap-2 rounded-full border px-3 py-2 text-xs font-semibold transition",
-        "border-neutral-200 text-neutral-900",
-        "dark:border-neutral-800 dark:bg-neutral-900 dark:text-neutral-100 dark:hover:bg-neutral-800/70",
-        active
-          ? "border-neutral-950 bg-neutral-950 text-white dark:border-neutral-50 dark:bg-neutral-50 dark:text-neutral-950"
-          : "",
-      )}>
+      aria-pressed={active}
+      className={clsx("ws-chip", active && "ws-chip-active")}>
       {children}
     </button>
   );
@@ -390,179 +410,122 @@ const SummaryCharts = (): JSX.Element => {
 
     try {
       await navigator.clipboard.writeText(lines);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1600);
     } catch {
       // silent (some browsers block)
     }
   };
 
+  // Bars and lines take the hue of the metric being shown.
+  const barFill = accent;
+
   return (
     <Layout>
       {isLoading ? (
-        <Loader />
+        <PageSkeleton />
       ) : (
-        <div
-          className={clsx(
-            "w-full px-4 py-6 mt-[70px] max-w-6xl",
-            isRTL ? "rtl" : "ltr",
-            "text-neutral-950 dark:text-neutral-50",
-          )}>
+        <div className="animate-fade-up">
           {/* Header */}
-          <div
-            className="mb-6 flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3"
-            dir={isRTL ? "rtl" : "ltr"}>
+          <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
             <div>
-              <h1 className="text-2xl sm:text-3xl font-semibold tracking-tight text-neutral-950 dark:text-neutral-50">
+              <h1 className="text-xl font-extrabold tracking-tight sm:text-2xl">
                 {isRTL ? "لوحة الإحصائيات" : "Summary Dashboard"}
               </h1>
-              <p className="mt-1 text-sm text-neutral-600 dark:text-neutral-400">
-                {isRTL ? "نظرة عامة + ميزات تصفية." : "Overview + filters."}
+              <p className="mt-1 flex flex-wrap items-center gap-1.5 text-sm text-muted-foreground">
+                <Info className="size-3.5" />
+                {isRTL ? "آخر تحديث:" : "Last update:"}{" "}
+                {lastUpdatedAt ? lastUpdatedAt.toLocaleTimeString(isRTL ? "ar" : "en") : "—"}
               </p>
             </div>
 
-            <div className="flex flex-wrap items-center gap-2 text-sm text-neutral-500 dark:text-neutral-400">
-              <span className="inline-flex items-center gap-2">
-                <Info className="h-4 w-4" />
-                {isRTL ? "آخر تحديث:" : "Last update:"}{" "}
-                {lastUpdatedAt ? lastUpdatedAt.toLocaleTimeString(isRTL ? "ar" : "en") : "—"}
-              </span>
-
-              <button
-                type="button"
-                onClick={refreshNow}
-                className={clsx(
-                  "inline-flex items-center gap-2 rounded-full border px-3 py-2 text-xs font-semibold transition",
-                  "border-neutral-200 bg-white text-neutral-900 hover:bg-neutral-50",
-                  "dark:border-neutral-800 dark:bg-neutral-900 dark:text-neutral-100 dark:hover:bg-neutral-800/70",
-                )}>
-                <RefreshCw className="h-4 w-4" />
+            <div className="no-print flex flex-wrap items-center gap-2">
+              <button type="button" onClick={refreshNow} className="ws-chip h-10 px-3.5">
+                <RefreshCw className="size-4" />
                 {isRTL ? "تحديث" : "Refresh"}
               </button>
 
-              <button
-                type="button"
-                onClick={() => window.print()}
-                className={clsx(
-                  "inline-flex items-center gap-2 rounded-full border px-3 py-2 text-xs font-semibold transition",
-                  "border-neutral-200 bg-white text-neutral-900 hover:bg-neutral-50",
-                  "dark:border-neutral-800 dark:bg-neutral-900 dark:text-neutral-100 dark:hover:bg-neutral-800/70",
-                )}>
-                <Printer className="h-4 w-4" />
+              <button type="button" onClick={() => window.print()} className="ws-chip h-10 px-3.5">
+                <Printer className="size-4" />
                 {isRTL ? "طباعة" : "Print"}
               </button>
             </div>
           </div>
 
           {/* Summary Cards */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6">
-            {summaryStats.map((s) => {
-              const Icon = s.icon;
-              const isActive = activeChart === (s.key as ActiveChart);
-              return (
-                <button
-                  key={s.key}
-                  type="button"
-                  onClick={() => setActiveChart(s.key as ActiveChart)}
-                  className={clsx(
-                    "text-left rounded-3xl border backdrop-blur shadow-sm transition",
-                    "border-neutral-200 bg-white/80 hover:bg-white",
-                    "dark:border-neutral-800 dark:bg-neutral-900/60 dark:hover:bg-neutral-900/80",
-                    isActive
-                      ? "border-neutral-950 ring-2 ring-neutral-950/10 dark:border-neutral-200 dark:ring-neutral-200/10"
-                      : "",
-                  )}>
-                  <div className="p-5">
-                    <div className="flex items-center justify-between">
-                      <div
-                        className={clsx(
-                          "inline-flex h-11 w-11 items-center justify-center rounded-2xl border",
-                          "border-neutral-200 bg-neutral-50",
-                          "dark:border-neutral-800 dark:bg-neutral-800/70",
-                        )}>
-                        <Icon className="h-5 w-5 text-neutral-900 dark:text-neutral-50" />
-                      </div>
-                      <span className="text-xs font-semibold text-neutral-500 dark:text-neutral-400">
-                        {isRTL ? "إجمالي" : "TOTAL"}
-                      </span>
-                    </div>
-
-                    <div className="mt-3 text-2xl sm:text-3xl font-semibold text-neutral-950 dark:text-neutral-50">
-                      {s.value}
-                    </div>
-                    <div className="mt-1 text-sm text-neutral-600 dark:text-neutral-400">
-                      {s.title[language]}
-                    </div>
-                  </div>
-                </button>
-              );
-            })}
+          <div className="mb-5 grid grid-cols-1 gap-4 sm:grid-cols-3">
+            {summaryStats.map((s) => (
+              <StatCard
+                key={s.key}
+                label={s.title[language]}
+                value={s.value}
+                icon={s.icon}
+                hint={isRTL ? "إجمالي" : "TOTAL"}
+                accent={METRIC_ACCENT[s.key as ActiveChart]}
+                active={activeChart === (s.key as ActiveChart)}
+                onClick={() => setActiveChart(s.key as ActiveChart)}
+              />
+            ))}
           </div>
 
           {/* Controls */}
-          <div className="mb-4 grid grid-cols-1 lg:grid-cols-12 gap-3">
-            <div className="lg:col-span-7 rounded-3xl border backdrop-blur shadow-sm p-4 border-neutral-200 bg-white/80 dark:border-neutral-800 dark:bg-neutral-900/60">
-              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-3">
-                <div className="flex items-center gap-2 text-sm font-semibold text-neutral-900 dark:text-neutral-50">
-                  <Filter className="h-4 w-4" />
+          <div className="mb-5 grid grid-cols-1 gap-4 xl:grid-cols-12">
+            <div className="ws-card p-4 xl:col-span-7">
+              <div className="mb-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div className="flex items-center gap-2 text-sm font-bold">
+                  <Filter className="size-4" style={{ color: "var(--viz-5)" }} />
                   {isRTL ? "تصفية" : "Filters"}
                 </div>
 
                 <div className="flex flex-wrap items-center gap-2">
                   <ChipBtn active={viewMode === "chart"} onClick={() => setViewMode("chart")}>
-                    <Eye className="h-4 w-4" />
+                    <Eye className="size-3.5" />
                     {isRTL ? "رسم" : "Chart"}
                   </ChipBtn>
                   <ChipBtn active={viewMode === "table"} onClick={() => setViewMode("table")}>
-                    <Table2 className="h-4 w-4" />
+                    <Table2 className="size-3.5" />
                     {isRTL ? "جدول" : "Table"}
                   </ChipBtn>
 
-                  <button
-                    type="button"
-                    onClick={copySummary}
-                    className={clsx(
-                      "inline-flex items-center gap-2 rounded-full border px-3 py-2 text-xs font-semibold transition",
-                      "border-neutral-200 bg-white text-neutral-900 hover:bg-neutral-50",
-                      "dark:border-neutral-800 dark:bg-neutral-900 dark:text-neutral-100 dark:hover:bg-neutral-800/70",
-                    )}>
-                    <Copy className="h-4 w-4" />
-                    {isRTL ? "نسخ" : "Copy"}
+                  <button type="button" onClick={copySummary} className="ws-chip">
+                    {copied ? (
+                      <Check className="size-3.5 text-emerald-500" />
+                    ) : (
+                      <Copy className="size-3.5" />
+                    )}
+                    {copied ? (isRTL ? "تم النسخ" : "Copied") : isRTL ? "نسخ" : "Copy"}
                   </button>
                 </div>
               </div>
 
               {/* Chart type */}
-              <div className="flex flex-wrap items-center gap-2 mb-3">
+              <div className="mb-3 flex flex-wrap items-center gap-2">
                 <ChipBtn active={chartType === "pie"} onClick={() => setChartType("pie")}>
+                  <PieIcon className="size-3.5" />
                   {isRTL ? "دائري" : "Pie"}
                 </ChipBtn>
                 <ChipBtn active={chartType === "line"} onClick={() => setChartType("line")}>
+                  <LineIcon className="size-3.5" />
                   {isRTL ? "خطي" : "Line"}
                 </ChipBtn>
                 <ChipBtn active={chartType === "bar"} onClick={() => setChartType("bar")}>
+                  <BarChart3 className="size-3.5" />
                   {isRTL ? "أعمدة" : "Bar"}
                 </ChipBtn>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+              <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
                 <input
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                   placeholder={isRTL ? "بحث..." : "Search..."}
-                  className={clsx(
-                    "rounded-2xl border px-3 py-2 text-sm outline-none transition",
-                    "border-neutral-200 bg-white text-neutral-900 focus:ring-2 focus:ring-neutral-950/10",
-                    "dark:border-neutral-800 dark:bg-neutral-950 dark:text-neutral-100 dark:placeholder:text-neutral-500 dark:focus:ring-neutral-200/10",
-                  )}
+                  className="ws-input"
                 />
 
                 <select
                   value={range}
                   onChange={(e) => setRange(e.target.value as Range)}
-                  className={clsx(
-                    "rounded-2xl border px-3 py-2 text-sm outline-none transition",
-                    "border-neutral-200 bg-white text-neutral-900 focus:ring-2 focus:ring-neutral-950/10",
-                    "dark:border-neutral-800 dark:bg-neutral-950 dark:text-neutral-100 dark:focus:ring-neutral-200/10",
-                  )}>
+                  className="ws-select">
                   <option value="all">{isRTL ? "الكل" : "All"}</option>
                   <option value="top5">{isRTL ? "أفضل 5" : "Top 5"}</option>
                   <option value="top10">{isRTL ? "أفضل 10" : "Top 10"}</option>
@@ -571,11 +534,7 @@ const SummaryCharts = (): JSX.Element => {
                 <select
                   value={sortBy}
                   onChange={(e) => setSortBy(e.target.value as SortBy)}
-                  className={clsx(
-                    "rounded-2xl border px-3 py-2 text-sm outline-none transition",
-                    "border-neutral-200 bg-white text-neutral-900 focus:ring-2 focus:ring-neutral-950/10",
-                    "dark:border-neutral-800 dark:bg-neutral-950 dark:text-neutral-100 dark:focus:ring-neutral-200/10",
-                  )}>
+                  className="ws-select">
                   <option value="value_desc">{isRTL ? "قيمة: تنازلي" : "Value: desc"}</option>
                   <option value="value_asc">{isRTL ? "قيمة: تصاعدي" : "Value: asc"}</option>
                   <option value="label_asc">{isRTL ? "اسم: أ-ي" : "Label: A-Z"}</option>
@@ -585,21 +544,20 @@ const SummaryCharts = (): JSX.Element => {
 
               <div className="mt-3 flex flex-wrap items-center gap-2">
                 <ChipBtn active={showLegend} onClick={() => setShowLegend((v) => !v)}>
-                  {showLegend ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
+                  {showLegend ? <Eye className="size-3.5" /> : <EyeOff className="size-3.5" />}
                   {isRTL ? "الوسيلة" : "Legend"}
                 </ChipBtn>
 
                 <ChipBtn active={showGrid} onClick={() => setShowGrid((v) => !v)}>
-                  {showGrid ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
+                  {showGrid ? <Eye className="size-3.5" /> : <EyeOff className="size-3.5" />}
                   {isRTL ? "الشبكة" : "Grid"}
                 </ChipBtn>
 
                 <ChipBtn active={showLabels} onClick={() => setShowLabels((v) => !v)}>
-                  {showLabels ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
+                  {showLabels ? <Eye className="size-3.5" /> : <EyeOff className="size-3.5" />}
                   {isRTL ? "القيم" : "Values"}
                 </ChipBtn>
 
-                {/* Kept as state & used for chart behavior; no extra imports */}
                 <ChipBtn
                   active={normalization === "percent"}
                   onClick={() => setNormalization((v) => (v === "raw" ? "percent" : "raw"))}>
@@ -615,14 +573,18 @@ const SummaryCharts = (): JSX.Element => {
             </div>
 
             {/* Summary box */}
-            <div className="lg:col-span-5 rounded-3xl border backdrop-blur shadow-sm p-4 border-neutral-200 bg-white/80 dark:border-neutral-800 dark:bg-neutral-900/60">
-              <div className="flex items-center gap-2 mb-3 text-sm font-semibold text-neutral-900 dark:text-neutral-50">
-                <Info className="h-4 w-4" />
+            <div className="ws-card p-4 xl:col-span-5">
+              <div className="mb-3 flex items-center gap-2 text-sm font-bold">
+                <Info className="size-4" style={{ color: accent }} />
                 {isRTL ? "ملخص" : "Summary"}
               </div>
 
               <div className="grid grid-cols-2 gap-3">
-                <StatChip label={isRTL ? "عدد العناصر" : "Items"} value={`${chartStats.count}`} />
+                <StatChip
+                  label={isRTL ? "عدد العناصر" : "Items"}
+                  value={`${chartStats.count}`}
+                  tone="var(--viz-5)"
+                />
 
                 <StatChip
                   label={isRTL ? "المجموع" : "Sum"}
@@ -631,6 +593,7 @@ const SummaryCharts = (): JSX.Element => {
                       ? `${chartStats.total.toFixed(3)} KD`
                       : `${Math.round(chartStats.total)} ${unit}`
                   }
+                  tone={accent}
                 />
 
                 <StatChip
@@ -640,6 +603,7 @@ const SummaryCharts = (): JSX.Element => {
                       ? money(chartStats.max)
                       : `${Math.round(chartStats.max)} ${unit}`
                   }
+                  tone="var(--viz-6)"
                 />
 
                 <StatChip
@@ -649,10 +613,11 @@ const SummaryCharts = (): JSX.Element => {
                       ? money(chartStats.avg)
                       : `${Math.round(chartStats.avg)} ${unit}`
                   }
+                  tone="var(--viz-8)"
                 />
               </div>
 
-              <div className="mt-3 text-xs text-neutral-500 dark:text-neutral-400">
+              <div className="mt-3 text-xs text-muted-foreground">
                 {normalization === "percent"
                   ? isRTL
                     ? "عرض القيم كنِسَب (مع إظهار القيمة الأصلية في التولتيب)."
@@ -665,31 +630,34 @@ const SummaryCharts = (): JSX.Element => {
           </div>
 
           {/* Chart / Table */}
-          <Card className="w-full rounded-3xl overflow-hidden border border-neutral-200 bg-white/80 backdrop-blur shadow-sm dark:border-neutral-800 dark:bg-neutral-900/60">
-            <CardHeader>
-              <CardTitle className="text-lg sm:text-xl text-neutral-950 dark:text-neutral-50">
-                {chartTitle}
-              </CardTitle>
-              <CardDescription className="text-sm text-neutral-600 dark:text-neutral-400">
-                {chartDesc}
-              </CardDescription>
-            </CardHeader>
+          <div className="ws-card overflow-hidden">
+            {/* Colour rule ties the panel to the metric selected above. */}
+            <span aria-hidden className="block h-1 w-full" style={{ backgroundColor: accent }} />
 
-            <CardContent className="pt-2">
-              {viewMode === "table" ? (
-                <div className="overflow-x-auto rounded-2xl border border-neutral-200 bg-white dark:border-neutral-800 dark:bg-neutral-950">
-                  <table className="min-w-full text-sm">
-                    <thead className="text-left bg-neutral-50 dark:bg-neutral-900/50">
+            <div
+              className="border-b border-border p-5"
+              style={{ backgroundColor: `color-mix(in srgb, ${accent} 5%, var(--card))` }}>
+              <h2 className="text-base font-extrabold sm:text-lg">{chartTitle}</h2>
+              <p className="mt-0.5 text-sm text-muted-foreground">{chartDesc}</p>
+            </div>
+
+            <div className="p-4 sm:p-5">
+              {!filteredSortedData.length ? (
+                <EmptyState
+                  title={isRTL ? "لا توجد بيانات" : "No data"}
+                  description={
+                    isRTL ? "غيّر الفلاتر أو البحث." : "Change the filters or search term."
+                  }
+                  icon={BarChart3}
+                />
+              ) : viewMode === "table" ? (
+                <div className="overflow-x-auto rounded-xl border border-border">
+                  <table className="ws-table">
+                    <thead>
                       <tr>
-                        <th className="px-4 py-3 font-semibold text-neutral-700 dark:text-neutral-200">
-                          {isRTL ? "الاسم" : "Label"}
-                        </th>
-                        <th className="px-4 py-3 font-semibold text-neutral-700 dark:text-neutral-200">
-                          {isRTL ? "القيمة" : "Value"}
-                        </th>
-                        <th className="px-4 py-3 font-semibold text-neutral-700 dark:text-neutral-200">
-                          {isRTL ? "النسبة" : "Percent"}
-                        </th>
+                        <th>{isRTL ? "الاسم" : "Label"}</th>
+                        <th>{isRTL ? "القيمة" : "Value"}</th>
+                        <th className="text-end">{isRTL ? "النسبة" : "Percent"}</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -697,37 +665,46 @@ const SummaryCharts = (): JSX.Element => {
                         const v = Number(d.value) || 0;
                         const pct = (v / totalSafe) * 100;
                         return (
-                          <tr
-                            key={`${d.label}_${idx}`}
-                            className="border-t border-neutral-200 dark:border-neutral-800">
-                            <td className="px-4 py-3 text-neutral-900 dark:text-neutral-100">
-                              {String(d.label)}
+                          <tr key={`${d.label}_${idx}`}>
+                            <td className="font-bold">
+                              <span className="flex items-center gap-2">
+                                <span
+                                  aria-hidden
+                                  className="size-2.5 shrink-0 rounded-full"
+                                  style={{ backgroundColor: PIE_COLORS[idx % PIE_COLORS.length] }}
+                                />
+                                {String(d.label)}
+                              </span>
                             </td>
-                            <td className="px-4 py-3 text-neutral-900 dark:text-neutral-100">
+                            <td>
                               {activeChart === "revenue" ? v.toFixed(3) : Math.round(v)}{" "}
-                              {activeChart === "revenue" ? "KD" : unit}
+                              <span className="text-muted-foreground">
+                                {activeChart === "revenue" ? "KD" : unit}
+                              </span>
                             </td>
-                            <td className="px-4 py-3 text-neutral-700 dark:text-neutral-300">
-                              {pct.toFixed(1)}%
+                            <td className="text-end">
+                              <div className="flex items-center justify-end gap-2">
+                                <div className="hidden h-1.5 w-24 overflow-hidden rounded-full bg-muted sm:block">
+                                  <div
+                                    className="h-full rounded-full transition-[width] duration-300"
+                                    style={{
+                                      width: `${Math.min(pct, 100)}%`,
+                                      // Row colour matches its slice in the pie.
+                                      backgroundColor: PIE_COLORS[idx % PIE_COLORS.length],
+                                    }}
+                                  />
+                                </div>
+                                <span className="font-bold">{pct.toFixed(1)}%</span>
+                              </div>
                             </td>
                           </tr>
                         );
                       })}
-
-                      {!filteredSortedData.length ? (
-                        <tr>
-                          <td
-                            colSpan={3}
-                            className="px-4 py-6 text-center text-neutral-500 dark:text-neutral-400">
-                            {isRTL ? "لا توجد بيانات" : "No data"}
-                          </td>
-                        </tr>
-                      ) : null}
                     </tbody>
                   </table>
                 </div>
               ) : (
-                <div className="h-[360px] sm:h-[420px]">
+                <div className="h-[340px] sm:h-[420px]">
                   <ResponsiveContainer width="100%" height="100%">
                     {chartType === "pie" ? (
                       <PieChart>
@@ -746,23 +723,21 @@ const SummaryCharts = (): JSX.Element => {
                           labelLine={false}
                           label={showLabels ? renderPieLabel : false}>
                           {chartData.map((_: any, idx: number) => (
-                            <Cell key={`cell-${idx}`} fill={PIE_COLORS[idx % PIE_COLORS.length]} />
+                            <Cell
+                              key={`cell-${idx}`}
+                              fill={PIE_COLORS[idx % PIE_COLORS.length]}
+                              stroke="var(--card)"
+                              strokeWidth={2}
+                            />
                           ))}
                         </Pie>
 
                         {/* Center label */}
                         <text x="50%" y="50%" textAnchor="middle" dominantBaseline="middle">
-                          <tspan
-                            className="fill-neutral-900 dark:fill-neutral-50"
-                            fontSize="14"
-                            fontWeight="700">
+                          <tspan fill="var(--foreground)" fontSize="14" fontWeight="800">
                             {legendLabel}
                           </tspan>
-                          <tspan
-                            x="50%"
-                            dy="18"
-                            className="fill-neutral-500 dark:fill-neutral-400"
-                            fontSize="12">
+                          <tspan x="50%" dy="18" fill="var(--muted-foreground)" fontSize="12">
                             {activeChart === "revenue"
                               ? `${chartStats.total.toFixed(3)} KD`
                               : `${Math.round(chartStats.total)} ${unit}`}
@@ -778,21 +753,27 @@ const SummaryCharts = (): JSX.Element => {
                           dataKey="label"
                           tickLine={false}
                           axisLine={false}
+                          reversed={isRTL}
                           tickFormatter={(v) =>
                             String(v)?.length > 14 ? String(v).slice(0, 14) + "…" : v
                           }
                         />
-                        <YAxis tickLine={false} axisLine={false} width={44} />
+                        <YAxis
+                          tickLine={false}
+                          axisLine={false}
+                          width={44}
+                          orientation={isRTL ? "right" : "left"}
+                        />
                         <Tooltip formatter={formatTooltip as any} />
                         {showLegend ? <Legend formatter={() => legendLabel} /> : null}
 
                         <Line
                           type="monotone"
                           dataKey="value"
-                          stroke="#0a0a0a"
+                          stroke={barFill}
                           strokeWidth={3}
-                          dot={{ r: 3 }}
-                          activeDot={{ r: 5 }}
+                          dot={{ r: 3, strokeWidth: 2 }}
+                          activeDot={{ r: 6 }}
                         />
                       </LineChart>
                     ) : (
@@ -804,19 +785,35 @@ const SummaryCharts = (): JSX.Element => {
                           dataKey="label"
                           tickLine={false}
                           axisLine={false}
+                          reversed={isRTL}
                           tickFormatter={(v) =>
                             String(v)?.length > 14 ? String(v).slice(0, 14) + "…" : v
                           }
                         />
-                        <YAxis tickLine={false} axisLine={false} width={44} />
-                        <Tooltip formatter={formatTooltip as any} />
+                        <YAxis
+                          tickLine={false}
+                          axisLine={false}
+                          width={44}
+                          orientation={isRTL ? "right" : "left"}
+                        />
+                        <Tooltip
+                          formatter={formatTooltip as any}
+                          cursor={{ fill: "var(--muted)" }}
+                        />
                         {showLegend ? <Legend formatter={() => legendLabel} /> : null}
 
-                        <Bar dataKey="value" fill="#0a0a0a" radius={10}>
+                        <Bar dataKey="value" fill={barFill} radius={[10, 10, 4, 4]}>
+                          {/* Per-bar colour so a bar, its pie slice and its
+                              table row all share one hue. */}
+                          {chartData.map((_: any, idx: number) => (
+                            <Cell key={`bar-${idx}`} fill={PIE_COLORS[idx % PIE_COLORS.length]} />
+                          ))}
+
                           {showLabels ? (
                             <LabelList
                               dataKey="value"
                               position="top"
+                              className="fill-muted-foreground"
                               formatter={(v: any) => formatValue(v)}
                             />
                           ) : null}
@@ -826,15 +823,15 @@ const SummaryCharts = (): JSX.Element => {
                   </ResponsiveContainer>
                 </div>
               )}
-            </CardContent>
-          </Card>
+            </div>
+          </div>
 
-          <div className="mt-3 text-xs text-neutral-500 dark:text-neutral-400 flex flex-wrap items-center gap-2">
-            <Info className="h-4 w-4" />
+          <p className="mt-3 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+            <Info className="size-3.5" />
             {isRTL
               ? "ميزات إضافية: جدول، نسخ الملخص، تغيير النِسَب، إخفاء نسب صغيرة في الدائري."
               : "Extra features: table view, copy summary, percent mode, hide tiny pie % labels."}
-          </div>
+          </p>
         </div>
       )}
     </Layout>

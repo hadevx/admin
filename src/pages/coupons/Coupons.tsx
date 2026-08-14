@@ -5,6 +5,7 @@ import { Separator } from "../../components/ui/separator";
 import { Plus, Loader2Icon, Ticket, Sparkles, Percent, Tags, Hash, Trash2, X } from "lucide-react";
 import { Link } from "react-router-dom";
 import Loader from "../../components/Loader";
+import PageHeader from "@/components/PageHeader";
 import { useSelector } from "react-redux";
 import clsx from "clsx";
 import {
@@ -276,80 +277,56 @@ function Coupons(): JSX.Element {
     });
   };
 
-  // ✅ styles (dark mode added)
-  const bentoCard =
-    "rounded-3xl border border-black/10 bg-white/80 backdrop-blur shadow-sm dark:border-white/10 dark:bg-zinc-950/80";
-  const tile =
-    "rounded-2xl border border-black/10 bg-white p-4 dark:border-white/10 dark:bg-zinc-950";
-  const chipBase =
-    "select-none inline-flex items-center gap-2 rounded-2xl border px-3 py-2 text-sm font-semibold transition";
-  const chipOn =
-    "bg-zinc-900 text-white border-zinc-900 dark:bg-white dark:text-zinc-900 dark:border-white";
-  const chipOff =
-    "bg-white text-zinc-900 border-black/10 hover:bg-zinc-50 dark:bg-zinc-950 dark:text-white dark:border-white/10 dark:hover:bg-white/5";
+  // Shared surface/control styles come from the design system in index.css
+  const bentoCard = "ws-card";
+  const tile = "ws-tile";
+  const chipBase = "ws-chip select-none px-3 py-2 text-sm";
+  const chipOn = "ws-chip-active";
+  const chipOff = "";
 
   if (loadingCategories) return <Loader />;
 
   return (
     <Layout>
-      <div
-        dir={language === "ar" ? "rtl" : "ltr"}
-        className="px-4 w-full max-w-4xl min-h-screen mt-[70px] lg:mt-[50px] lg:py-6 pb-6 text-zinc-900 dark:text-white">
+      <div className="mx-auto w-full max-w-5xl animate-fade-up">
         {/* Header */}
-        <div className="flex items-start justify-between gap-3">
-          <div className="flex items-center gap-2">
-            <div className="h-11 w-11 rounded-2xl bg-zinc-900 text-white grid place-items-center dark:bg-white dark:text-zinc-900">
-              <Ticket className="h-5 w-5" />
-            </div>
-            <div>
-              <h1 className="text-xl lg:text-2xl font-extrabold text-zinc-900 dark:text-white">
-                {t.title}
-              </h1>
-              <p className="text-sm text-zinc-600 dark:text-zinc-400">{t.subtitle}</p>
-            </div>
-          </div>
-
-          <button
-            onClick={handleCreate}
-            disabled={loadingCreate}
-            className={clsx(
-              "text-sm px-4 py-2 rounded-md font-semibold shadow-sm flex items-center gap-2",
-              "disabled:opacity-50 disabled:cursor-not-allowed transition",
-              "bg-zinc-950 hover:bg-zinc-800 text-white",
-              "dark:bg-white dark:text-zinc-900 dark:hover:bg-zinc-200",
-            )}>
-            {loadingCreate ? (
-              <Loader2Icon className="h-4 w-4 animate-spin" />
-            ) : (
-              <Plus className="h-4 w-4" />
-            )}
-            {t.createCoupon}
-          </button>
-        </div>
-
-        <Separator className="my-5 bg-black/10 dark:bg-white/10" />
+        <PageHeader
+          title={t.title}
+          subtitle={t.subtitle}
+          icon={Ticket}
+          actions={
+            <button onClick={handleCreate} disabled={loadingCreate} className="ws-btn-primary">
+              {loadingCreate ? (
+                <Loader2Icon className="size-4 animate-spin" />
+              ) : (
+                <Plus className="size-4" />
+              )}
+              {t.createCoupon}
+            </button>
+          }
+        />
 
         <div className="grid grid-cols-1 gap-4">
           {/* Create coupon */}
           <section className={`${bentoCard} p-5`}>
             <div className="flex items-center gap-2">
-              <Sparkles className="h-4 w-4 text-zinc-900 dark:text-white" />
-              <h2 className="text-base font-bold text-zinc-900 dark:text-white">
+              <Sparkles className="h-4 w-4 text-foreground" />
+              <h2 className="text-base font-bold text-foreground">
                 {language === "ar" ? "إنشاء كوبون للفئات" : "Create category coupon"}
               </h2>
             </div>
 
-            <Separator className="my-4 bg-black/10 dark:bg-white/10" />
+            <Separator className="my-4 bg-border" />
 
             <div className="grid grid-cols-1 md:grid-cols-12 gap-3">
               {/* Code */}
               <div className={`${tile} md:col-span-5`}>
                 <div className="flex items-center gap-2 mb-2">
-                  <Hash className="h-4 w-4 text-zinc-700 dark:text-zinc-300" />
-                  <label className="text-sm font-semibold text-zinc-800 dark:text-zinc-200">
+                  <Hash className="h-4 w-4 text-muted-foreground" />
+                  <label className="text-sm font-semibold text-foreground">
                     {t.couponCode}
                   </label>
-                  <span className="text-xs text-zinc-500 dark:text-zinc-400">• {t.required}</span>
+                  <span className="text-xs text-muted-foreground">• {t.required}</span>
                 </div>
 
                 <input
@@ -364,7 +341,7 @@ function Coupons(): JSX.Element {
                   )}
                 />
 
-                <div className="mt-2 text-xs text-zinc-500 dark:text-zinc-400">
+                <div className="mt-2 text-xs text-muted-foreground">
                   {language === "ar"
                     ? "سيتم تحويل الكود تلقائياً إلى أحرف كبيرة."
                     : "Code will be normalized to UPPERCASE."}
@@ -374,11 +351,11 @@ function Coupons(): JSX.Element {
               {/* Discount */}
               <div className={`${tile} md:col-span-7`}>
                 <div className="flex items-center gap-2 mb-2">
-                  <Percent className="h-4 w-4 text-zinc-700 dark:text-zinc-300" />
-                  <label className="text-sm font-semibold text-zinc-800 dark:text-zinc-200">
+                  <Percent className="h-4 w-4 text-muted-foreground" />
+                  <label className="text-sm font-semibold text-foreground">
                     {t.discountBy}
                   </label>
-                  <span className="text-xs text-zinc-500 dark:text-zinc-400">• {t.required}</span>
+                  <span className="text-xs text-muted-foreground">• {t.required}</span>
                 </div>
 
                 <select
@@ -403,11 +380,11 @@ function Coupons(): JSX.Element {
               <div className={`${tile} md:col-span-12`}>
                 <div className="flex items-center justify-between gap-3 flex-wrap">
                   <div className="flex items-center gap-2">
-                    <Tags className="h-4 w-4 text-zinc-700 dark:text-zinc-300" />
-                    <div className="text-sm font-semibold text-zinc-800 dark:text-zinc-200">
+                    <Tags className="h-4 w-4 text-muted-foreground" />
+                    <div className="text-sm font-semibold text-foreground">
                       {t.categories}
                     </div>
-                    <div className="text-xs text-zinc-500 dark:text-zinc-400">
+                    <div className="text-xs text-muted-foreground">
                       • {t.selected}: {selectedCategories.length}
                     </div>
                   </div>
@@ -436,10 +413,10 @@ function Coupons(): JSX.Element {
                   </div>
                 </div>
 
-                <Separator className="my-3 bg-black/10 dark:bg-white/10" />
+                <Separator className="my-3 bg-border" />
 
                 {categories?.length === 0 ? (
-                  <p className="py-3 text-sm text-zinc-700 dark:text-zinc-300">
+                  <p className="py-3 text-sm text-muted-foreground">
                     {t.noCategories}{" "}
                     <Link to="/categories" className="underline text-blue-600 dark:text-blue-300">
                       {t.createCategory}
@@ -475,21 +452,21 @@ function Coupons(): JSX.Element {
             <section className={`${bentoCard} p-5`}>
               <div className="flex items-center justify-between gap-3">
                 <div className="flex items-center gap-2">
-                  <Ticket className="h-4 w-4 text-zinc-900 dark:text-white" />
-                  <h3 className="text-base font-bold text-zinc-900 dark:text-white">
+                  <Ticket className="h-4 w-4 text-foreground" />
+                  <h3 className="text-base font-bold text-foreground">
                     {language === "ar" ? "الكوبونات الحالية" : "Current Coupons"}
                   </h3>
                 </div>
 
                 {loadingCoupons ? (
-                  <div className="text-xs text-zinc-500 dark:text-zinc-400 flex items-center gap-2">
+                  <div className="text-xs text-muted-foreground flex items-center gap-2">
                     <Loader2Icon className="h-4 w-4 animate-spin" />{" "}
                     {language === "ar" ? "تحميل..." : "Loading..."}
                   </div>
                 ) : null}
               </div>
 
-              <Separator className="my-4 bg-black/10 dark:bg-white/10" />
+              <Separator className="my-4 bg-border" />
 
               <div className="grid sm:grid-cols-2 gap-3">
                 {coupons.map((c) => {
@@ -506,7 +483,7 @@ function Coupons(): JSX.Element {
                       <div className="flex items-start justify-between gap-3">
                         <div className="min-w-0">
                           <div className="flex items-center gap-2">
-                            <span className="text-lg font-extrabold text-zinc-900 dark:text-white truncate">
+                            <span className="text-lg font-extrabold text-foreground truncate">
                               {c.code}
                             </span>
 
@@ -521,14 +498,14 @@ function Coupons(): JSX.Element {
                             </span>
                           </div>
 
-                          <div className="mt-2 text-sm text-zinc-700 dark:text-zinc-300">
+                          <div className="mt-2 text-sm text-muted-foreground">
                             <span className="font-semibold">{Math.round(c.discountBy * 100)}%</span>{" "}
                             {language === "ar" ? "خصم" : "off"}
                           </div>
 
-                          <div className="mt-2 text-xs text-zinc-500 dark:text-zinc-400">
+                          <div className="mt-2 text-xs text-muted-foreground">
                             {t.created}:{" "}
-                            <span className="font-semibold text-zinc-900 dark:text-white">
+                            <span className="font-semibold text-foreground">
                               {c.createdAt ? fmtDate(c.createdAt) : "—"}
                             </span>
                           </div>
@@ -551,9 +528,9 @@ function Coupons(): JSX.Element {
                         </button>
                       </div>
 
-                      <Separator className="my-3 bg-black/10 dark:bg-white/10" />
+                      <Separator className="my-3 bg-border" />
 
-                      <div className="text-xs text-zinc-500 dark:text-zinc-400 mb-2">
+                      <div className="text-xs text-muted-foreground mb-2">
                         {language === "ar" ? "الفئات:" : "Categories:"}
                       </div>
 
@@ -570,7 +547,7 @@ function Coupons(): JSX.Element {
                           </span>
                         ))}
                         {cats.length > 10 ? (
-                          <span className="text-xs text-zinc-500 dark:text-zinc-400 px-2 py-1">
+                          <span className="text-xs text-muted-foreground px-2 py-1">
                             +{cats.length - 10}
                           </span>
                         ) : null}
@@ -590,7 +567,7 @@ function Coupons(): JSX.Element {
             <div className="relative w-full max-w-md rounded-3xl bg-white border border-black/10 shadow-lg p-5 dark:bg-zinc-950 dark:border-white/10">
               <div className="flex items-start justify-between gap-3">
                 <div>
-                  <h4 className="text-lg font-extrabold text-zinc-900 dark:text-white">
+                  <h4 className="text-lg font-extrabold text-foreground">
                     {t.confirmDeleteTitle}
                   </h4>
                   <p className="text-sm text-zinc-600 mt-1 dark:text-zinc-400">
@@ -610,8 +587,8 @@ function Coupons(): JSX.Element {
               </div>
 
               <div className="mt-4 rounded-2xl border border-black/10 bg-zinc-50 p-3 dark:border-white/10 dark:bg-white/5">
-                <div className="text-xs text-zinc-500 dark:text-zinc-400">{t.couponCode}</div>
-                <div className="text-base font-bold text-zinc-900 dark:text-white">
+                <div className="text-xs text-muted-foreground">{t.couponCode}</div>
+                <div className="text-base font-bold text-foreground">
                   {deleteTarget?.code}
                 </div>
               </div>

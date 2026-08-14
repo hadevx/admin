@@ -1,382 +1,313 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import clsx from "clsx";
-import {
-  ShoppingBasket,
-  Box,
-  Boxes,
-  Users,
-  TicketPercent,
-  LogOut,
-  Truck,
-  Settings,
-  Menu,
-  X,
-  Loader2Icon,
-  ScrollText,
-  ChevronDown,
-  Codepen,
-  Percent,
-} from "lucide-react";
+import { ChevronDown, LogOut, Loader2Icon, PanelLeftClose, PanelLeftOpen } from "lucide-react";
 import { useSelector, useDispatch } from "react-redux";
 import { logout } from "../redux/slices/authSlice";
 import { useLogoutMutation } from "../redux/queries/userApi";
 import { toast } from "react-toastify";
-import { Separator } from "./ui/separator";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { NAV_SECTIONS, isPathActive, type Lang, type NavItem } from "@/lib/nav";
 
-function SideMenu() {
+type SideMenuProps = {
+  collapsed: boolean;
+  onToggleCollapse: () => void;
+  mobileOpen: boolean;
+  onCloseMobile: () => void;
+};
+
+const labels = {
+  en: { logout: "Logout", loggingOut: "Signing out…", collapse: "Collapse", expand: "Expand" },
+  ar: { logout: "تسجيل الخروج", loggingOut: "جاري الخروج…", collapse: "طي", expand: "توسيع" },
+} satisfies Record<Lang, Record<string, string>>;
+
+function SideMenu({ collapsed, onToggleCollapse, mobileOpen, onCloseMobile }: SideMenuProps) {
   const [logoutApiCall, { isLoading: loadingLogout }] = useLogoutMutation();
-  const location = useLocation();
+  const { pathname } = useLocation();
   const navigate = useNavigate();
-  const { pathname } = location;
-  const language = useSelector((state: any) => state.language.lang);
-  const { adminUserInfo } = useSelector((state: any) => state.auth);
-
   const dispatch = useDispatch();
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
 
-  // ✅ Dropdown state for Promotions
-  const [promotionsOpen, setPromotionsOpen] = useState(false);
+  const language: Lang = useSelector((state: any) => state.language.lang);
+  const { adminUserInfo } = useSelector((state: any) => state.auth);
+  const isRTL = language === "ar";
+  const t = labels[language] ?? labels.en;
+
+  const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({});
+
+  // Keep a group expanded whenever one of its children is the current page.
+  useEffect(() => {
+    const next: Record<string, boolean> = {};
+    NAV_SECTIONS.forEach((section) =>
+      section.items.forEach((item) => {
+        if (item.children?.some((child) => isPathActive(pathname, child.to))) next[item.key] = true;
+      }),
+    );
+    if (Object.keys(next).length) setOpenGroups((prev) => ({ ...prev, ...next }));
+  }, [pathname]);
 
   const handleLogout = async () => {
     try {
       await logoutApiCall(undefined).unwrap();
       dispatch(logout());
+      onCloseMobile();
       navigate("/login");
-      setIsMenuOpen(false);
     } catch (error: any) {
       toast.error(error?.data?.message || "Logout failed");
     }
   };
 
-  useEffect(() => {
-    if (isMenuOpen) document.body.classList.add("overflow-hidden");
-    else document.body.classList.remove("overflow-hidden");
-    return () => document.body.classList.remove("overflow-hidden");
-  }, [isMenuOpen]);
+  const initials = String(adminUserInfo?.name || adminUserInfo?.email || "AD")
+    .trim()
+    .split(/\s+/)
+    .slice(0, 2)
+    .map((part: string) => part[0])
+    .join("")
+    .toUpperCase();
 
-  // ✅ Keep dropdown opened when current route is inside it
-  useEffect(() => {
-    if (pathname.startsWith("/discounts") || pathname.startsWith("/coupons")) {
-      setPromotionsOpen(true);
-    }
-  }, [pathname]);
+  /** A single navigation row. `depth` indents nested children. */
+  const NavLink = ({ item, depth = 0 }: { item: NavItem; depth?: number }) => {
+    const active = isPathActive(pathname, item.to);
+    const Icon = item.icon;
 
-  const labels: any = {
-    en: {
-      summary: "Summary",
-      orders: "Orders",
-      products: "Products",
-      categories: "Categories",
-      customers: "Customers",
-      promotions: "Promotions",
-      coupons: "Coupons",
-      discounts: "Discounts",
-      delivery: "Delivery",
-      settings: "Settings",
-      logout: "Logout",
-      loggingOut: "Logging out...",
-    },
-    ar: {
-      summary: "الملخص",
-      orders: "الطلبات",
-      products: "المنتجات",
-      categories: "الفئات",
-      customers: "العملاء",
-      promotions: "العروض",
-      coupons: "الكوبونات",
-      discounts: "الخصومات",
-      delivery: "التوصيل",
-      settings: "الإعدادات",
-      logout: "تسجيل الخروج",
-      loggingOut: "جاري تسجيل الخروج...",
-    },
+    return (
+      <Link
+        to={item.to}
+        onClick={onCloseMobile}
+        title={collapsed ? item.label[language] : undefined}
+        aria-current={active ? "page" : undefined}
+        className={clsx(
+          "ws-nav-link group",
+          active && "ws-nav-link-active",
+          collapsed && "lg:justify-center lg:px-0",
+          depth > 0 && !collapsed && "ms-3 text-[13px]",
+        )}>
+        <Icon
+          className={clsx(
+            "size-[18px] shrink-0 transition-transform duration-200",
+            !active && "group-hover:scale-110",
+          )}
+          strokeWidth={active ? 2.2 : 1.8}
+        />
+        <span className={clsx("truncate", collapsed && "lg:hidden")}>{item.label[language]}</span>
+      </Link>
+    );
   };
 
-  const t = labels[language];
+  /** A parent row that expands to reveal its children. */
+  const NavGroup = ({ item }: { item: NavItem }) => {
+    const children = item.children ?? [];
+    const groupActive = children.some((child) => isPathActive(pathname, child.to));
+    const open = openGroups[item.key] ?? groupActive;
+    const Icon = item.icon;
 
-  const isPromotionsActive = useMemo(
-    () => pathname.startsWith("/discounts") || pathname.startsWith("/coupons"),
-    [pathname],
-  );
+    const disclosure = (
+      <div className="flex flex-col">
+        <button
+          type="button"
+          onClick={() => setOpenGroups((prev) => ({ ...prev, [item.key]: !open }))}
+          aria-expanded={open}
+          className={clsx(
+            "ws-nav-link w-full justify-between",
+            groupActive && !open && "text-foreground",
+          )}>
+          <span className="flex items-center gap-3">
+            <Icon className="size-[18px] shrink-0" strokeWidth={1.8} />
+            {item.label[language]}
+          </span>
+          <ChevronDown
+            className={clsx("size-4 transition-transform duration-300", open && "rotate-180")}
+          />
+        </button>
 
-  const closeMobileMenu = () => setIsMenuOpen(false);
+        <AnimatePresence initial={false}>
+          {open && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: "auto", opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={{ duration: 0.22, ease: "easeOut" }}
+              className="overflow-hidden">
+              <div className="mt-1 flex flex-col gap-1 border-s border-border ps-2">
+                {children.map((child) => (
+                  <NavLink key={child.key} item={child} depth={1} />
+                ))}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+    );
 
-  // ---- Menu content ----
-  const menuContent = (
-    <div
-      className={clsx(
-        "flex flex-col h-full px-2 lg:px-[2rem] py-[2rem] border-r-[2px] w-64 lg:w-auto min-h-screen",
-        " text-neutral-900 border-black/10",
-        "dark:bg-neutral-950 dark:text-neutral-100 dark:border-neutral-800",
-      )}>
-      <div className="mt-10 flex items-center gap-3 p-2">
+    // The collapsed rail has no room for a disclosure, so it flattens the group
+    // into plain icons. The mobile drawer is never collapsed and keeps the menu.
+    if (collapsed) {
+      return (
+        <>
+          <div className="hidden flex-col gap-1 lg:flex">
+            {children.map((child) => (
+              <NavLink key={child.key} item={child} />
+            ))}
+          </div>
+          <div className="lg:hidden">{disclosure}</div>
+        </>
+      );
+    }
+
+    return disclosure;
+  };
+
+  const panel = (
+    <div className="flex h-full flex-col bg-sidebar text-sidebar-foreground">
+      {/* Brand */}
+      <div
+        className={clsx(
+          "flex h-16 shrink-0 items-center gap-3 border-b border-sidebar-border px-5",
+          collapsed && "lg:justify-center lg:px-0",
+        )}>
         <a
           href="https://webschema.online"
           target="_blank"
           rel="noreferrer"
-          className="shrink-0"
-          aria-label="Open website">
-          <motion.div
-            whileHover={{ scale: 0.96 }}
-            whileTap={{ scale: 0.98 }}
-            className="relative select-none size-10 flex items-center justify-center transition">
-            <img src="/webschema.jpeg" alt="logo" className="rounded-lg object-contain" />
-            <span
-              className={clsx(
-                "absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full bg-emerald-500 border-2",
-                "border-white dark:border-neutral-950",
-              )}
-              aria-hidden="true"
-            />
-          </motion.div>
+          aria-label="Open website"
+          className="relative shrink-0">
+          <img
+            src="/webschema.jpeg"
+            alt=""
+            className="size-9 rounded-md object-cover ring-1 ring-black/5 dark:ring-white/10"
+          />
+          <span className="absolute -bottom-0.5 -end-0.5 size-2.5 rounded-full border-2 border-sidebar bg-emerald-500" />
         </a>
 
-        <div className="min-w-0">
-          <p className="text-sm font-black text-neutral-900 dark:text-neutral-50 truncate">
-            {adminUserInfo?.name}
-          </p>
-          <p className="text-xs text-neutral-500 dark:text-neutral-400 truncate">
-            {adminUserInfo?.email}
+        <div className={clsx("min-w-0 flex-1", collapsed && "lg:hidden")}>
+          <p className="truncate text-sm font-extrabold tracking-tight">Webschema</p>
+          <p className="truncate text-[11px] text-muted-foreground">
+            {isRTL ? "لوحة التحكم" : "Admin panel"}
           </p>
         </div>
+
+        <button
+          type="button"
+          onClick={onToggleCollapse}
+          title={collapsed ? t.expand : t.collapse}
+          aria-label={collapsed ? t.expand : t.collapse}
+          className={clsx(
+            "hidden size-8 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground lg:flex",
+            collapsed && "lg:hidden",
+          )}>
+          <PanelLeftClose className={clsx("size-4", isRTL && "rotate-180")} />
+        </button>
       </div>
 
-      <Separator className="my-4 bg-black/20 dark:bg-white/10" />
-
-      <div className="flex flex-col lg:justify-start h-full">
-        <div className="flex flex-col gap-3 max-h-[calc(100vh-300px)]">
-          <Link
-            to="/summary"
-            onClick={closeMobileMenu}
-            className={clsx(
-              "flex gap-3 px-3 py-2 rounded-lg transition-all duration-300",
-              "hover:shadow",
-              "dark:hover:bg-neutral-900/70 dark:hover:shadow-none",
-              pathname === "/summary" && "bg-white shadow dark:bg-neutral-900/70 dark:shadow-none",
-            )}>
-            <ScrollText strokeWidth={1} />
-            <p>{t.summary}</p>
-          </Link>
-
-          <Link
-            to="/orders"
-            onClick={closeMobileMenu}
-            className={clsx(
-              "flex gap-3 px-3 py-2 rounded-lg transition-all duration-300",
-              " hover:shadow",
-              "dark:hover:bg-neutral-900/70 dark:hover:shadow-none",
-              (pathname === "/orders" || pathname.startsWith("/orders")) &&
-                "bg-white shadow dark:bg-neutral-900/70 dark:shadow-none",
-            )}>
-            <ShoppingBasket strokeWidth={1} />
-            <p>{t.orders}</p>
-          </Link>
-
-          <Link
-            to="/products"
-            onClick={closeMobileMenu}
-            className={clsx(
-              "flex gap-3 px-3 py-2 rounded-lg transition-all duration-300",
-              " hover:shadow",
-              "dark:hover:bg-neutral-900/70 dark:hover:shadow-none",
-              pathname.startsWith("/products") &&
-                "bg-white shadow dark:bg-neutral-900/70 dark:shadow-none",
-            )}>
-            <Box strokeWidth={1} />
-            <p>{t.products}</p>
-          </Link>
-
-          <Link
-            to="/categories"
-            onClick={closeMobileMenu}
-            className={clsx(
-              "flex gap-3 px-3 py-2 rounded-lg transition-all duration-300",
-              " hover:shadow-[0_0_5px_rgba(0,0,0,0.1)]",
-              "dark:hover:bg-neutral-900/70 dark:hover:shadow-none",
-              pathname === "/categories" &&
-                "bg-white shadow-[0_0_5px_rgba(0,0,0,0.1)] dark:bg-neutral-900/70 dark:shadow-none",
-            )}>
-            <Boxes strokeWidth={1} />
-            <p>{t.categories}</p>
-          </Link>
-
-          <Link
-            to="/users"
-            onClick={closeMobileMenu}
-            className={clsx(
-              "flex gap-3 px-3 py-2 rounded-lg transition-all duration-300",
-              " hover:shadow",
-              "dark:hover:bg-neutral-900/70 dark:hover:shadow-none",
-              pathname.startsWith("/users") &&
-                "bg-white shadow dark:bg-neutral-900/70 dark:shadow-none",
-            )}>
-            <Users strokeWidth={1} />
-            <p>{t.customers}</p>
-          </Link>
-
-          {/* ✅ Promotions dropdown (Discounts + Coupons) */}
-          <div className="flex flex-col">
-            <button
-              type="button"
-              onClick={() => setPromotionsOpen((v) => !v)}
-              className={clsx(
-                "group flex w-full items-center justify-between px-3 py-2 rounded-lg transition-all duration-300",
-                " hover:shadow",
-                "dark:hover:bg-neutral-900/70 dark:hover:shadow-none",
-                isPromotionsActive && "bg-white shadow dark:bg-neutral-900/70 dark:shadow-none",
-              )}>
-              <span className="flex items-center gap-3">
-                <Percent strokeWidth={1} />
-                <p>{t.promotions}</p>
-              </span>
-
-              <ChevronDown
-                className={clsx(
-                  "h-4 w-4 transition-transform duration-300",
-                  promotionsOpen ? "rotate-180" : "rotate-0",
-                )}
-              />
-            </button>
-
-            <AnimatePresence initial={false}>
-              {promotionsOpen && (
-                <motion.div
-                  initial={{ height: 0, opacity: 0 }}
-                  animate={{ height: "auto", opacity: 1 }}
-                  exit={{ height: 0, opacity: 0 }}
-                  transition={{ duration: 0.25, ease: "easeOut" }}
-                  className="overflow-hidden">
-                  <div className="mt-2 ml-3 flex flex-col gap-2">
-                    <Link
-                      to="/discounts"
-                      onClick={closeMobileMenu}
-                      className={clsx(
-                        "flex gap-3 px-3 py-2 rounded-lg transition-all duration-300",
-                        " hover:shadow",
-                        "dark:hover:bg-neutral-900/70 dark:hover:shadow-none",
-                        pathname.startsWith("/discounts") &&
-                          "bg-white shadow dark:bg-neutral-900/70 dark:shadow-none",
-                      )}>
-                      <TicketPercent strokeWidth={1} className="opacity-80" />
-                      <p>{t.discounts}</p>
-                    </Link>
-
-                    <Link
-                      to="/coupons"
-                      onClick={closeMobileMenu}
-                      className={clsx(
-                        "flex gap-3 px-3 py-2 rounded-lg transition-all duration-300",
-                        " hover:shadow",
-                        "dark:hover:bg-neutral-900/70 dark:hover:shadow-none",
-                        pathname.startsWith("/coupons") &&
-                          "bg-white shadow dark:bg-neutral-900/70 dark:shadow-none",
-                      )}>
-                      <Codepen strokeWidth={1} className="opacity-80" />
-                      <p>{t.coupons}</p>
-                    </Link>
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
-
-          <Link
-            to="/delivery"
-            onClick={closeMobileMenu}
-            className={clsx(
-              "flex gap-3 px-3 py-2 rounded-lg transition-all duration-300",
-              " hover:shadow",
-              "dark:hover:bg-neutral-900/70 dark:hover:shadow-none",
-              pathname === "/delivery" && "bg-white shadow dark:bg-neutral-900/70 dark:shadow-none",
-            )}>
-            <Truck strokeWidth={1} />
-            <p>{t.delivery}</p>
-          </Link>
-
-          <Link
-            to="/settings"
-            onClick={closeMobileMenu}
-            className={clsx(
-              "group flex gap-3 px-3 py-2 rounded-lg transition-all duration-300",
-              " hover:shadow",
-              "dark:hover:bg-neutral-900/70 dark:hover:shadow-none",
-              pathname === "/settings" && "bg-white shadow dark:bg-neutral-900/70 dark:shadow-none",
-            )}>
-            <Settings
-              strokeWidth={1}
-              className="transition-transform duration-300 group-hover:rotate-180"
-            />
-            <p>{t.settings}</p>
-          </Link>
-        </div>
-
-        <div>
-          <Separator className="my-4 bg-black/20 dark:bg-white/10" />
+      {/* Sections */}
+      <nav className="no-scrollbar flex-1 overflow-y-auto px-4 py-5">
+        {collapsed && (
           <button
-            onClick={handleLogout}
-            disabled={loadingLogout}
-            className={clsx(
-              "w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-sm font-semibold transition-all duration-200",
-              "border border-rose-200 bg-rose-50 text-rose-700 hover:bg-rose-100 hover:border-rose-300",
-              "dark:border-rose-900/60 dark:bg-rose-950/40 dark:text-rose-200 dark:hover:bg-rose-950/60 dark:hover:border-rose-900",
-              "disabled:opacity-60 disabled:cursor-not-allowed",
-            )}>
-            {loadingLogout ? (
-              <>
-                <Loader2Icon className="animate-spin" size={16} />
-                {t.loggingOut}
-              </>
-            ) : (
-              <>
-                <LogOut size={16} />
-                {t.logout}
-              </>
-            )}
+            type="button"
+            onClick={onToggleCollapse}
+            title={t.expand}
+            aria-label={t.expand}
+            className="mx-auto mb-3 hidden size-9 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground lg:flex">
+            <PanelLeftOpen className={clsx("size-4", isRTL && "rotate-180")} />
           </button>
+        )}
+
+        <div className="flex flex-col gap-5">
+          {NAV_SECTIONS.map((section) => (
+            <div key={section.key} className="flex flex-col gap-1">
+              <p
+                className={clsx(
+                  "px-3 pb-1 text-[10px] font-bold uppercase tracking-[0.12em] text-muted-foreground/70",
+                  collapsed && "lg:hidden",
+                )}>
+                {section.title[language]}
+              </p>
+
+              {section.items.map((item) =>
+                item.children?.length ? (
+                  <NavGroup key={item.key} item={item} />
+                ) : (
+                  <NavLink key={item.key} item={item} />
+                ),
+              )}
+            </div>
+          ))}
         </div>
+      </nav>
+
+      {/* Account + logout */}
+      <div className="shrink-0 border-t border-sidebar-border p-4">
+        <div
+          className={clsx(
+            "mb-2 flex items-center gap-3 rounded-md bg-muted/60 p-2.5",
+            collapsed && "lg:justify-center lg:bg-transparent lg:p-0",
+          )}>
+          <div className="grid size-9 shrink-0 place-items-center rounded-md bg-emphasis text-xs font-black text-emphasis-foreground">
+            {initials}
+          </div>
+          <div className={clsx("min-w-0 flex-1", collapsed && "lg:hidden")}>
+            <p className="truncate text-sm font-bold">{adminUserInfo?.name || "—"}</p>
+            <p className="truncate text-[11px] text-muted-foreground">{adminUserInfo?.email}</p>
+          </div>
+        </div>
+
+        <button
+          onClick={handleLogout}
+          disabled={loadingLogout}
+          title={collapsed ? t.logout : undefined}
+          className={clsx(
+            "inline-flex w-full items-center justify-center gap-2 rounded-md border px-4 py-2.5 text-sm font-semibold transition-all duration-150 active:scale-[0.98]",
+            "border-rose-200 bg-rose-50 text-rose-700 hover:bg-rose-100",
+            "dark:border-rose-500/25 dark:bg-rose-500/10 dark:text-rose-300 dark:hover:bg-rose-500/20",
+            "disabled:pointer-events-none disabled:opacity-55",
+            collapsed && "lg:px-0",
+          )}>
+          {loadingLogout ? (
+            <Loader2Icon className="size-4 animate-spin" />
+          ) : (
+            <LogOut className="size-4 shrink-0" />
+          )}
+          <span className={clsx(collapsed && "lg:hidden")}>
+            {loadingLogout ? t.loggingOut : t.logout}
+          </span>
+        </button>
       </div>
     </div>
   );
 
   return (
     <>
-      <div className="">
-        <button
-          className={clsx(
-            "lg:hidden fixed top-4 left-4 z-50 p-2 rounded-md shadow",
-            "bg-zinc-900 text-white",
-            "dark:bg-neutral-100 dark:text-neutral-950",
-          )}
-          onClick={() => setIsMenuOpen((prev) => !prev)}
-          aria-label="Toggle menu">
-          {isMenuOpen ? <X className="size-5" /> : <Menu className="size-5" />}
-        </button>
-        {/* <ThemeToggle /> */}
-      </div>
-      <div className="hidden lg:flex z-50">{menuContent}</div>
+      {/* Desktop rail */}
+      <aside
+        className="fixed inset-y-0 start-0 z-30 hidden w-[var(--sidebar-w)] border-e border-sidebar-border transition-[width] duration-300 ease-out lg:block"
+        aria-label="Sidebar">
+        {panel}
+      </aside>
 
-      {isMenuOpen && (
-        <div
-          className={clsx("fixed inset-0 backdrop-blur-sm z-40", "bg-black/20 dark:bg-black/50")}
-          onClick={() => setIsMenuOpen(false)}
-          aria-hidden="true">
-          <motion.div
-            initial={{ x: "-100%" }}
-            animate={{ x: 0 }}
-            exit={{ x: "-100%" }}
-            transition={{ type: "spring", stiffness: 300, damping: 30 }}
-            className={clsx(
-              "fixed left-0 top-0 h-full w-64 shadow-lg z-50",
-              "bg-zinc-100",
-              "dark:bg-neutral-950",
-            )}
-            onClick={(e) => e.stopPropagation()}>
-            {menuContent}
-          </motion.div>
-        </div>
-      )}
+      {/* Mobile drawer */}
+      <AnimatePresence>
+        {mobileOpen && (
+          <div className="lg:hidden">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              onClick={onCloseMobile}
+              className="fixed inset-0 z-40 bg-black/45 backdrop-blur-sm"
+              aria-hidden="true"
+            />
+            <motion.aside
+              initial={{ x: isRTL ? "100%" : "-100%" }}
+              animate={{ x: 0 }}
+              exit={{ x: isRTL ? "100%" : "-100%" }}
+              transition={{ type: "spring", stiffness: 320, damping: 34 }}
+              className="fixed inset-y-0 start-0 z-50 w-[17rem] max-w-[85vw] border-e border-sidebar-border shadow-2xl"
+              aria-label="Sidebar">
+              {panel}
+            </motion.aside>
+          </div>
+        )}
+      </AnimatePresence>
     </>
   );
 }

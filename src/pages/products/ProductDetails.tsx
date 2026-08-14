@@ -116,7 +116,6 @@ function SettingsStyleSwitch({
 
 function ProductDetails(): JSX.Element {
   const language = useSelector((state: RootState) => state.language.lang);
-  const dir = language === "ar" ? "rtl" : "ltr";
   const isRTL = language === "ar";
 
   const t = useMemo(() => texts[language], [language]);
@@ -443,26 +442,17 @@ function ProductDetails(): JSX.Element {
 
   return (
     <Layout>
-      <div
-        dir={dir}
-        className={clsx(
-          "px-4 w-full max-w-6xl py-6 my-10 min-h-screen font-custom",
-          isRTL ? "rtl" : "ltr",
-          "text-neutral-900 dark:text-neutral-100",
-        )}>
+      <div className="me-auto w-full max-w-6xl animate-fade-up">
         {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
+        <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-3">
-            <h1 className="text-2xl font-bold text-neutral-950 dark:text-neutral-50">{t.title}</h1>
+            <h1 className="text-xl font-extrabold tracking-tight sm:text-2xl">{t.title}</h1>
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
             {clickEditProduct ? (
               <>
-                <button
-                  onClick={cancelEdit}
-                  type="button"
-                  className="inline-flex items-center gap-2 rounded-md border border-neutral-200 bg-white px-3 py-2 text-sm font-semibold text-neutral-900 hover:bg-neutral-50 transition dark:border-neutral-800 dark:bg-neutral-950 dark:text-neutral-100 dark:hover:bg-neutral-900/60">
+                <button onClick={cancelEdit} type="button" className="ws-btn-secondary ws-btn-sm">
                   {t.cancel}
                 </button>
 
@@ -470,12 +460,8 @@ function ProductDetails(): JSX.Element {
                   onClick={handleUpdateProduct}
                   disabled={busy}
                   type="button"
-                  className={clsx(
-                    "inline-flex items-center gap-2 rounded-md px-4 py-2 text-sm font-semibold transition",
-                    "bg-neutral-950 text-white hover:bg-neutral-900 dark:bg-neutral-50 dark:text-neutral-950 dark:hover:bg-neutral-200",
-                    busy ? "opacity-60 cursor-not-allowed" : "",
-                  )}>
-                  {busy && <Loader2Icon className="h-4 w-4 animate-spin" />}
+                  className="ws-btn-primary ws-btn-sm">
+                  {busy && <Loader2Icon className="size-4 animate-spin" />}
                   {loadingUploadImage ? t.uploading : loadingUpdateProduct ? t.updating : t.update}
                 </button>
               </>
@@ -484,24 +470,24 @@ function ProductDetails(): JSX.Element {
                 <button
                   onClick={() => setIsAddVariantOpen(true)}
                   type="button"
-                  className="inline-flex items-center gap-2 rounded-md border border-neutral-200 bg-white px-3 py-2 text-sm font-semibold text-neutral-900 hover:bg-neutral-50 transition dark:border-neutral-800 dark:bg-neutral-950 dark:text-neutral-100 dark:hover:bg-neutral-900/60">
-                  <Plus className="h-4 w-4" />
+                  className="ws-btn-secondary ws-btn-sm">
+                  <Plus className="size-4" />
                   {t.addVariant}
                 </button>
 
                 <button
                   onClick={() => setIsDeleteModalOpen(true)}
                   type="button"
-                  className="inline-flex items-center gap-2 rounded-md bg-rose-500 px-3 py-2 text-sm font-semibold text-white hover:bg-rose-600 transition dark:bg-rose-600 dark:hover:bg-rose-700">
-                  <Trash2 className="h-4 w-4" />
+                  className="ws-btn-danger ws-btn-sm">
+                  <Trash2 className="size-4" />
                   {t.delete}
                 </button>
 
                 <button
                   onClick={() => setIsDiscountModalOpen(true)}
                   type="button"
-                  className="inline-flex items-center gap-2 rounded-md bg-neutral-950 px-3 py-2 text-sm font-semibold text-white hover:bg-neutral-900 transition dark:bg-neutral-50 dark:text-neutral-950 dark:hover:bg-neutral-200">
-                  <Tag className="h-4 w-4" />
+                  className="ws-btn-primary ws-btn-sm">
+                  <Tag className="size-4" />
                   {t.createDiscount}
                 </button>
 
@@ -517,7 +503,7 @@ function ProductDetails(): JSX.Element {
           </div>
         </div>
 
-        <Separator className="my-4 bg-black/10 dark:bg-white/10" />
+        <Separator className="my-4 bg-border" />
 
         {/* Main content */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
@@ -558,10 +544,10 @@ function ProductDetails(): JSX.Element {
 
                   {selectedFiles.length > 0 ? (
                     <div className="rounded-2xl border border-neutral-200 bg-white p-4 dark:border-neutral-800 dark:bg-neutral-950">
-                      <p className="text-sm font-semibold text-neutral-900 dark:text-neutral-100">
+                      <p className="text-sm font-semibold text-foreground">
                         {t.selectedFiles}
                       </p>
-                      <ul className="mt-2 list-disc pl-5 text-sm text-neutral-700 dark:text-neutral-300 space-y-1">
+                      <ul className="mt-2 list-disc pl-5 text-sm text-muted-foreground space-y-1">
                         {selectedFiles.map((file, idx) => (
                           <li key={idx} className="break-all">
                             {file.name}
@@ -599,12 +585,12 @@ function ProductDetails(): JSX.Element {
                 </span>
               </div>
 
-              <Separator className="my-4 bg-black/10 dark:bg-white/10" />
+              <Separator className="my-4 bg-border" />
 
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 {/* Name */}
                 <div className="rounded-2xl border border-neutral-200 bg-white p-4 dark:border-neutral-800 dark:bg-neutral-950">
-                  <div className="text-xs text-neutral-500 dark:text-neutral-400">{t.name}</div>
+                  <div className="text-xs text-muted-foreground">{t.name}</div>
                   {!clickEditProduct ? (
                     <div className="mt-1 font-semibold text-neutral-950 dark:text-neutral-100 break-words">
                       {p?.name}
@@ -620,7 +606,7 @@ function ProductDetails(): JSX.Element {
 
                 {/* Category (regular select) */}
                 <div className="rounded-2xl border border-neutral-200 bg-white p-4 dark:border-neutral-800 dark:bg-neutral-950">
-                  <div className="text-xs text-neutral-500 dark:text-neutral-400">{t.category}</div>
+                  <div className="text-xs text-muted-foreground">{t.category}</div>
 
                   {!clickEditProduct ? (
                     <div className="mt-1 font-semibold text-neutral-950 dark:text-neutral-100 break-words">
@@ -646,12 +632,12 @@ function ProductDetails(): JSX.Element {
 
                 {/* ✅ Price (fractional allowed) */}
                 <div className="rounded-2xl border border-neutral-200 bg-white p-4 dark:border-neutral-800 dark:bg-neutral-950">
-                  <div className="text-xs text-neutral-500 dark:text-neutral-400">{t.price}</div>
+                  <div className="text-xs text-muted-foreground">{t.price}</div>
                   {!clickEditProduct ? (
                     <div className="mt-1 font-semibold text-neutral-950 dark:text-neutral-100">
                       {p?.hasDiscount ? (
                         <div className="flex flex-col">
-                          <span className="line-through text-neutral-500 dark:text-neutral-400 text-sm">
+                          <span className="line-through text-muted-foreground text-sm">
                             {formatPrice(p.price)}
                           </span>
                           <span className="text-emerald-600 dark:text-emerald-300 text-lg">
@@ -684,7 +670,7 @@ function ProductDetails(): JSX.Element {
 
                 {/* Stock */}
                 <div className="rounded-2xl border border-neutral-200 bg-white p-4 dark:border-neutral-800 dark:bg-neutral-950">
-                  <div className="text-xs text-neutral-500 dark:text-neutral-400">{t.stock}</div>
+                  <div className="text-xs text-muted-foreground">{t.stock}</div>
                   {!clickEditProduct ? (
                     <div className="mt-1 font-semibold text-neutral-950 dark:text-neutral-100">
                       {p?.countInStock ?? 0}
@@ -706,7 +692,7 @@ function ProductDetails(): JSX.Element {
 
                 {/* Featured */}
                 <div className="rounded-2xl border border-neutral-200 bg-white p-4 dark:border-neutral-800 dark:bg-neutral-950">
-                  <div className="text-xs text-neutral-500 dark:text-neutral-400">{t.featured}</div>
+                  <div className="text-xs text-muted-foreground">{t.featured}</div>
                   {!clickEditProduct ? (
                     <div className="mt-1 font-semibold text-neutral-950 dark:text-neutral-100">
                       {p?.featured ? t.yes : t.no}
@@ -714,7 +700,7 @@ function ProductDetails(): JSX.Element {
                   ) : (
                     <div className="mt-2 flex items-center gap-3">
                       <SettingsStyleSwitch checked={featured} onChange={setFeatured} />
-                      <span className="text-sm font-semibold text-neutral-700 dark:text-neutral-300">
+                      <span className="text-sm font-semibold text-muted-foreground">
                         {featured ? t.yes : t.no}
                       </span>
                     </div>
@@ -723,7 +709,7 @@ function ProductDetails(): JSX.Element {
 
                 {/* Discount quick view */}
                 <div className="rounded-2xl border border-neutral-200 bg-white p-4 dark:border-neutral-800 dark:bg-neutral-950">
-                  <div className="text-xs text-neutral-500 dark:text-neutral-400">
+                  <div className="text-xs text-muted-foreground">
                     {isRTL ? "الخصم" : "Discount"}
                   </div>
                   <div className="mt-1 font-semibold text-neutral-950 dark:text-neutral-100">
@@ -736,14 +722,14 @@ function ProductDetails(): JSX.Element {
                   <button
                     type="button"
                     onClick={() => setIsDiscountModalOpen(true)}
-                    className="mt-2 text-xs font-semibold text-neutral-900 dark:text-neutral-100 underline decoration-neutral-400 dark:decoration-neutral-600">
+                    className="mt-2 text-xs font-semibold text-foreground underline decoration-neutral-400 dark:decoration-neutral-600">
                     {isRTL ? "تعديل الخصم" : "Edit discount"}
                   </button>
                 </div>
 
                 {/* Description */}
                 <div className="sm:col-span-3 rounded-2xl border border-neutral-200 bg-white p-4 dark:border-neutral-800 dark:bg-neutral-950">
-                  <div className="text-xs text-neutral-500 dark:text-neutral-400">
+                  <div className="text-xs text-muted-foreground">
                     {t.description}
                   </div>
                   {!clickEditProduct ? (
@@ -770,7 +756,7 @@ function ProductDetails(): JSX.Element {
               <h3 className="text-lg font-bold text-neutral-950 dark:text-neutral-50">
                 {t.variants}
               </h3>
-              <span className="text-sm text-neutral-500 dark:text-neutral-400">
+              <span className="text-sm text-muted-foreground">
                 {p.variants.length}
               </span>
             </div>

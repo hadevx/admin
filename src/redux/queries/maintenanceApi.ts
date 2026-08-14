@@ -8,11 +8,13 @@ export const maintenanceApi = api.injectEndpoints({
         method: "PUT",
         body: data,
       }),
+      invalidatesTags: ["Status"],
     }),
     getStoreStatus: builder.query({
       query: () => ({
         url: "/api/store",
       }),
+      providesTags: ["Status"],
     }),
   }),
 });

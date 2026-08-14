@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type ChangeEvent, type JSX } from "react";
+import { useEffect, useMemo, useState, type JSX } from "react";
 import Layout from "../../Layout";
 import { useGetProductsQuery } from "../../redux/queries/productApi";
 import {
@@ -10,15 +10,16 @@ import {
   useUpdateCategoryMutation,
 } from "../../redux/queries/categoryApi";
 import { toast } from "react-toastify";
-import Loader from "../../components/Loader";
-import Badge from "../../components/Badge";
 import Paginate from "@/components/Paginate";
+import PageHeader from "@/components/PageHeader";
+import SearchInput from "@/components/SearchInput";
+import EmptyState from "@/components/EmptyState";
+import { PageSkeleton } from "@/components/Skeleton";
 
 import { Button } from "@/components/ui/button";
 import {
   Boxes,
   Plus,
-  Search,
   Trash2,
   SquarePen,
   Loader2Icon,
@@ -73,7 +74,7 @@ function Categories(): JSX.Element {
     en: {
       categories: "Categories",
       totalCategories: "categories",
-      addCategory: "Add new Category",
+      addCategory: "Add Category",
       searchPlaceholder: "Search categories...",
       allCategories: "All Categories",
       mainCategories: "Main Categories",
@@ -110,11 +111,12 @@ function Categories(): JSX.Element {
       delete: "Delete",
       edit: "Edit",
       activeFilters: "Active filters",
+      emptyHint: "Create your first category or clear the filters.",
     },
     ar: {
       categories: "الفئات",
       totalCategories: "فئة",
-      addCategory: "إضافة فئة جديدة",
+      addCategory: "إضافة فئة",
       searchPlaceholder: "ابحث عن الفئات...",
       allCategories: "جميع الفئات",
       mainCategories: "الفئات الرئيسية",
@@ -151,6 +153,7 @@ function Categories(): JSX.Element {
       delete: "حذف",
       edit: "تعديل",
       activeFilters: "فلاتر مفعّلة",
+      emptyHint: "أنشئ أول فئة أو امسح الفلاتر.",
     },
   } as const;
 
@@ -305,21 +308,24 @@ function Categories(): JSX.Element {
       refetch();
       refetchTree();
       refetchProducts();
-    } catch (error) {
-      toast.error(t.categoryExists);
+    } catch (error: any) {
+      // "already exists" is only one of several reasons this can fail.
+      toast.error(error?.data?.message || t.categoryExists);
     }
   };
 
-  const handleDeleteCategory = async (id: string, name: string) => {
+  const handleDeleteCategory = async (id: string) => {
     setDeletingCategoryId(id);
     try {
-      await deleteCategory({ name }).unwrap();
+      await deleteCategory({ id }).unwrap();
       toast.success(`${t.categories} deleted successfully.`);
       refetch();
       refetchTree();
       refetchProducts();
-    } catch (error) {
-      toast.error(`Error deleting ${t.categories}`);
+    } catch (error: any) {
+      // The server explains *why* it refused (subcategories or products still
+      // attached); a generic message hid that and looked like a bug.
+      toast.error(error?.data?.message || `Error deleting ${t.categories}`);
     } finally {
       setDeletingCategoryId(null);
     }
@@ -363,8 +369,13 @@ function Categories(): JSX.Element {
       refetch();
       refetchTree();
       refetchProducts();
-    } catch (error) {
-      toast.error(language === "ar" ? "فشل تحديث الفئة" : "Failed to update category");
+    } catch (error: any) {
+      // The server says which rule was broken (empty name, missing parent,
+      // or moving a category under its own subcategory).
+      toast.error(
+        error?.data?.message ||
+          (language === "ar" ? "فشل تحديث الفئة" : "Failed to update category"),
+      );
     }
   };
 
@@ -377,405 +388,343 @@ function Categories(): JSX.Element {
     }
   }, [isModalOpen, isEditModalOpen]);
 
+  /* ---------------- Presentation helpers ---------------- */
+
+  const Thumb = ({ cat, size = "size-14" }: { cat: Category; size?: string }) =>
+    cat.image ? (
+      <img
+        className={clsx(size, "shrink-0 rounded-xl border border-border object-cover")}
+        src={cat.image}
+        alt=""
+        loading="lazy"
+      />
+    ) : (
+      <div
+        className={clsx(
+          size,
+          "grid shrink-0 place-items-center rounded-xl border border-border bg-muted text-muted-foreground",
+        )}>
+        <ImageIcon className="size-5" />
+      </div>
+    );
+
+  const RowActions = ({ cat }: { cat: Category }) => (
+    <div className="flex items-center gap-2">
+      <button
+        disabled={isDeleting && deletingCategoryId === cat._id}
+        onClick={() => handleDeleteCategory(cat._id)}
+        className="ws-icon-btn size-9 hover:border-rose-300 hover:bg-rose-50 hover:text-rose-600 disabled:opacity-60 dark:hover:border-rose-500/30 dark:hover:bg-rose-500/10 dark:hover:text-rose-300"
+        title={t.delete}
+        aria-label={t.delete}>
+        {isDeleting && deletingCategoryId === cat._id ? (
+          <Loader2Icon className="size-4 animate-spin" />
+        ) : (
+          <Trash2 className="size-4" />
+        )}
+      </button>
+
+      <button
+        onClick={() => openEdit(cat)}
+        className="ws-icon-btn size-9 hover:border-foreground/25 hover:bg-muted hover:text-foreground"
+        title={t.edit}
+        aria-label={t.edit}>
+        <SquarePen className="size-4" />
+      </button>
+    </div>
+  );
+
+  const TypeTag = ({ isMain }: { isMain: boolean }) => (
+    <span className={clsx("ws-pill", isMain ? "ws-pill-info" : "ws-pill-neutral")}>
+      {isMain ? t.main : t.subCategories}
+    </span>
+  );
+
   return (
     <Layout>
       {isLoadingCategories ? (
-        <Loader />
+        <PageSkeleton />
       ) : (
-        <div
-          dir={isRTL ? "ltr" : "ltr"}
-          className="flex w-full mb-10 lg:w-4xl min-h-screen lg:min-h-auto justify-between py-3 mt-[70px] lg:mt-[50px] px-4">
-          <div className="w-full">
-            {/* HEADER (ProductList-like) */}
-            <div className={`flex justify-between items-center ${isRTL ? "flex-row-reverse" : ""}`}>
-              <h1
-                dir={isRTL ? "rtl" : "ltr"}
-                className="text-lg lg:text-2xl font-black flex gap-2 lg:gap-5 items-center">
-                {t.categories}:
-                <Badge icon={false}>
-                  <Boxes className="size-5 sm:size-6" />
-                  <p className="text-sm lg:text-sm">
-                    {totalAllCategories}{" "}
-                    <span className="hidden lg:inline">{t.totalCategories}</span>
-                  </p>
-                </Badge>
-              </h1>
+        <div className="animate-fade-up">
+          <PageHeader
+            title={t.categories}
+            subtitle={t.manage}
+            icon={Boxes}
+            count={totalAllCategories}
+            countLabel={` ${t.totalCategories}`}
+            actions={
+              <button onClick={openCreate} className="ws-btn-primary">
+                <Plus className="size-4" />
+                {t.addCategory}
+              </button>
+            }
+          />
+
+          {/* Search + filters */}
+          <div className="ws-card mb-5 p-4">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+              <SearchInput
+                value={searchTerm}
+                onChange={(value) => {
+                  setSearchTerm(value);
+                  setPage(1);
+                }}
+                placeholder={t.searchPlaceholder}
+                className="flex-1"
+              />
 
               <button
-                onClick={openCreate}
-                className="inline-flex items-center gap-2 rounded-md bg-neutral-950 dark:bg-white dark:text-neutral-950 px-3 py-2 text-sm font-semibold text-white hover:bg-neutral-900 dark:hover:bg-white/90 transition">
-                {t.addCategory}
-                <Plus className="size-4" />
+                type="button"
+                onClick={() => setShowMobileFilters((v) => !v)}
+                className="ws-btn-secondary justify-between sm:hidden">
+                <span className="flex items-center gap-2">
+                  <SlidersHorizontal className="size-4" />
+                  {t.filters}
+                  {activeFiltersCount > 0 ? (
+                    <span className="grid size-5 place-items-center rounded-full bg-emphasis text-[11px] font-bold text-emphasis-foreground">
+                      {activeFiltersCount}
+                    </span>
+                  ) : null}
+                </span>
+                <span className="text-xs text-muted-foreground">
+                  {showMobileFilters ? t.hide : t.show}
+                </span>
               </button>
             </div>
 
-            <Separator className="my-4 bg-black/20 dark:bg-white/10" />
+            <div className={clsx(showMobileFilters ? "block" : "hidden", "sm:block")}>
+              <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-3">
+                <select
+                  value={filterType}
+                  onChange={(e) => {
+                    setFilterType(e.target.value as any);
+                    setPage(1);
+                  }}
+                  className="ws-select">
+                  <option value="all">{t.allCategories}</option>
+                  <option value="main">{t.mainCategories}</option>
+                  <option value="sub">{t.subCategories}</option>
+                </select>
 
-            {/* SEARCH + MOBILE FILTER BUTTON */}
-            <div className="mt-5 mb-2">
-              <div className="flex flex-wrap items-center gap-3 mb-4">
-                <div className="relative w-full lg:w-full">
-                  <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400 dark:text-zinc-400">
-                    <Search className="h-5 w-5" />
-                  </span>
-                  <input
-                    type="text"
-                    placeholder={t.searchPlaceholder}
-                    value={searchTerm}
-                    onChange={(e: ChangeEvent<HTMLInputElement>) => {
-                      setSearchTerm(e.target.value);
-                      setPage(1);
-                    }}
-                    className="w-full bg-white dark:bg-zinc-900 border border-gray-300 dark:border-white/10 rounded-lg py-2.5 pl-10 pr-4 text-sm text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 dark:placeholder:text-zinc-500 focus:outline-none focus:border-blue-500 focus:border-2 dark:focus:border-blue-400"
-                  />
+                <div className="ws-tile flex items-center justify-between py-2.5">
+                  <span className="text-sm text-muted-foreground">{t.showing}</span>
+                  <span className="text-sm font-black">{filteredCategories.length}</span>
                 </div>
 
-                {/* Mobile only: filters toggle */}
-                <div className="w-full lg:hidden">
-                  <button
-                    type="button"
-                    onClick={() => setShowMobileFilters((v) => !v)}
-                    className="w-full bg-white dark:bg-zinc-900 border border-gray-300 dark:border-white/10 rounded-lg px-3 py-2.5 text-sm font-bold text-zinc-900 dark:text-zinc-100 flex items-center justify-between">
-                    <span className="flex items-center gap-2">
-                      <SlidersHorizontal className="h-4 w-4" />
-                      {t.filters}
-                      {activeFiltersCount > 0 ? (
-                        <span className="ml-2 inline-flex items-center justify-center rounded-full bg-black text-white dark:bg-white dark:text-black text-xs w-5 h-5">
-                          {activeFiltersCount}
-                        </span>
-                      ) : null}
-                    </span>
-                    <span className="text-gray-500 dark:text-zinc-400">
-                      {showMobileFilters ? t.hide : t.show}
-                    </span>
+                <div className="ws-tile flex items-center justify-between py-2.5">
+                  <span className="text-sm text-muted-foreground">{t.total}</span>
+                  <span className="text-sm font-black">{totalAllCategories}</span>
+                </div>
+              </div>
+
+              {activeFiltersCount > 0 ? (
+                <div className="mt-3 flex items-center justify-between border-t border-border pt-3">
+                  <p className="text-xs text-muted-foreground">
+                    {t.activeFilters}:{" "}
+                    <span className="font-bold text-foreground">{activeFiltersCount}</span>
+                  </p>
+                  <button type="button" onClick={clearFilters} className="ws-chip">
+                    <X className="size-3.5" />
+                    {t.clear}
                   </button>
                 </div>
-              </div>
-
-              {/* FILTERS */}
-              <div className={`${showMobileFilters ? "block" : "hidden"} lg:block`}>
-                <div className="grid w-full grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 lg:gap-4 mb-5">
-                  <select
-                    value={filterType}
-                    onChange={(e) => {
-                      setFilterType(e.target.value as any);
-                      setPage(1);
-                    }}
-                    className="border bg-white dark:bg-zinc-900 border-gray-300 dark:border-white/10 rounded-lg p-2 text-sm text-zinc-900 dark:text-zinc-100">
-                    <option value="all">{t.allCategories}</option>
-                    <option value="main">{t.mainCategories}</option>
-                    <option value="sub">{t.subCategories}</option>
-                  </select>
-
-                  {/* showing count on this page */}
-                  <div className="border bg-white dark:bg-zinc-900 border-gray-300 dark:border-white/10 rounded-lg p-2 text-sm flex items-center justify-between">
-                    <span className="text-gray-500 dark:text-zinc-400">{t.showing}</span>
-                    <span className="font-black text-gray-900 dark:text-zinc-100">
-                      {filteredCategories.length}
-                    </span>
-                  </div>
-
-                  {/* total */}
-                  <div className="border bg-white dark:bg-zinc-900 border-gray-300 dark:border-white/10 rounded-lg p-2 text-sm flex items-center justify-between">
-                    <span className="text-gray-500 dark:text-zinc-400">{t.total}</span>
-                    <span className="font-black text-gray-900 dark:text-zinc-100">
-                      {totalAllCategories}
-                    </span>
-                  </div>
-
-                  {/* placeholder tile to keep 4-col symmetry on desktop */}
-                  <div className="hidden lg:block border bg-white dark:bg-zinc-900 border-gray-300 dark:border-white/10 rounded-lg p-2 text-sm text-gray-500 dark:text-zinc-400">
-                    {t.manage}
-                  </div>
-                </div>
-
-                {activeFiltersCount > 0 ? (
-                  <div className="flex items-center justify-between mb-5">
-                    <p className="text-xs text-gray-500 dark:text-zinc-400">
-                      {t.activeFilters}: <span className="font-bold">{activeFiltersCount}</span>
-                    </p>
-                    <button
-                      type="button"
-                      onClick={clearFilters}
-                      className="text-xs font-bold text-gray-700 dark:text-zinc-200 hover:text-black dark:hover:text-white inline-flex items-center gap-1">
-                      <X className="h-4 w-4" />
-                      {t.clear}
-                    </button>
-                  </div>
-                ) : null}
-
-                {/* DESKTOP TABLE (ProductList-like) */}
-                <div className="hidden lg:block rounded-lg mb-10 border border-gray-200 dark:border-white/10 lg:p-5 bg-white dark:bg-zinc-950 overflow-x-auto">
-                  <table className="w-full min-w-[800px] border-gray-200 text-sm text-left text-gray-700 dark:text-zinc-200">
-                    <thead className="bg-white dark:bg-zinc-950 text-gray-900/50 dark:text-zinc-400 font-semibold">
-                      <tr>
-                        <th className="px-4 py-3 border-b border-gray-200 dark:border-white/10">
-                          {t.tableName}
-                        </th>
-                        <th className="px-4 py-3 border-b border-gray-200 dark:border-white/10">
-                          {t.tableParent}
-                        </th>
-                        <th className="px-4 py-3 border-b border-gray-200 dark:border-white/10">
-                          {t.tableType}
-                        </th>
-                        <th className="px-4 py-3 border-b border-gray-200 dark:border-white/10">
-                          {t.tableActions}
-                        </th>
-                      </tr>
-                    </thead>
-
-                    <tbody className="divide-y divide-gray-200 dark:divide-white/10 bg-white dark:bg-zinc-950">
-                      {filteredCategories.length > 0 ? (
-                        filteredCategories.map((cat) => {
-                          const isMain = !cat.parent?.name;
-                          return (
-                            <tr
-                              key={cat._id}
-                              className="hover:bg-gray-100 dark:hover:bg-white/5 transition-all font-bold">
-                              <td className="px-4 py-3">
-                                <div className="flex items-center gap-2 max-w-72">
-                                  {cat.image ? (
-                                    <img
-                                      className="w-16 h-16 object-cover rounded-md bg-gray-50 dark:bg-zinc-900 border border-gray-200 dark:border-white/10 shrink-0"
-                                      src={cat.image}
-                                      alt={cat.name}
-                                      loading="lazy"
-                                    />
-                                  ) : (
-                                    <div className="w-16 h-16 rounded-md bg-gray-50 dark:bg-zinc-900 border border-gray-200 dark:border-white/10 shrink-0 grid place-items-center">
-                                      <ImageIcon className="h-5 w-5 text-gray-400 dark:text-zinc-500" />
-                                    </div>
-                                  )}
-                                  <p className="truncate text-zinc-900 dark:text-zinc-100">
-                                    {cat.name}
-                                  </p>
-                                </div>
-                              </td>
-
-                              <td className="px-4 py-3">
-                                {cat.parent?.name ? (
-                                  <span className="text-gray-700 dark:text-zinc-200">
-                                    {cat.parent.name}
-                                  </span>
-                                ) : (
-                                  <span className="text-gray-500 dark:text-zinc-400">—</span>
-                                )}
-                              </td>
-
-                              <td className="px-4 py-3">
-                                <span className="text-gray-700 dark:text-zinc-200">
-                                  {isMain ? t.main : t.subCategories}
-                                </span>
-                              </td>
-
-                              <td className="px-4 py-3">
-                                <div className="flex items-center gap-2">
-                                  <button
-                                    disabled={isDeleting && deletingCategoryId === cat._id}
-                                    onClick={() => handleDeleteCategory(cat._id, cat.name)}
-                                    className="text-zinc-900 dark:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-white/10 bg-zinc-50 dark:bg-white/5 border border-black/10 dark:border-white/10 p-2 rounded-xl transition flex items-center justify-center min-w-[36px] min-h-[36px] disabled:opacity-60"
-                                    title={t.delete}>
-                                    {isDeleting && deletingCategoryId === cat._id ? (
-                                      <Loader2Icon className="animate-spin h-4 w-4" />
-                                    ) : (
-                                      <Trash2 className="h-4 w-4" />
-                                    )}
-                                  </button>
-
-                                  <button
-                                    onClick={() => openEdit(cat)}
-                                    className="text-zinc-900 dark:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-white/10 bg-zinc-50 dark:bg-white/5 border border-black/10 dark:border-white/10 p-2 rounded-xl transition flex items-center justify-center min-w-[36px] min-h-[36px]"
-                                    title={t.edit}>
-                                    <SquarePen className="h-4 w-4" />
-                                  </button>
-                                </div>
-                              </td>
-                            </tr>
-                          );
-                        })
-                      ) : (
-                        <tr>
-                          <td
-                            colSpan={4}
-                            className="px-4 py-6 text-center text-gray-500 dark:text-zinc-400">
-                            {t.noCategoriesFound}
-                          </td>
-                        </tr>
-                      )}
-                    </tbody>
-                  </table>
-
-                  <Paginate page={page} pages={pages} setPage={setPage} />
-                </div>
-
-                {/* MOBILE CARDS (ProductList-like) */}
-                <div className="lg:hidden mb-10">
-                  {filteredCategories.length > 0 ? (
-                    <div className="space-y-3">
-                      {filteredCategories.map((cat) => {
-                        const isMain = !cat.parent?.name;
-
-                        return (
-                          <div
-                            key={cat._id}
-                            className="w-full rounded-2xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-950 p-3 shadow-sm hover:bg-gray-50 dark:hover:bg-white/5 transition">
-                            <div className="flex gap-3 items-stretch">
-                              {/* Image */}
-                              <div className="shrink-0">
-                                {cat.image ? (
-                                  <img
-                                    className="w-20 h-20 rounded-xl object-cover bg-gray-50 dark:bg-zinc-900 border border-gray-200 dark:border-white/10"
-                                    src={cat.image}
-                                    alt="thumbnail"
-                                    loading="lazy"
-                                  />
-                                ) : (
-                                  <div className="w-20 h-20 rounded-xl bg-gray-50 dark:bg-zinc-900 border border-gray-200 dark:border-white/10 grid place-items-center">
-                                    <ImageIcon className="h-5 w-5 text-gray-400 dark:text-zinc-500" />
-                                  </div>
-                                )}
-                              </div>
-
-                              {/* Content */}
-                              <div className="min-w-0 flex-1 flex flex-col justify-between">
-                                <div className="flex items-start justify-between gap-2">
-                                  <div className="min-w-0">
-                                    <p className="text-black dark:text-zinc-100 truncate font-bold">
-                                      {cat.name}
-                                    </p>
-                                    <p className="text-xs text-gray-500 dark:text-zinc-400 mt-0.5 truncate">
-                                      {isMain ? t.main : `${t.subOf} ${cat.parent?.name || "—"}`}
-                                    </p>
-                                  </div>
-
-                                  <span className="inline-flex items-center rounded-full border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-900 px-3 py-1 text-xs font-black text-gray-900 dark:text-zinc-100">
-                                    {isMain ? t.main : t.subCategories}
-                                  </span>
-                                </div>
-
-                                <div className="mt-3 flex items-center justify-between gap-2">
-                                  <div className="text-xs text-gray-600 dark:text-zinc-300 font-bold truncate">
-                                    {t.tableParent}: {cat.parent?.name || "—"}
-                                  </div>
-
-                                  <div className="flex items-center gap-2">
-                                    <button
-                                      disabled={isDeleting && deletingCategoryId === cat._id}
-                                      onClick={() => handleDeleteCategory(cat._id, cat.name)}
-                                      className="text-zinc-900 dark:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-white/10 bg-zinc-50 dark:bg-white/5 border border-black/10 dark:border-white/10 p-2 rounded-xl transition flex items-center justify-center min-w-[36px] min-h-[36px] disabled:opacity-60"
-                                      title={t.delete}>
-                                      {isDeleting && deletingCategoryId === cat._id ? (
-                                        <Loader2Icon className="animate-spin h-4 w-4" />
-                                      ) : (
-                                        <Trash2 className="h-4 w-4" />
-                                      )}
-                                    </button>
-
-                                    <button
-                                      onClick={() => openEdit(cat)}
-                                      className="text-zinc-900 dark:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-white/10 bg-zinc-50 dark:bg-white/5 border border-black/10 dark:border-white/10 p-2 rounded-xl transition flex items-center justify-center min-w-[36px] min-h-[36px]"
-                                      title={t.edit}>
-                                      <SquarePen className="h-4 w-4" />
-                                    </button>
-                                  </div>
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                        );
-                      })}
-
-                      <div className="pt-2">
-                        <Paginate page={page} pages={pages} setPage={setPage} />
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="text-center text-gray-500 dark:text-zinc-400 py-10">
-                      {t.noCategoriesFound}
-                    </div>
-                  )}
-                </div>
-
-                {/* TREE */}
-                {tree ? (
-                  <div className="rounded-lg border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-950 p-4 lg:p-5 mb-10">
-                    <div className="flex items-center gap-2">
-                      <FolderTree className="h-4 w-4 text-zinc-900 dark:text-zinc-100" />
-                      <h2 className="text-base font-black text-zinc-900 dark:text-zinc-100">
-                        {t.hierarchy}
-                      </h2>
-                    </div>
-                    <Separator className="my-4 bg-black/10 dark:bg-white/10" />
-                    <CategoryTree data={normalizeTree(tree)} />
-                  </div>
-                ) : null}
-              </div>
+              ) : null}
             </div>
           </div>
+
+          {/* Desktop table */}
+          <div className="hidden lg:block">
+            <div className="ws-table-wrap">
+              <table className="ws-table">
+                <thead>
+                  <tr>
+                    <th>{t.tableName}</th>
+                    <th>{t.tableParent}</th>
+                    <th>{t.tableType}</th>
+                    <th className="text-end">{t.tableActions}</th>
+                  </tr>
+                </thead>
+
+                <tbody>
+                  {filteredCategories.length > 0 ? (
+                    filteredCategories.map((cat) => {
+                      const isMain = !cat.parent?.name;
+                      return (
+                        <tr key={cat._id}>
+                          <td>
+                            <div className="flex max-w-sm items-center gap-3">
+                              <Thumb cat={cat} />
+                              <p className="truncate font-bold">{cat.name}</p>
+                            </div>
+                          </td>
+
+                          <td className="text-muted-foreground">{cat.parent?.name || "—"}</td>
+
+                          <td>
+                            <TypeTag isMain={isMain} />
+                          </td>
+
+                          <td>
+                            <div className="flex justify-end">
+                              <RowActions cat={cat} />
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })
+                  ) : (
+                    <tr>
+                      <td colSpan={4} className="p-0">
+                        <EmptyState
+                          title={t.noCategoriesFound}
+                          description={t.emptyHint}
+                          icon={Boxes}
+                          action={
+                            <button onClick={openCreate} className="ws-btn-primary">
+                              <Plus className="size-4" />
+                              {t.addCategory}
+                            </button>
+                          }
+                        />
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+
+            <Paginate page={page} pages={pages} setPage={setPage} />
+          </div>
+
+          {/* Mobile cards */}
+          <div className="lg:hidden">
+            {filteredCategories.length > 0 ? (
+              <>
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                  {filteredCategories.map((cat) => {
+                    const isMain = !cat.parent?.name;
+
+                    return (
+                      <div key={cat._id} className="ws-card p-3">
+                        <div className="flex items-stretch gap-3">
+                          <Thumb cat={cat} size="size-20" />
+
+                          <div className="flex min-w-0 flex-1 flex-col justify-between">
+                            <div className="flex items-start justify-between gap-2">
+                              <div className="min-w-0">
+                                <p className="truncate text-sm font-extrabold">{cat.name}</p>
+                                <p className="mt-0.5 truncate text-xs text-muted-foreground">
+                                  {isMain ? t.main : `${t.subOf} ${cat.parent?.name || "—"}`}
+                                </p>
+                              </div>
+
+                              <TypeTag isMain={isMain} />
+                            </div>
+
+                            <div className="mt-3 flex items-center justify-end">
+                              <RowActions cat={cat} />
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                <Paginate page={page} pages={pages} setPage={setPage} />
+              </>
+            ) : (
+              <div className="ws-card">
+                <EmptyState
+                  title={t.noCategoriesFound}
+                  description={t.emptyHint}
+                  icon={Boxes}
+                  action={
+                    <button onClick={openCreate} className="ws-btn-primary">
+                      <Plus className="size-4" />
+                      {t.addCategory}
+                    </button>
+                  }
+                />
+              </div>
+            )}
+          </div>
+
+          {/* Hierarchy */}
+          {tree ? (
+            <div className="ws-card mt-6 p-4 lg:p-5">
+              <div className="flex items-center gap-2">
+                <FolderTree className="size-4 text-foreground" />
+                <h2 className="text-base font-extrabold">{t.hierarchy}</h2>
+              </div>
+              <Separator className="my-4" />
+              <CategoryTree data={normalizeTree(tree)} />
+            </div>
+          ) : null}
         </div>
       )}
 
       {/* Create modal */}
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-        <DialogContent className="bg-white dark:bg-zinc-950 border border-black/10 dark:border-white/10 text-zinc-900 dark:text-zinc-100">
+        <DialogContent dir={isRTL ? "rtl" : "ltr"} className="ws-card max-w-lg">
           <DialogHeader>
             <DialogTitle>{t.addCategory}</DialogTitle>
           </DialogHeader>
 
-          <input
-            type="text"
-            value={category}
-            onChange={(e) => {
-              setCategory(e.target.value);
-              if (categoryError) setCategoryError(false);
-            }}
-            placeholder={t.enterCategoryName}
-            className={clsx(
-              "w-full border rounded-xl py-3 px-4 text-sm outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 dark:placeholder:text-zinc-500 dark:focus:ring-blue-400",
-              categoryError ? "border-rose-500 border-2" : "border-black/10 dark:border-white/10",
-            )}
-          />
-
-          <select
-            className="w-full border rounded-xl py-3 px-4 text-sm outline-none focus:ring-2 focus:ring-blue-500 my-2 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 border-black/10 dark:border-white/10 dark:focus:ring-blue-400"
-            value={parent}
-            onChange={(e) => setParent(e.target.value)}>
-            <option value="">{t.noParent}</option>
-            {parentOptions.map((opt) => (
-              <option key={opt.id} value={opt.id}>
-                {opt.label}
-              </option>
-            ))}
-          </select>
-
-          <div className="rounded-2xl border border-black/10 dark:border-white/10 bg-white dark:bg-zinc-950 p-4">
-            <div className="text-sm font-semibold text-zinc-800 dark:text-zinc-200 mb-2">
-              {t.imageUpload}
+          <div className="space-y-3">
+            <div>
+              <label className="ws-label">{t.tableName}</label>
+              <input
+                type="text"
+                value={category}
+                onChange={(e) => {
+                  setCategory(e.target.value);
+                  if (categoryError) setCategoryError(false);
+                }}
+                placeholder={t.enterCategoryName}
+                className={clsx("ws-input", categoryError && "border-rose-500 focus:border-rose-500")}
+              />
             </div>
-            <input
-              type="file"
-              accept="image/*"
-              onChange={(e) => {
-                if (e.target.files && e.target.files[0]) setImageFile(e.target.files[0]);
-              }}
-              className="w-full text-sm text-zinc-900 dark:text-zinc-100 file:text-zinc-900 dark:file:text-zinc-100"
-            />
 
-            {imageFile ? (
-              <div className="mt-3 flex items-center gap-3">
-                <img
-                  src={URL.createObjectURL(imageFile)}
-                  alt="Preview"
-                  className="w-16 h-16 object-cover rounded-xl border border-black/10 dark:border-white/10"
-                />
-                <div className="min-w-0">
-                  <div className="text-xs text-zinc-500 dark:text-zinc-400">{t.preview}</div>
-                  <div className="text-sm font-semibold text-zinc-900 dark:text-zinc-100 truncate">
-                    {imageFile.name}
+            <div>
+              <label className="ws-label">{t.tableParent}</label>
+              <select
+                className="ws-select"
+                value={parent}
+                onChange={(e) => setParent(e.target.value)}>
+                <option value="">{t.noParent}</option>
+                {parentOptions.map((opt) => (
+                  <option key={opt.id} value={opt.id}>
+                    {opt.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="ws-tile">
+              <div className="mb-2 text-sm font-semibold">{t.imageUpload}</div>
+              <input
+                type="file"
+                accept="image/*"
+                onChange={(e) => {
+                  if (e.target.files && e.target.files[0]) setImageFile(e.target.files[0]);
+                }}
+                className="w-full text-sm file:me-3 file:rounded-lg file:border-0 file:bg-emphasis file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-emphasis-foreground hover:file:bg-emphasis-hover"
+              />
+
+              {imageFile ? (
+                <div className="mt-3 flex items-center gap-3">
+                  <img
+                    src={URL.createObjectURL(imageFile)}
+                    alt="Preview"
+                    className="size-16 rounded-xl border border-border object-cover"
+                  />
+                  <div className="min-w-0">
+                    <div className="text-xs text-muted-foreground">{t.preview}</div>
+                    <div className="truncate text-sm font-semibold">{imageFile.name}</div>
                   </div>
                 </div>
-              </div>
-            ) : null}
+              ) : null}
+            </div>
           </div>
 
           <DialogFooter className="mt-4 flex justify-end gap-2">
@@ -791,69 +740,72 @@ function Categories(): JSX.Element {
 
       {/* Edit modal */}
       <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
-        <DialogContent className="bg-white dark:bg-zinc-950 border border-black/10 dark:border-white/10 text-zinc-900 dark:text-zinc-100">
+        <DialogContent dir={isRTL ? "rtl" : "ltr"} className="ws-card max-w-lg">
           <DialogHeader>
             <DialogTitle>{t.editCategory}</DialogTitle>
           </DialogHeader>
 
-          <input
-            type="text"
-            value={category}
-            onChange={(e) => {
-              setCategory(e.target.value);
-              if (categoryError) setCategoryError(false);
-            }}
-            placeholder={t.enterCategoryName}
-            className={clsx(
-              "w-full border rounded-xl py-3 px-4 text-sm outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 dark:placeholder:text-zinc-500 dark:focus:ring-blue-400",
-              categoryError ? "border-rose-500 border-2" : "border-black/10 dark:border-white/10",
-            )}
-          />
-
-          <select
-            className="w-full border rounded-xl py-3 px-4 text-sm outline-none focus:ring-2 focus:ring-blue-500 my-2 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 border-black/10 dark:border-white/10 dark:focus:ring-blue-400"
-            value={parent}
-            onChange={(e) => setParent(e.target.value)}>
-            <option value="">{t.noParent}</option>
-            {parentOptions
-              .filter((opt) => opt.id !== editingCategory?._id)
-              .map((opt) => (
-                <option key={opt.id} value={opt.id}>
-                  {opt.label}
-                </option>
-              ))}
-          </select>
-
-          <div className="rounded-2xl border border-black/10 dark:border-white/10 bg-white dark:bg-zinc-950 p-4">
-            <div className="text-sm font-semibold text-zinc-800 dark:text-zinc-200 mb-2">
-              {t.imageUpload}
+          <div className="space-y-3">
+            <div>
+              <label className="ws-label">{t.tableName}</label>
+              <input
+                type="text"
+                value={category}
+                onChange={(e) => {
+                  setCategory(e.target.value);
+                  if (categoryError) setCategoryError(false);
+                }}
+                placeholder={t.enterCategoryName}
+                className={clsx("ws-input", categoryError && "border-rose-500 focus:border-rose-500")}
+              />
             </div>
-            <input
-              type="file"
-              accept="image/*"
-              onChange={(e) => {
-                if (e.target.files && e.target.files[0]) setImageFile(e.target.files[0]);
-              }}
-              className="w-full text-sm text-zinc-900 dark:text-zinc-100 file:text-zinc-900 dark:file:text-zinc-100"
-            />
 
-            {editingCategory?.image || imageFile ? (
-              <div className="mt-3 flex items-center gap-3">
-                <img
-                  src={
-                    imageFile ? URL.createObjectURL(imageFile) : (editingCategory?.image as string)
-                  }
-                  alt="Preview"
-                  className="w-16 h-16 object-cover rounded-xl border border-black/10 dark:border-white/10"
-                />
-                <div className="min-w-0">
-                  <div className="text-xs text-zinc-500 dark:text-zinc-400">{t.preview}</div>
-                  <div className="text-sm font-semibold text-zinc-900 dark:text-zinc-100 truncate">
-                    {imageFile ? imageFile.name : editingCategory?.name}
+            <div>
+              <label className="ws-label">{t.tableParent}</label>
+              <select
+                className="ws-select"
+                value={parent}
+                onChange={(e) => setParent(e.target.value)}>
+                <option value="">{t.noParent}</option>
+                {parentOptions
+                  .filter((opt) => opt.id !== editingCategory?._id)
+                  .map((opt) => (
+                    <option key={opt.id} value={opt.id}>
+                      {opt.label}
+                    </option>
+                  ))}
+              </select>
+            </div>
+
+            <div className="ws-tile">
+              <div className="mb-2 text-sm font-semibold">{t.imageUpload}</div>
+              <input
+                type="file"
+                accept="image/*"
+                onChange={(e) => {
+                  if (e.target.files && e.target.files[0]) setImageFile(e.target.files[0]);
+                }}
+                className="w-full text-sm file:me-3 file:rounded-lg file:border-0 file:bg-emphasis file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-emphasis-foreground hover:file:bg-emphasis-hover"
+              />
+
+              {editingCategory?.image || imageFile ? (
+                <div className="mt-3 flex items-center gap-3">
+                  <img
+                    src={
+                      imageFile ? URL.createObjectURL(imageFile) : (editingCategory?.image as string)
+                    }
+                    alt="Preview"
+                    className="size-16 rounded-xl border border-border object-cover"
+                  />
+                  <div className="min-w-0">
+                    <div className="text-xs text-muted-foreground">{t.preview}</div>
+                    <div className="truncate text-sm font-semibold">
+                      {imageFile ? imageFile.name : editingCategory?.name}
+                    </div>
                   </div>
                 </div>
-              </div>
-            ) : null}
+              ) : null}
+            </div>
           </div>
 
           <DialogFooter className="mt-4 flex justify-end gap-2">

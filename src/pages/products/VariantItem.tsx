@@ -219,19 +219,19 @@ const VariantItem = ({ variant, productId, language }: Props) => {
 
   if (!localVariant) return null;
 
-  const card = "rounded-3xl border border-neutral-200 bg-white/80 backdrop-blur shadow-sm";
-  const tile = "rounded-2xl border border-neutral-200 bg-white";
+  const card = "ws-card";
+  const tile = "rounded-2xl border border-border bg-card";
 
   return (
     <div dir={isRTL ? "rtl" : "ltr"} className={clsx(card, "mt-4 overflow-hidden")}>
       {/* Header row */}
       <div className="p-4 sm:p-5 flex items-center justify-between gap-3">
         <div className="min-w-0">
-          <p className="text-sm font-semibold text-neutral-950">
+          <p className="text-sm font-semibold text-foreground">
             {isRTL ? "متغير" : "Variant"} •{" "}
-            <span className="text-neutral-600">{localVariant.color || t.empty}</span>
+            <span className="text-muted-foreground">{localVariant.color || t.empty}</span>
           </p>
-          <p className="text-xs text-neutral-500">
+          <p className="text-xs text-muted-foreground">
             {(localVariant.sizes?.length || 0) + " " + (isRTL ? "مقاسات" : "sizes")} •{" "}
             {(localVariant.images?.length || 0) + " " + (isRTL ? "صور" : "images")}
           </p>
@@ -241,7 +241,7 @@ const VariantItem = ({ variant, productId, language }: Props) => {
           <button
             type="button"
             onClick={() => setIsOpen(true)}
-            className="inline-flex items-center gap-2 rounded-md border border-neutral-200 bg-white px-3 py-2 text-xs font-semibold text-neutral-900 hover:bg-neutral-50 transition">
+            className="inline-flex items-center gap-2 rounded-md border border-border bg-card px-3 py-2 text-xs font-semibold text-foreground hover:bg-muted transition">
             <PencilLine className="h-4 w-4" />
           </button>
 
@@ -274,7 +274,7 @@ const VariantItem = ({ variant, productId, language }: Props) => {
               localVariant.images.map((img, i) => (
                 <div
                   key={i}
-                  className="relative w-full overflow-hidden rounded-2xl border border-neutral-200 bg-neutral-50 aspect-[5/4] ">
+                  className="relative w-full overflow-hidden rounded-2xl border border-border bg-muted aspect-[5/4] ">
                   <img
                     src={img.url || "/placeholder.svg"}
                     alt={`variant-${i}`}
@@ -283,8 +283,8 @@ const VariantItem = ({ variant, productId, language }: Props) => {
                 </div>
               ))
             ) : (
-              <div className="w-full flex items-center justify-center bg-neutral-50 rounded-2xl border border-neutral-200 aspect-[5/4] lg:aspect-[16/10]">
-                <ImageIcon className="w-6 h-6 text-neutral-400" />
+              <div className="w-full flex items-center justify-center bg-muted rounded-2xl border border-border aspect-[5/4] lg:aspect-[16/10]">
+                <ImageIcon className="w-6 h-6 text-muted-foreground" />
               </div>
             )}
           </div>
@@ -294,18 +294,18 @@ const VariantItem = ({ variant, productId, language }: Props) => {
         <div className={clsx(tile, "p-4 lg:col-span-7")}>
           <div className="flex items-center justify-between gap-3">
             <div className="flex items-center gap-2">
-              <div className="h-9 w-9 rounded-2xl border border-neutral-200 bg-neutral-50 grid place-items-center">
-                <Ruler className="h-4 w-4 text-neutral-900" />
+              <div className="h-9 w-9 rounded-2xl border border-border bg-muted grid place-items-center">
+                <Ruler className="h-4 w-4 text-foreground" />
               </div>
               <div>
-                <div className="text-xs text-neutral-500">{t.sizes}</div>
-                <div className="text-sm font-semibold text-neutral-950">
+                <div className="text-xs text-muted-foreground">{t.sizes}</div>
+                <div className="text-sm font-semibold text-foreground">
                   {localVariant.sizes?.length ? `${localVariant.sizes.length}` : t.empty}
                 </div>
               </div>
             </div>
 
-            <div className="flex items-center gap-2 text-xs text-neutral-500">
+            <div className="flex items-center gap-2 text-xs text-muted-foreground">
               <Boxes className="h-4 w-4" />
               <span>
                 {localVariant.sizes?.reduce((acc, s) => acc + (Number(s.stock) || 0), 0)}{" "}
@@ -314,17 +314,17 @@ const VariantItem = ({ variant, productId, language }: Props) => {
             </div>
           </div>
 
-          <div className="mt-3 overflow-hidden rounded-2xl border border-neutral-200">
+          <div className="mt-3 overflow-hidden rounded-2xl border border-border">
             <table className="w-full text-sm">
-              <thead className="bg-neutral-50 text-neutral-600">
+              <thead className="bg-muted text-muted-foreground">
                 <tr>
                   <th className="px-3 py-2 text-right font-semibold">{t.size}</th>
                   <th className="px-3 py-2 text-right font-semibold">{t.stock}</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-neutral-200 bg-white">
+              <tbody className="divide-y divide-border bg-card">
                 {localVariant.sizes?.map((s, idx) => (
-                  <tr key={idx} className="text-neutral-900">
+                  <tr key={idx} className="text-foreground">
                     <td className="px-3 py-2 font-semibold">{s.size || t.empty}</td>
                     <td className="px-3 py-2">{s.stock ?? 0}</td>
                   </tr>
@@ -339,23 +339,23 @@ const VariantItem = ({ variant, productId, language }: Props) => {
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
         <DialogContent className="w-[calc(100vw-1rem)] sm:w-[calc(100vw-2rem)] max-w-2xl p-0 overflow-hidden max-h-[90vh] flex flex-col rounded-3xl">
           {/* Header */}
-          <div className="px-4 sm:px-6 py-4 border-b bg-white shrink-0">
+          <div className="px-4 sm:px-6 py-4 border-b bg-card shrink-0">
             <DialogHeader>
               <DialogTitle className="text-lg sm:text-xl font-bold">{t.editVariant}</DialogTitle>
-              <DialogDescription className="text-sm text-neutral-500">
+              <DialogDescription className="text-sm text-muted-foreground">
                 {t.editVariantDesc}
               </DialogDescription>
             </DialogHeader>
           </div>
 
           {/* Body */}
-          <div className="flex-1 min-h-0 overflow-y-auto px-4 sm:px-6 py-6 bg-neutral-50 space-y-4">
+          <div className="flex-1 min-h-0 overflow-y-auto px-4 sm:px-6 py-6 bg-muted space-y-4">
             {/* Color */}
             <div className={clsx(tile, "p-4")}>
               <div className="flex items-center justify-between mb-3">
                 <div>
                   <p className="text-sm font-semibold">{t.color}</p>
-                  <p className="text-xs text-neutral-500">
+                  <p className="text-xs text-muted-foreground">
                     {isRTL ? "اكتب اللون أو اختره" : "Type or select a color"}
                   </p>
                 </div>
@@ -399,7 +399,7 @@ const VariantItem = ({ variant, productId, language }: Props) => {
               <div className="flex items-center justify-between mb-3">
                 <div>
                   <p className="text-sm font-semibold">{t.sizes}</p>
-                  <p className="text-xs text-neutral-500">
+                  <p className="text-xs text-muted-foreground">
                     {isRTL ? "اكتب المقاس أو اختره" : "Type or select a size"}
                   </p>
                 </div>
@@ -412,7 +412,7 @@ const VariantItem = ({ variant, productId, language }: Props) => {
                       sizes: [...localVariant.sizes, { size: "", stock: 0 }],
                     })
                   }
-                  className="inline-flex items-center gap-2 rounded-xl bg-neutral-950 text-white px-3 py-2 text-xs font-semibold">
+                  className="inline-flex items-center gap-2 rounded-xl bg-emphasis text-emphasis-foreground px-3 py-2 text-xs font-semibold">
                   <Plus size={14} />
                   {t.addSize}
                 </button>
@@ -428,7 +428,7 @@ const VariantItem = ({ variant, productId, language }: Props) => {
                   };
 
                   return (
-                    <div key={idx} className="rounded-xl border bg-white p-3 space-y-2">
+                    <div key={idx} className="rounded-xl border bg-card p-3 space-y-2">
                       <div className="grid grid-cols-1 sm:grid-cols-12 gap-2">
                         <div className="sm:col-span-5">
                           <input
@@ -490,7 +490,7 @@ const VariantItem = ({ variant, productId, language }: Props) => {
                   localVariant.images.map((img, i) => (
                     <div
                       key={i}
-                      className="relative w-full overflow-hidden rounded-2xl border bg-white aspect-[5/4]">
+                      className="relative w-full overflow-hidden rounded-2xl border bg-card aspect-[5/4]">
                       <img
                         src={img.url}
                         className="absolute inset-0 w-full h-full object-cover"
@@ -510,7 +510,7 @@ const VariantItem = ({ variant, productId, language }: Props) => {
                     </div>
                   ))
                 ) : (
-                  <p className="text-xs text-neutral-500">{t.noImages}</p>
+                  <p className="text-xs text-muted-foreground">{t.noImages}</p>
                 )}
               </div>
 
@@ -529,7 +529,7 @@ const VariantItem = ({ variant, productId, language }: Props) => {
           </div>
 
           {/* Footer */}
-          <div className="px-4 sm:px-6 py-4 border-t bg-white shrink-0 flex justify-end gap-3">
+          <div className="px-4 sm:px-6 py-4 border-t bg-card shrink-0 flex justify-end gap-3">
             <button
               onClick={() => setIsOpen(false)}
               className="px-4 py-2 rounded-xl border font-semibold">
@@ -539,7 +539,7 @@ const VariantItem = ({ variant, productId, language }: Props) => {
             <button
               onClick={handleUpdateProductVariant}
               disabled={updating}
-              className="px-4 py-2 rounded-xl bg-neutral-950 text-white font-semibold inline-flex items-center gap-2">
+              className="px-4 py-2 rounded-xl bg-emphasis text-emphasis-foreground font-semibold inline-flex items-center gap-2">
               {updating && <Loader2Icon className="h-4 w-4 animate-spin" />}
               {updating ? t.saving : t.save}
             </button>

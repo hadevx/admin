@@ -78,7 +78,7 @@ function Login() {
   }, [tips]);
 
   return (
-    <div className="h-screen w-screen overflow-hidden bg-white">
+    <div className="h-dvh w-full overflow-hidden bg-background">
       <div className="grid h-full w-full grid-cols-1 md:grid-cols-[1.55fr_1fr]">
         {/* LEFT: ONE IMAGE + TIP OVERLAY */}
         <div className="relative hidden md:block overflow-hidden">
@@ -118,69 +118,78 @@ function Login() {
         </div>
 
         {/* RIGHT: FORM */}
-        <div className="flex h-full items-center justify-center px-8">
-          <div className="w-full max-w-md">
+        <div className="flex h-full items-center justify-center overflow-y-auto px-6 py-10 sm:px-8">
+          <div className="w-full max-w-md animate-fade-up">
             {/* Brand */}
-            <div className="mb-6 flex items-center gap-2">
-              <div className="grid h-8 w-8 place-items-center rounded-lg bg-black">
-                <img src="/webschema.jpeg" className="rounded-lg" alt="logo" />
-              </div>
-              <span className="text-sm font-semibold text-zinc-900">{storeName || "Konekta"}</span>
+            <div className="mb-8 flex items-center gap-2.5">
+              <img
+                src="/webschema.jpeg"
+                className="size-9 rounded-xl object-cover ring-1 ring-black/5 dark:ring-white/10"
+                alt=""
+              />
+              <span className="text-sm font-extrabold tracking-tight">
+                {storeName || "Konekta"}
+              </span>
             </div>
 
-            <h1 className="text-2xl font-semibold text-zinc-900">Login to your account</h1>
-            <p className="mt-2 text-sm text-zinc-500">
+            <h1 className="text-2xl font-extrabold tracking-tight sm:text-3xl">
+              Login to your account
+            </h1>
+            <p className="mt-2 text-sm text-muted-foreground">
               Welcome back! Enter your details to log in.
             </p>
 
-            <form onSubmit={handleLogin} className="mt-6 space-y-4">
+            <form onSubmit={handleLogin} className="mt-8 space-y-4">
               {/* Email */}
               <div>
-                <label className="text-xs font-medium text-zinc-600">Email</label>
+                <label className="ws-label">Email</label>
                 <input
                   type="email"
                   placeholder="Enter your email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="mt-1 h-11 w-full rounded-sm border border-black/10 px-4 text-sm shadow-sm outline-none focus:border-black focus:ring-2 focus:ring-black/30"
+                  className="ws-input"
+                  autoComplete="email"
                 />
               </div>
 
               {/* Password */}
               <div>
-                <label className="text-xs font-medium text-zinc-600">Password</label>
-                <div className="relative mt-1">
+                <label className="ws-label">Password</label>
+                <div className="relative">
                   <input
                     type={showPassword ? "text" : "password"}
                     placeholder="Enter your password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="h-11 w-full rounded-sm border border-black/10 px-4 pr-12 text-sm shadow-sm outline-none focus:border-black focus:ring-2 focus:ring-black/30"
+                    className="ws-input pe-12"
                     autoComplete="current-password"
                   />
                   <button
                     type="button"
                     onClick={togglePasswordVisibility}
-                    className="absolute inset-y-0 right-0 px-4 text-zinc-400 hover:text-zinc-700"
+                    className="absolute inset-y-0 end-1.5 my-auto grid size-8 place-items-center rounded-lg text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
                     aria-label={showPassword ? "Hide password" : "Show password"}>
-                    {showPassword ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
+                    {showPassword ? <Eye className="size-4" /> : <EyeOff className="size-4" />}
                   </button>
                 </div>
               </div>
 
               {/* Remember + Forgot */}
-              <div className="flex items-center justify-between text-xs">
-                <label className="flex items-center gap-2 text-zinc-600">
+              <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
+                <label className="flex cursor-pointer items-center gap-2 text-muted-foreground">
                   <input
                     type="checkbox"
                     checked={remember}
                     onChange={(e) => setRemember(e.target.checked)}
-                    className="h-4 w-4 rounded border-black/20"
+                    className="size-4 rounded accent-neutral-900 dark:accent-neutral-100"
                   />
                   Remember login
                 </label>
 
-                <Link to="/forget-password" className="font-medium text-neutral-900">
+                <Link
+                  to="/forget-password"
+                  className="font-bold text-foreground underline-offset-4 transition-colors hover:underline">
                   Forgot password?
                 </Link>
               </div>
@@ -189,15 +198,10 @@ function Login() {
               <button
                 disabled={isLoading}
                 type="submit"
-                className={clsx(
-                  "mt-2 h-11 w-full rounded-md py-6 text-white text-lg font-semibold transition",
-                  "bg-neutral-900",
-                  "shadow-[0_12px_30px_rgba(0,0,0,0.25)]",
-                  "disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2",
-                )}>
+                className={clsx("ws-btn-primary mt-2 h-12 w-full text-base")}>
                 {isLoading ? (
                   <>
-                    <Loader2 className="h-4 w-4 animate-spin" />
+                    <Loader2 className="size-4 animate-spin" />
                     Signing in...
                   </>
                 ) : (

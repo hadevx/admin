@@ -8,7 +8,7 @@ export const discountApi = api.injectEndpoints({
         method: "POST",
         body: data,
       }),
-      invalidatesTags: ["Product"],
+      invalidatesTags: ["Product", "Discount"],
     }),
 
     deleteDiscount: builder.mutation({
@@ -16,7 +16,7 @@ export const discountApi = api.injectEndpoints({
         url: `/api/discount/${id}`,
         method: "DELETE",
       }),
-      invalidatesTags: ["Product"],
+      invalidatesTags: ["Product", "Discount"],
     }),
 
     updateDiscount: builder.mutation({
@@ -25,13 +25,14 @@ export const discountApi = api.injectEndpoints({
         method: "PUT",
         body: data,
       }),
-      invalidatesTags: ["Product"],
+      invalidatesTags: ["Product", "Discount"],
     }),
 
     getDiscountStatus: builder.query({
       query: () => ({
         url: `/api/discount`,
       }),
+      providesTags: ["Discount"],
     }),
   }),
 });

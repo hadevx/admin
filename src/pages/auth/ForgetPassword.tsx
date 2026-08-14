@@ -32,29 +32,29 @@ export default function ForgotPassword() {
   };
 
   return (
-    <div className="min-h-screen bg-zinc-50 px-4 py-10 flex items-center justify-center">
-      <div className="w-full max-w-md">
+    <div className="flex min-h-screen items-center justify-center bg-background px-4 py-10">
+      <div className="w-full max-w-md animate-fade-up">
         {/* Header */}
         <div className="mb-5">
           <Link
             to="/login"
-            className="inline-flex items-center gap-2 text-sm font-semibold text-zinc-700 hover:text-zinc-900 transition">
-            <ArrowLeft className="h-4 w-4" />
+            className="inline-flex items-center gap-2 text-sm font-semibold text-muted-foreground transition-colors hover:text-foreground">
+            <ArrowLeft className="size-4 rtl:rotate-180" />
             Back to Login
           </Link>
         </div>
 
-        <div className="rounded-3xl border border-black/10 bg-white/80 backdrop-blur shadow-sm overflow-hidden">
+        <div className="ws-card overflow-hidden">
           {/* Top band */}
-          <div className="p-6 border-b border-black/10 bg-white">
+          <div className="border-b border-border p-6">
             <div className="flex items-start gap-3">
-              <div className="h-11 w-11 rounded-2xl bg-zinc-900 text-white grid place-items-center shrink-0">
-                <ShieldCheck className="h-5 w-5" />
+              <div className="grid size-11 shrink-0 place-items-center rounded-2xl bg-emphasis text-emphasis-foreground">
+                <ShieldCheck className="size-5" />
               </div>
 
               <div className="min-w-0">
-                <h2 className="text-xl font-bold text-zinc-900">Reset your password</h2>
-                <p className="text-sm text-zinc-600 mt-1">
+                <h2 className="text-xl font-extrabold tracking-tight">Reset your password</h2>
+                <p className="mt-1 text-sm text-muted-foreground">
                   Enter your email and we’ll send you a secure reset link.
                 </p>
               </div>
@@ -64,17 +64,15 @@ export default function ForgotPassword() {
           {/* Body */}
           <div className="p-6">
             <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="rounded-2xl border border-black/10 bg-white p-4">
-                <label className="block text-xs font-semibold text-zinc-600">Email</label>
+              <div className="ws-tile">
+                <label className="ws-label">Email</label>
 
-                <div className="mt-2 relative">
-                  <span className="absolute inset-y-0 left-3 flex items-center text-zinc-400">
-                    <Mail className="h-4 w-4" />
-                  </span>
+                <div className="relative">
+                  <Mail className="pointer-events-none absolute inset-y-0 start-3.5 my-auto size-4 text-muted-foreground" />
                   <input
                     type="email"
                     placeholder="you@example.com"
-                    className="w-full rounded-xl border border-black/10 bg-white px-10 py-3 text-sm outline-none shadow-sm focus:ring-2 focus:ring-blue-500"
+                    className="ws-input ps-10"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     required
@@ -82,15 +80,13 @@ export default function ForgotPassword() {
                   />
                 </div>
 
-                <p className="mt-2 text-[11px] text-zinc-500">
+                <p className="mt-2 text-[11px] text-muted-foreground">
                   If the email exists, you’ll receive a link within a few minutes.
                 </p>
               </div>
 
-              <button
-                disabled={loading}
-                className="w-full rounded-2xl bg-zinc-900 hover:bg-zinc-800 text-white font-semibold py-3 shadow-lg drop-shadow-[0_0_10px_rgba(24,24,27,0.25)] transition disabled:opacity-60 disabled:cursor-not-allowed inline-flex items-center justify-center gap-2">
-                {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+              <button disabled={loading} className="ws-btn-primary w-full py-3">
+                {loading ? <Loader2 className="size-4 animate-spin" /> : null}
                 {loading ? "Sending..." : "Send reset link"}
               </button>
             </form>
@@ -98,10 +94,10 @@ export default function ForgotPassword() {
             {/* Message */}
             {message ? (
               <div
-                className={`mt-4 rounded-2xl border p-4 text-sm font-semibold ${
+                className={`mt-4 rounded-xl border p-4 text-sm font-semibold ${
                   isError
-                    ? "border-rose-200 bg-rose-50 text-rose-700"
-                    : "border-emerald-200 bg-emerald-50 text-emerald-700"
+                    ? "border-rose-200 bg-rose-50 text-rose-700 dark:border-rose-500/25 dark:bg-rose-500/10 dark:text-rose-300"
+                    : "border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-500/25 dark:bg-emerald-500/10 dark:text-emerald-300"
                 }`}>
                 {message}
               </div>
@@ -109,8 +105,8 @@ export default function ForgotPassword() {
           </div>
 
           {/* Footer */}
-          <div className="px-6 py-5 border-t border-black/10 bg-white">
-            <p className="text-xs text-zinc-500">
+          <div className="border-t border-border bg-[var(--surface-muted)] px-6 py-5">
+            <p className="text-xs text-muted-foreground">
               Didn’t get the email? Check spam/junk or try again with the correct address.
             </p>
           </div>

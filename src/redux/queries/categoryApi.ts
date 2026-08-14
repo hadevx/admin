@@ -8,31 +8,39 @@ export const categoryApi = api.injectEndpoints({
         method: "POST",
         body: category,
       }),
+      invalidatesTags: ["Category", "Product"],
     }),
 
     getCategories: builder.query({
       query: ({ pageNumber = 1, keyword = "" }) => ({
-        url: `/api/category?pageNumber=${pageNumber}&keyword=${keyword}`,
+        // encodeURIComponent: an unescaped "&" or "#" in the search box used to
+        // truncate the query string and silently return unfiltered results.
+        url: `/api/category?pageNumber=${pageNumber}&keyword=${encodeURIComponent(keyword)}`,
       }),
+      providesTags: ["Category"],
     }),
 
     getAllCategories: builder.query({
       query: () => ({
         url: `/api/category/all`,
       }),
+      providesTags: ["Category"],
     }),
     getCategoriesTree: builder.query({
       query: () => ({
         url: "/api/category/tree",
       }),
+      providesTags: ["Category"],
     }),
 
-    deleteCategory: builder.mutation({
-      query: (category) => ({
-        url: "/api/category",
+    // Deletes by id. Names are only unique per parent, so the old name-based
+    // delete could remove the wrong category when two shared a name.
+    deleteCategory: builder.mutation<any, { id: string }>({
+      query: ({ id }) => ({
+        url: `/api/category/${id}`,
         method: "DELETE",
-        body: category,
       }),
+      invalidatesTags: ["Category", "Product"],
     }),
 
     updateCategory: builder.mutation({
@@ -41,7 +49,7 @@ export const categoryApi = api.injectEndpoints({
         method: "PUT",
         body: data,
       }),
-      invalidatesTags: ["Category"],
+      invalidatesTags: ["Category", "Product"],
     }),
     uploadCategoryImage: builder.mutation({
       query: (data) => ({
